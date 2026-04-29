@@ -161,13 +161,17 @@ function getDefaultContentTagForTarget(targetRaw) {
   return map[target] || 'EN';
 }
 
-function showSettingsModal() {
-  initPipelineModelSelectorsInSettingsModal();
-  document.getElementById('batchSizeRunMobile').value = document.getElementById('batchSize').value;
-  document.getElementById('intervalRunMobile').value = document.getElementById('interval').value;
-  document.getElementById('tokenLimitRunMobile').value = document.getElementById('autoTokenLimit').value;
-  document.getElementById('settingsModal').classList.add('show');
-}
+ function showSettingsModal() {
+   initPipelineModelSelectorsInSettingsModal();
+   document.getElementById('batchSizeRunMobile').value = document.getElementById('batchSize').value;
+   document.getElementById('intervalRunMobile').value = document.getElementById('interval').value;
+   const autoTokenLimitEl = document.getElementById('autoTokenLimit');
+   const tokenLimitRunMobileEl = document.getElementById('tokenLimitRunMobile');
+   if (autoTokenLimitEl && tokenLimitRunMobileEl) {
+     tokenLimitRunMobileEl.value = autoTokenLimitEl.value;
+   }
+   document.getElementById('settingsModal').classList.add('show');
+ }
 
 function closeSettingsModal() {
   const mainGroq = document.getElementById('providerRunMainGroqModel')?.value || '';
@@ -182,13 +186,25 @@ function closeSettingsModal() {
   setPipelineSecondaryEnabled('openrouter', secOpenRouterEnabled);
   syncSecondaryProviderToggles('gemini', secGeminiEnabled);
   syncSecondaryProviderToggles('openrouter', secOpenRouterEnabled);
-  updateAutoProviderCountdowns();
-  document.getElementById('provider').value = 'groq';
-  if (mainGroq) document.getElementById('model').value = mainGroq;
-  document.getElementById('batchSize').value = document.getElementById('batchSizeRunMobile').value;
-  document.getElementById('interval').value = document.getElementById('intervalRunMobile').value;
-  document.getElementById('autoTokenLimit').value = document.getElementById('tokenLimitRunMobile').value;
-  onProviderChange();
+   updateAutoProviderCountdowns();
+   const providerEl = document.getElementById('provider');
+   if (providerEl) providerEl.value = 'groq';
+   const modelEl = document.getElementById('model');
+   if (mainGroq && modelEl) modelEl.value = mainGroq;
+   const batchSizeRunMobile = document.getElementById('batchSizeRunMobile');
+   const batchSize = document.getElementById('batchSize');
+   if (batchSizeRunMobile && batchSize) batchSize.value = batchSizeRunMobile.value;
+   const intervalRunMobile = document.getElementById('intervalRunMobile');
+   const interval = document.getElementById('interval');
+   if (intervalRunMobile && interval) interval.value = intervalRunMobile.value;
+   const tokenLimitRunMobile = document.getElementById('tokenLimitRunMobile');
+   const autoTokenLimit = document.getElementById('autoTokenLimit');
+   if (tokenLimitRunMobile && autoTokenLimit) {
+     autoTokenLimit.value = tokenLimitRunMobile.value;
+   } else {
+     console.warn('tokenLimitRunMobile or autoTokenLimit not found', { tokenLimitRunMobile, autoTokenLimit });
+   }
+   onProviderChange();
   initPipelineModelSelectors();
   initRunSelects();
   updateSetupCompactSummary();
