@@ -1,34 +1,33 @@
 ﻿import { state } from './state.js';
-import { storeKey, backupKey, undoKey } from './storage.js';
+import { storeKey, backupKey, undoKey, safeSetLocalStorage, safeRemoveLocalStorage, checkQuotaAndMaybeAutoBackup } from './storage.js';
 import { debounce } from './utils.js';
 
 export function createBackupApi({ renderList, updateStats, showToast, showToastWithAction, t, logError, logWarn, logInfo, isTranslationComplete, updateBackupButtonVisibility, getUiLang, updateFailedCount, clearLog }) {
 
 function saveProgressImmediate() {
    try {
-    // Strip 'raw' from each entry – full AI responses kept in memory only,
-    // not persisted (prevents localStorage quota overflow with large datasets).
-    const translatedStripped = {};
-    for (const [k, v] of Object.entries(state.translated)) {
-      if (!v || typeof v !== 'object') { translatedStripped[k] = v; continue; }
-      const { raw: _raw, ...rest } = v;
-      translatedStripped[k] = rest;
+     const translatedStripped = {};
+     for (const [k, v] of Object.entries(state.translated)) {
+       if (!v || typeof v !== 'object') { translatedStripped[k] = v; continue; }
+       const { raw: _raw, ...rest } = v;
+       translatedStripped[k] = rest;
+     }
+     safeSetLocalStorage(storeKey(), JSON.stringify({
+       translated: translatedStripped,
+       sourceEntryEdits: state.sourceEntryEdits,
+        ts: Date.now(),
+        fileId: state.currentFileId
+      }), 'backup-main');
+      maybeAutoBackup();
+      checkQuotaAndMaybeAutoBackup();
+    } catch(e) {
+      logError('saveProgress', e, {
+        translatedCount: Object.keys(state.translated).length,
+        approxSizeKB: JSON.stringify(state.translated).length / 1024
+      });
+      showToast(t('toast.storage.full'));
     }
-    localStorage.setItem(storeKey(), JSON.stringify({
-      translated: translatedStripped,
-      sourceEntryEdits: state.sourceEntryEdits,
-       ts: Date.now(),
-       fileId: state.currentFileId
-     }));
-     maybeAutoBackup();
-   } catch(e) {
-     logError('saveProgress', e, {
-       translatedCount: Object.keys(state.translated).length,
-       approxSizeKB: JSON.stringify(state.translated).length / 1024
-     });
-     showToast(t('toast.storage.full'));
-   }
-}
+ }
 
 // Debounced save – shlukne rychlé za sebou jdoucí úpravy (editace, import, atd.)
 const saveProgress = debounce(saveProgressImmediate, 500);
@@ -37,7 +36,7 @@ const saveProgress = debounce(saveProgressImmediate, 500);
 const AUTO_BACKUP_EVERY_N_BATCHES = 10;
 function writeBackup(key, payload) {
   try {
-    localStorage.setItem(key, JSON.stringify(payload));
+    safeSetLocalStorage(key, JSON.stringify(payload), 'backup');
     return true;
   } catch(e) {
     logWarn('writeBackup', `Nelze uložit backup (${key})`, { error: e.message });
@@ -96,18 +95,18 @@ function restoreFromBackup(source) {
 }
 
 function clearProgress() {
-  if (!confirm(t('confirm.clearProgress'))) return;
-  // Ulož snapshot jako undo
-  writeBackup(undoKey(), { translated: state.translated, ts: Date.now(), fileId: state.currentFileId });
-  localStorage.removeItem(storeKey());
-  state.translated = {};
-  updateStats();
-  renderList();
-  clearLog();
-  const pane = document.getElementById('detailPane');
-  if (pane) pane.innerHTML = `<div class="detail-empty">${t('detail.empty')}</div>`;
-  showToastWithAction(t('toast.progressClearedRestore.message'), t('toast.progressClearedRestore.action'), () => restoreFromBackup('undo'));
-}
+   if (!confirm(t('confirm.clearProgress'))) return;
+   // Ulož snapshot jako undo
+   writeBackup(undoKey(), { translated: state.translated, ts: Date.now(), fileId: state.currentFileId });
+   safeRemoveLocalStorage(storeKey());
+   state.translated = {};
+   updateStats();
+   renderList();
+   clearLog();
+   const pane = document.getElementById('detailPane');
+   if (pane) pane.innerHTML = `<div class="detail-empty">${t('detail.empty')}</div>`;
+   showToastWithAction(t('toast.progressClearedRestore.message'), t('toast.progressClearedRestore.action'), () => restoreFromBackup('undo'));
+ }
 
   return { saveProgress, saveProgressImmediate, writeBackup, maybeAutoBackup, hasUndo, restoreFromBackup, clearProgress };
 }

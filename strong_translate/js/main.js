@@ -30,45 +30,52 @@
     MODEL_TEST_PINNED_MODELS,
     API_KEY_PROFILES_PREFIX,
     API_KEY_ACTIVE_PROFILE_PREFIX
-  } from './config.js';
-  import { computeFileId, storeKey, backupKey, undoKey } from './storage.js';
-  import {
-    UI_LANG_KEY,
-    DEFAULT_UI_LANG,
-    UI_LANGS,
-    loadUiMessages,
-    getUiLang,
-    consumeUiLangFallback,
-    t,
-    uiLabel,
-    refreshStaticProviderSelectLabel,
-    getContentLangTag,
-    getDefaultContentTag
-  } from './i18n.js';
-  import { sleepMs, sleep, debounce, formatAiResponseTime, escHtml } from './utils.js';
-  import { extractOpenRouterText } from './ai/client.js';
-  import { isSideFallbackAborted, sleepMsWithAbort, runProviderFallbackTaskSequential } from './ai/fallback.js';
-  import { createAutoApi } from './auto.js';
-  import { createModelTestUiApi, createModelTestRunnerApi } from './modelTest.js';
-  import { createPromptLibraryApi } from './promptLibrary.js';
-  import { startResize, doResize, stopResize } from './ui/resize.js';
-  import { createExportApi } from './exportData.js';
-  import { createToastApi }  from './ui/toast.js';
-  import { createHeaderApi } from './ui/header.js';
-  import { createModalsApi } from './ui/modals.js';
-  import { createListApi }   from './ui/list.js';
-  import { createDetailApi } from './ui/detail.js';
-  import { createBatchApi }  from './translation/batch.js';
-  import { createTopicRepairApi } from './translation/topicRepair.js';
-  import { parseCzTXT, parseImportJSON } from './parser.js';
-  import { createLimitsApi } from './ui/limits.js';
-  import { createPreviewApi } from './ui/preview.js';
-  import { createSettingsApi } from './settings.js';
-  import { createModelTestOutputApi } from './modelTestOutput.js';
-  import { createBackupApi } from './backup.js';
-  import { createApiKeysApi } from './apiKeys.js';
-  import { createSettingsModalsApi } from './ui/settingsModals.js';
-  import { createCallApi } from './ai/call.js';
+   } from './config.js';
+   import {
+     UI_LANG_KEY,
+     DEFAULT_UI_LANG,
+     UI_LANGS,
+     loadUiMessages,
+     getUiLang,
+     consumeUiLangFallback,
+     t,
+     uiLabel,
+     refreshStaticProviderSelectLabel,
+     getContentLangTag,
+     getDefaultContentTag
+   } from './i18n.js';
+   import { sleepMs, sleep, debounce, formatAiResponseTime, escHtml } from './utils.js';
+   import { createCallApi } from './ai/call.js';
+   import { StorageStats } from './storageStats.js';
+   import {
+     computeFileId,
+     storeKey,
+     backupKey,
+     undoKey,
+     safeSetLocalStorage,
+     checkQuotaAndMaybeAutoBackup
+   } from './storage.js';
+   
+   // UI a translation API moduly
+   import { createExportApi } from './exportData.js';
+   import { createToastApi } from './ui/toast.js';
+   import { createHeaderApi } from './ui/header.js';
+   import { createModalsApi } from './ui/modals.js';
+   import { startResize as uiStartResize, doResize as uiDoResize, stopResize as uiStopResize } from './ui/resize.js';
+   import { createListApi } from './ui/list.js';
+   import { createDetailApi } from './ui/detail.js';
+   import { createBatchApi } from './translation/batch.js';
+   import { createTopicRepairApi } from './translation/topicRepair.js';
+   import { createLimitsApi } from './ui/limits.js';
+   import { createPreviewApi } from './ui/preview.js';
+   import { createSettingsApi } from './settings.js';
+   import { createModelTestOutputApi } from './modelTestOutput.js';
+   import { createBackupApi } from './backup.js';
+   import { createApiKeysApi } from './apiKeys.js';
+   import { createSettingsModalsApi } from './ui/settingsModals.js';
+   import { createAutoApi } from './auto.js';
+   import { createModelTestUiApi, createModelTestRunnerApi } from './modelTest.js';
+   import { createPromptLibraryApi } from './promptLibrary.js';
   import {
     getResolvedSystemMessage,
     getResolvedDefaultPrompt,
@@ -1454,10 +1461,13 @@ function initApp(loadingEl) {
       }
     }
    } catch(e) {
-     logWarn('startApp', 'Failed to load saved progress, starting fresh', { error: e.message });
-     state.translated = {};
-     state.sourceEntryEdits = {};
-   }
+      logWarn('startApp', 'Failed to load saved progress, starting fresh', { error: e.message });
+      state.translated = {};
+      state.sourceEntryEdits = {};
+    }
+    
+    // Kontrola kvóty localStorage hned po startu
+    checkQuotaAndMaybeAutoBackup();
 
   document.getElementById('app').style.display = 'flex';
   
@@ -1501,8 +1511,8 @@ function initApp(loadingEl) {
     loadingEl.parentNode.removeChild(loadingEl);
   }
   
-  document.getElementById('resizeHandle').addEventListener('mousedown', startResize);
-  document.getElementById('resizeHandle').addEventListener('touchstart', startResize, {passive: false});
+   document.getElementById('resizeHandle').addEventListener('mousedown', uiStartResize);
+   document.getElementById('resizeHandle').addEventListener('touchstart', uiStartResize, {passive: false});
    
   if (window.innerWidth <= 600) {
     toggleListPane();
