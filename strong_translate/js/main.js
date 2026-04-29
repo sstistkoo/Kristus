@@ -1,4 +1,4 @@
-﻿  // ══ CORE MODULE IMPORT ═══════════════════════════════════════════
+  // -- CORE MODULE IMPORT -------------------------------------------
   import core from '../strong_translator_core_new.js';
   import prompts from '../strong_prompts.js';
   import {
@@ -102,7 +102,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     const lang = String(targetLang || 'CZ');
     if (!text) return text;
     if (text.includes('{lang}')) return text.replaceAll('{lang}', lang);
-    return text.replace(/(Strong\s*GR\s*→\s*)([A-Za-z-]+)/i, `$1${lang}`);
+    return text.replace(/(Strong\s*GR\s*?\s*)([A-Za-z-]+)/i, `$1${lang}`);
   }
 
   function getUiLangTag() {
@@ -239,7 +239,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     setAttr('btnAutoStop', 'aria-label', t('auto.stop.aria'));
     const autoLog = document.getElementById('autoLog');
     const autoLogText = (autoLog?.textContent || '').trim();
-    if (autoLog && (autoLogText === 'Čeká na start...' || autoLogText === 'Waiting to start...')) {
+    if (autoLog && (autoLogText === 'Cek� na start...' || autoLogText === 'Waiting to start...')) {
       autoLog.textContent = t('auto.log.waiting');
     }
     refreshLanguageAwarePromptOptionLabels();
@@ -337,7 +337,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     setText('promptLibraryTitle', t('prompt.library.title'));
     const promptPreview = document.getElementById('promptPreview');
     const promptPreviewText = (promptPreview?.textContent || '').trim();
-    if (promptPreview && (promptPreviewText === 'Vyberte prompt z knihovny pro náhled...' || promptPreviewText === 'Select a prompt from the library for preview...' || promptPreviewText === '—')) {
+    if (promptPreview && (promptPreviewText === 'Vyberte prompt z knihovny pro n�hled...' || promptPreviewText === 'Select a prompt from the library for preview...' || promptPreviewText === '�')) {
       promptPreview.textContent = t('prompt.library.preview.empty');
     }
     setAttr('promptLibraryEditor', 'placeholder', t('prompt.library.editor.placeholder'));
@@ -537,41 +537,25 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     setText('promptLangModalTitle', t('lang.modal.title'));
     setText('uiLanguageLabel', t('lang.modal.ui'));
     setText('targetLanguageLabel', t('lang.modal.target'));
-    setText('sourceLanguageLabel', t('lang.modal.source'));
-    const uiLanguageEl = document.getElementById('uiLanguage');
-    if (uiLanguageEl) {
-      const uiLangByValue = {
-        cs: t('lang.option.cs'),
-        en: t('lang.option.en'),
-        sk: t('lang.option.sk'),
-        pl: t('lang.option.pl'),
-        es: t('lang.option.sp'),
-        it: 'Italiano',
-        pt: 'Português'
-      };
-      uiLanguageEl.querySelectorAll('option').forEach(opt => {
-        if (opt.dataset.dynamicUiLang === '1') return;
-        const text = uiLangByValue[String(opt.value || '')];
-        if (text) opt.textContent = text;
-      });
-    }
-    setText('contentTagLanguageLabel', t('lang.contentTag.label'));
-    setText('contentTagLanguageHint', t('lang.contentTag.hint'));
-    const ctEl = document.getElementById('contentTagLanguage');
-    if (ctEl) {
-      const ctKey = (v) => {
-        if (v === 'zh-CN') return 'lang.contentTag.val_zhCN';
-        return `lang.contentTag.val_${v}`;
-      };
-      Array.from(ctEl.options).forEach(opt => {
-        const v = String(opt.value || '');
-        if (!v) return;
-        const k = ctKey(v);
-        const txt = t(k);
-        if (txt && txt !== k) opt.textContent = txt;
-      });
-    }
-    setText('btnI18nTranslateTool', t('lang.i18nTool.button'));
+     setText('sourceLanguageLabel', t('lang.modal.source'));
+     const uiLanguageEl = document.getElementById('uiLanguage');
+     if (uiLanguageEl) {
+       const uiLangByValue = {
+         cs: t('lang.option.cs'),
+         en: t('lang.option.en'),
+         sk: t('lang.option.sk'),
+         pl: t('lang.option.pl'),
+         es: t('lang.option.sp'),
+         it: 'Italiano',
+         pt: 'Portugu�s'
+       };
+       uiLanguageEl.querySelectorAll('option').forEach(opt => {
+         if (opt.dataset.dynamicUiLang === '1') return;
+         const text = uiLangByValue[String(opt.value || '')];
+         if (text) opt.textContent = text;
+       });
+     }
+     setText('btnI18nTranslateTool', t('lang.i18nTool.button'));
     setText('btnI18nToolOpenLangModal', t('i18nTool.buttons.selectLanguages'));
     setText('btnI18nToolCopyCmd', t('i18nTool.buttons.copyCommand'));
     setText('btnI18nToolRunBrowser', t('i18nTool.buttons.translate'));
@@ -653,7 +637,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     setText('btnPromptLangSave', t('lang.modal.save'));
     const status = document.getElementById('statusTXT');
     const rawStatus = String(status?.textContent || '').trim();
-    if (status && !status.classList.contains('ok') && (rawStatus === '— nevybráno' || rawStatus === '— none selected' || rawStatus === '—')) {
+    if (status && !status.classList.contains('ok') && (rawStatus === '� nevybr�no' || rawStatus === '� none selected' || rawStatus === '�')) {
       status.textContent = t('setup.file.none');
     }
     refreshTokenStatsDisplay();
@@ -702,16 +686,24 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
       let processedPrompt = userPromptTemplate
         .replace(/{TARGET_LANG}/g, targetName)
         .replace(/{SOURCE_LANG}/g, sourceName);
-      processedPrompt = enforceSpecialistaFormat(processedPrompt);
-      
-      const userContent = processedPrompt.includes('{HESLA}') 
-        ? processedPrompt.replace(/{HESLA}/g, items)
-        : processedPrompt + '\n\n' + items;
-      
-      return [
-        { role: 'system', content: getResolvedSystemMessage() },
-        { role: 'user', content: userContent }
-      ];
+       processedPrompt = enforceSpecialistaFormat(processedPrompt);
+       
+        const userContent = processedPrompt.includes('{HESLA}')
+          ? processedPrompt.replace(/{HESLA}/g, items)
+          : processedPrompt + '\n\n' + items;
+
+        // ��������������������������������������������������������������������������
+        // �-? DEBUG LOG: Kompletn� prompt odeslan� AI (kontrola form�tu, tokeny)
+        // ��������������������������������������������������������������������������
+        batch.forEach(e => {
+          const def = (e.definice || e.def || '').substring(0, 80);
+        });
+        // ��������������������������������������������������������������������������
+
+        return [
+          { role: 'system', content: getActiveSystemMessage() },
+          { role: 'user', content: userContent }
+        ];
     }
 
     function getModelTestPromptType() {
@@ -733,17 +725,23 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
       return localStorage.getItem(MODEL_TEST_CUSTOM_PROMPT_KEY) || '';
     }
 
-    function getModelTestPromptTemplate(promptType) {
-      const topicTemplate = getTopicPromptTemplateByPromptType(promptType);
-      if (topicTemplate) return topicTemplate;
-      const fromCatalog = getModelTestPromptCatalog()?.[promptType]?.template;
-      if (fromCatalog) return fromCatalog;
-      const custom = getModelTestCustomPromptText().trim();
-      if (custom) return custom;
-      return getActiveMainPromptTemplate('batch');
-    }
+     function getModelTestPromptTemplate(promptType) {
+       const topicTemplate = getTopicPromptTemplateByPromptType(promptType);
+       if (topicTemplate) return topicTemplate;
+       const fromCatalog = getModelTestPromptCatalog()?.[promptType]?.template;
+       if (fromCatalog) return fromCatalog;
+       const custom = getModelTestCustomPromptText().trim();
+       if (custom) return custom;
+       return getActiveMainPromptTemplate('batch');
+     }
 
-    const EN_TOPIC_PROMPT_MAP = {
+     function getActiveSystemMessage() {
+       const custom = localStorage.getItem('strong_custom_system_prompt');
+       if (custom && custom.trim()) return custom.trim();
+       return getResolvedSystemMessage();
+     }
+
+     const EN_TOPIC_PROMPT_MAP = {
       preset_topic_vyznam_en: 'vyznam',
       preset_topic_definice_en: 'definice',
       preset_topic_kjv_en: 'kjv',
@@ -918,7 +916,7 @@ async function copyModelTestPromptPreview() {
 }
     function getModelTestPromptTopicLabel(promptType) {
       if (isEnTopicPromptType(promptType)) {
-        const base = String(EN_TOPIC_PROMPT_LABEL_BASE[promptType] || '').replace(/^Téma:\s*/i, '');
+        const base = String(EN_TOPIC_PROMPT_LABEL_BASE[promptType] || '').replace(/^T�ma:\s*/i, '');
         return `${base} (EN -> ${getCurrentTargetLangCode()})`;
       }
       return getModelTestPromptCatalog()?.[promptType]?.topicLabel || '';
@@ -939,15 +937,15 @@ async function copyModelTestPromptPreview() {
       let processedPrompt = String(userPromptTemplate || '')
         .replace(/{TARGET_LANG}/g, targetName)
         .replace(/{SOURCE_LANG}/g, sourceName);
-      processedPrompt = enforceSpecialistaFormat(processedPrompt);
-      const userContent = processedPrompt.includes('{HESLA}')
-        ? processedPrompt.replace(/{HESLA}/g, items)
-        : `${processedPrompt}\n\n${items}`;
+       processedPrompt = enforceSpecialistaFormat(processedPrompt);
+       const userContent = processedPrompt.includes('{HESLA}')
+         ? processedPrompt.replace(/{HESLA}/g, items)
+         : `${processedPrompt}\n\n${items}`;
 
-      return [
-        { role: 'system', content: getResolvedSystemMessage() },
-        { role: 'user', content: userContent }
-      ];
+       return [
+         { role: 'system', content: getActiveSystemMessage() },
+         { role: 'user', content: userContent }
+       ];
     }
 
     function buildModelTestMessages(batch, testMode, promptType, promptEnabled) {
@@ -963,7 +961,7 @@ async function copyModelTestPromptPreview() {
       return buildPromptMessages(batch);
     }
 
-  // ══ ERROR LOGGER ═════════════════════════════════════════════════
+  // -- ERROR LOGGER -------------------------------------------------
   /**
    * Structured error logger with context and stack traces.
    * Logs to both console and UI log panel.
@@ -973,25 +971,17 @@ async function copyModelTestPromptPreview() {
     const stack = error.stack ? `\nStack: ${error.stack}` : '';
     const contextStr = `[${timestamp}] [${context}]`;
 
-    // Console with full details
-    console.error(`${contextStr} ${error.message}`, {
-      context,
-      error: error.message,
-      ...extra
-    }, stack);
 
     // UI log
-    logMsg(`✗ ${context}: ${error.message}`, 'err');
+    logMsg(`? ${context}: ${error.message}`, 'err');
   }
 
   function logWarn(context, message, extra = {}) {
-    console.warn(`[${new Date().toISOString()}] [${context}]`, message, extra);
-    log(`⚠ ${context}: ${message}`);
+    log(`? ${context}: ${message}`);
   }
 
   function logInfo(context, message) {
-    console.log(`[${new Date().toISOString()}] [${context}]`, message);
-    log(`ℹ ${context}: ${message}`);
+    log(`? ${context}: ${message}`);
   }
   function getTestHistory() {
     try {
@@ -1013,7 +1003,6 @@ async function copyModelTestPromptPreview() {
       try {
         persist(80);
       } catch (err2) {
-        console.warn('[main] localStorage setItem failed:', TEST_HISTORY_KEY, err2 || err);
       }
     }
   }
@@ -1051,7 +1040,7 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
     }).filter(Boolean).filter(o => o.value);
   }
 
-  // Try cache first (rychlý start), ale vždy následně zkus aktualizaci z API
+  // Try cache first (rychl� start), ale v�dy n�sledne zkus aktualizaci z API
   let hadFreshCache = false;
   const preferredModel = selectElement.value || savedModel || '';
   const cached = localStorage.getItem(CACHE_KEY);
@@ -1084,8 +1073,8 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
     })
     .then(data => {
       const modelsRaw = (data.data || []).filter(m => m.id && m.id.endsWith(':free'));
-      // Některé položky API mohou být metadata bez reálně routovatelného endpointu
-      // (pak při testu vrací 404 "No endpoints found"). Zkusíme je vyřadit.
+      // Nekter� polo�ky API mohou b�t metadata bez re�lne routovateln�ho endpointu
+      // (pak pri testu vrac� 404 "No endpoints found"). Zkus�me je vyradit.
       const models = modelsRaw.filter(m => {
         if (Array.isArray(m.endpoints) && m.endpoints.length === 0) return false;
         if (m?.top_provider && m.top_provider.is_disabled === true) return false;
@@ -1095,8 +1084,8 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
 
       const topCandidates = [
         { id: 'openrouter/free', fixedLabel: t('provider.top.autoRouter') },
-        { id: 'openai/gpt-oss-20b:free', fixedLabel: '★ OpenAI GPT-OSS 20B (free)' },
-        { id: 'nvidia/nemotron-nano-9b-v2:free', fixedLabel: '★ NVIDIA Nemotron Nano 9B v2 (free)' }
+        { id: 'openai/gpt-oss-20b:free', fixedLabel: '? OpenAI GPT-OSS 20B (free)' },
+        { id: 'nvidia/nemotron-nano-9b-v2:free', fixedLabel: '? NVIDIA Nemotron Nano 9B v2 (free)' }
       ];
       const topOptions = topCandidates
         .filter(c => c.id === 'openrouter/free' || modelMap.has(c.id))
@@ -1140,10 +1129,9 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
       if (!hadFreshCache) restoreModel();
     })
     .catch(err => {
-      console.error('OpenRouter models fetch failed:', err);
       if (hadFreshCache) return;
 
-      // Fallback na jakoukoli dostupnou cache (i starou), aby app zůstala provozní
+      // Fallback na jakoukoli dostupnou cache (i starou), aby app zustala provozn�
       try {
         const fallbackRaw = localStorage.getItem(CACHE_KEY);
         if (fallbackRaw) {
@@ -1257,7 +1245,7 @@ function applyAutoPanelSettings() {
   updateETA();
 }
 
-// ══ LOAD TXT ═════════════════════════════════════════════════════
+// -- LOAD TXT -----------------------------------------------------
 const LAST_FILE_KEY = 'strong_last_file';
 const DEFAULT_TXT_FILE = 'strong_finalni_verze.txt';
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/sstistkoo/stistko/main/christ/strong_translate/';
@@ -1272,7 +1260,7 @@ function loadTXT(input) {
       state.entries = parseTXT(ev.target.result);
       state.currentFileId = computeFileId(state.entries);
       const el = document.getElementById('statusTXT');
-      el.textContent = `✓ ${file.name} — ${t('entries.count', { count: state.entries.length })}`;
+      el.textContent = `? ${file.name} � ${t('entries.count', { count: state.entries.length })}`;
       el.className = 'file-status ok';
       document.getElementById('fileReady').style.display = 'block';
       document.getElementById('startBtn').disabled = false;
@@ -1311,7 +1299,7 @@ function loadDefaultFile() {
       state.entries = parseTXT(text);
       state.currentFileId = computeFileId(state.entries);
       localStorage.setItem(LAST_FILE_KEY, lastFile);
-      document.getElementById('statusTXT').textContent = `✓ ${lastFile} — ${t('entries.count', { count: state.entries.length })}`;
+      document.getElementById('statusTXT').textContent = `? ${lastFile} � ${t('entries.count', { count: state.entries.length })}`;
       document.getElementById('statusTXT').className = 'file-status ok';
       document.getElementById('fileReady').style.display = 'block';
       document.getElementById('startBtn').disabled = false;
@@ -1324,7 +1312,7 @@ function loadDefaultFile() {
      })
     .catch(e => {
       logError('loadDefaultFile', e, { file: lastFile, githubUrl });
-      document.getElementById('statusTXT').textContent = '✗ ' + e.message;
+      document.getElementById('statusTXT').textContent = '? ' + e.message;
     });
 }
 
@@ -1334,7 +1322,7 @@ function checkDefaultFile() {
     document.getElementById('btnLoadDefault').style.display = 'inline-block';
     return;
   }
-  // Neprovádíme testovací fetch, aby se v konzoli neobjevoval zbytečný 404.
+  // Neprov�d�me testovac� fetch, aby se v konzoli neobjevoval zbytecn� 404.
   document.getElementById('btnLoadDefault').style.display = 'inline-block';
 }
 
@@ -1355,14 +1343,14 @@ function updateAutoBtn() {
     }
   }
 
-// ══ RESUME ═══════════════════════════════════════════════════════
+// -- RESUME -------------------------------------------------------
 function checkResume() {
   try {
     const box = document.getElementById('resumeBox');
     if (box) box.style.display = 'none';
     let saved = localStorage.getItem(storeKey());
     let source = t('resume.source.currentSlot');
-    // Pokud nemáme nic pod aktuálním fileId, ale máme legacy data, nabídneme je
+    // Pokud nem�me nic pod aktu�ln�m fileId, ale m�me legacy data, nab�dneme je
     if (!saved && state.currentFileId) {
       const legacy = localStorage.getItem(LEGACY_STORE_KEY);
       if (legacy) { saved = legacy; source = t('resume.source.legacySlot'); }
@@ -1371,7 +1359,7 @@ function checkResume() {
     const data = JSON.parse(saved);
     const count = Object.keys(data.translated || {}).filter(k => {
       const t = data.translated[k];
-      return t && t.vyznam && t.vyznam !== '—' && !t.skipped;
+      return t && t.vyznam && t.vyznam !== '�' && !t.skipped;
     }).length;
     if (count > 0 && box) {
       box.style.display = 'block';
@@ -1399,7 +1387,7 @@ function toggleListPane() {
   
   if (isHidden) {
     pane.classList.remove('hidden');
-    btn.textContent = '≡ Seznam';
+    btn.textContent = '= Seznam';
     if (isMobile) {
       pane.style.height = '45%';
       logPanel.style.height = '50%';
@@ -1409,7 +1397,7 @@ function toggleListPane() {
     }
   } else {
     pane.classList.add('hidden');
-    btn.textContent = '≡ Seznam';
+    btn.textContent = '= Seznam';
     if (isMobile) {
       pane.style.height = '0';
       logPanel.style.height = '100%';
@@ -1420,9 +1408,9 @@ function toggleListPane() {
   }
 }
 
-// ══ START ════════════════════════════════════════════════════════
+// -- START --------------------------------------------------------
 function startApp() {
-  // Ukaž loading hned
+  // Uka� loading hned
   document.getElementById('setup').style.display = 'none';
   const app = document.getElementById('app');
   app.style.display = 'flex';
@@ -1444,7 +1432,7 @@ function initApp(loadingEl) {
   state.currentBatchSize = parseInt(document.getElementById('batchSize').value);
   state.currentInterval  = parseInt(document.getElementById('interval').value);
 
-  // Obnov uložený překlad – pro aktuálně načtený soubor
+  // Obnov ulo�en� preklad � pro aktu�lne nacten� soubor
   try {
     const saved = localStorage.getItem(storeKey());
     if (saved) {
@@ -1452,16 +1440,16 @@ function initApp(loadingEl) {
       state.translated = data.translated || {};
       state.sourceEntryEdits = data.sourceEntryEdits || {};
     } else if (state.currentFileId) {
-      // Pokus o migraci ze starého (legacy) slotu při prvním použití nového prefixu
+      // Pokus o migraci ze star�ho (legacy) slotu pri prvn�m pou�it� nov�ho prefixu
       const legacy = localStorage.getItem(LEGACY_STORE_KEY);
       if (legacy) {
         const data = JSON.parse(legacy);
         if (data && data.translated && Object.keys(data.translated).length > 0) {
           state.translated = data.translated;
           state.sourceEntryEdits = data.sourceEntryEdits || {};
-          // Ulož pod novým klíčem, legacy zachováme – uživatel může mít víc souborů
+          // Ulo� pod nov�m kl�cem, legacy zachov�me � u�ivatel mu�e m�t v�c souboru
           localStorage.setItem(storeKey(), JSON.stringify({ translated: state.translated, sourceEntryEdits: state.sourceEntryEdits, ts: Date.now(), fileId: state.currentFileId, migrated: true }));
-          logInfo('migrate', `Migrováno ${Object.keys(state.translated).length} hesel z legacy slotu`);
+          logInfo('migrate', `Migrov�no ${Object.keys(state.translated).length} hesel z legacy slotu`);
         }
       }
     }
@@ -1473,7 +1461,7 @@ function initApp(loadingEl) {
 
   document.getElementById('app').style.display = 'flex';
   
-  // Dedup state.entries - pokud jsou duplicitní klíče, bereme jen první výskyt
+  // Dedup state.entries - pokud jsou duplicitn� kl�ce, bereme jen prvn� v�skyt
   const uniqueEntries = [];
   const seenKeys = new Set();
   for (const e of state.entries) {
@@ -1483,21 +1471,20 @@ function initApp(loadingEl) {
     }
   }
   if (uniqueEntries.length < state.entries.length) {
-    console.log('WARNING: Removed', state.entries.length - uniqueEntries.length, 'duplicate state.entries');
   }
   state.entries = uniqueEntries;
   
   state.entryMap = new Map(state.entries.map(e => [e.key, e]));
   applySourceEntryEditsToEntries();
   
-  // Vytvoř index pro rychlé řazení podle původního pořadí
+  // Vytvor index pro rychl� razen� podle puvodn�ho porad�
   window._entryIndexMap = new Map(state.entries.map((e, i) => [e.key, i]));
 
   state.filteredKeys = state.entries.map(e => e.key);
   initVirtualScroll();
   renderList();
   
-  // Scroll na začátek po načtení a znovu vykresli
+  // Scroll na zac�tek po nacten� a znovu vykresli
   const listScroll = document.getElementById('listScroll');
   if (listScroll) listScroll.scrollTop = 0;
   state.lastRenderRange = { start: -1, end: -1, doneStates: {} };
@@ -1509,7 +1496,7 @@ function initApp(loadingEl) {
   updateBackupButtonVisibility();
   updateFileIdBadge();
   
-  // Odstraň loading element
+  // Odstran loading element
   if (loadingEl && loadingEl.parentNode) {
     loadingEl.parentNode.removeChild(loadingEl);
   }
@@ -1522,7 +1509,7 @@ function initApp(loadingEl) {
   }
 }
 
-// ══ LIST — přesunuto do js/ui/list.js (viz wiring níže) ══════════
+// -- LIST � presunuto do js/ui/list.js (viz wiring n�e) ----------
 
 
 function resolveProviderForInteractiveAction(preferredProv = '') {
@@ -1549,12 +1536,12 @@ function filterList() {
   }
 }
 
-// Debounced varianta pro oninput (zabráni překreslení celého listu na každý znak)
+// Debounced varianta pro oninput (zabr�ni prekreslen� cel�ho listu na ka�d� znak)
 const filterListDebounced = debounce(filterList, 180);
 
-// ── getFilteredEntries, virtual scroll, showDetail, renderDetail → js/ui/list.js + js/ui/detail.js
+// -- getFilteredEntries, virtual scroll, showDetail, renderDetail ? js/ui/list.js + js/ui/detail.js
 
-// renderDetail, renderTranslation, editace polí → js/ui/detail.js
+// renderDetail, renderTranslation, editace pol� ? js/ui/detail.js
 
 function applySourceEntryEditsToEntries() {
   if (!state.sourceEntryEdits || typeof state.sourceEntryEdits !== 'object') return;
@@ -1601,7 +1588,7 @@ const TOPIC_PROMPT_PRESET_MAP = {
 
 
 
-// ══ AI CALL API ═════════════════════════════════════════════════
+// -- AI CALL API -------------------------------------------------
 const callApi = createCallApi({
   log, logError, logWarn, showToast: (...a) => showToast(...a), t,
   rateInfoFromErrorMessage: (...a) => rateInfoFromErrorMessage(...a),
@@ -1609,7 +1596,7 @@ const callApi = createCallApi({
 });
 const { callAIWithRetry, callOnce, getTranslationEngineLabel, parseTranslations } = callApi;
 
-// ══ UI MODULY ═══════════════════════════════════════════════════
+// -- UI MODULY ---------------------------------------------------
 const toastApi = createToastApi({ CONFIG, logError });
 const { showToast, showToastWithAction } = toastApi;
 
@@ -1622,8 +1609,8 @@ const {
   updateBackupButtonVisibility, hasBackup
 } = headerApi;
 
-// ══ TRANSLATION BATCH API ══════════════════════════════════════
-// Late-binding pro isAutoProviderEnabled (autoApi přijde až po listApi) a translateSelected (listApi přijde za batchApi)
+// -- TRANSLATION BATCH API --------------------------------------
+// Late-binding pro isAutoProviderEnabled (autoApi prijde a� po listApi) a translateSelected (listApi prijde za batchApi)
 const batchApi = createBatchApi({
   state, t, escHtml,
   log, logError, logWarn,
@@ -1670,7 +1657,7 @@ const {
   getProviderCooldownLeftSec, formatPreviewRawTranslation,
 } = batchApi;
 
-// Cirkularita list ↔ detail: late-binding přes closure
+// Cirkularita list ? detail: late-binding pres closure
 let _detailApi;
 const listApi = createListApi({
   state, t, escHtml, ITEM_HEIGHT, BUFFER_ITEMS,
@@ -1753,13 +1740,13 @@ const {
   refreshTokenStatsDisplay
 } = autoApi;
 
-// ══ TOPIC REPAIR API ════════════════════════════════════════════
+// -- TOPIC REPAIR API --------------------------------------------
 const topicRepairApi = createTopicRepairApi({
   state, t, escHtml,
   log, logError,
   showToast,
   saveProgress: (...a) => saveProgress(...a),
-  renderList, renderDetail, updateStats,
+  renderList, renderDetail, updateStats, updateFailedCount,
   TOPIC_LABELS, TOPIC_PROMPT_PRESET_MAP,
   callAIWithRetry,
   getPipelineModelForProvider: (...a) => getPipelineModelForProvider(...a),
@@ -1767,6 +1754,7 @@ const topicRepairApi = createTopicRepairApi({
   enforceSpecialistaFormat,
   parseWithOpenRouterNormalization, applyFallbacksToParsedMap,
   isAutoProviderEnabled,
+  resolveMainBatchProvider: (...a) => resolveMainBatchProvider(...a),
   resolveProviderForInteractiveAction,
   getFailedTopicsForFallback, getMissingTopicsForRepair,
   cloneTranslationTopicFields, shouldReplaceTopicValue,
@@ -1795,7 +1783,7 @@ const {
   extractTopicValueFromAI,
 } = topicRepairApi;
 
-// ══ LIMITS + PREVIEW API ════════════════════════════════════════
+// -- LIMITS + PREVIEW API ----------------------------------------
 const limitsApi = createLimitsApi({
   getCurrentApiKey: (...a) => getCurrentApiKey(...a),
   getModelTestSelectedModelForProvider: (...a) => getModelTestSelectedModelForProvider(...a),
@@ -1812,6 +1800,7 @@ const previewApi = createPreviewApi({
   translateSingle: (...a) => translateSingle(...a),
   retranslateSingle: (...a) => retranslateSingle(...a),
   getStrongKeyNumber,
+  updateFailedCount,
 });
 const {
   showPreviewModal, toggleAllPreview, acceptPreview, discardPreview,
@@ -1819,7 +1808,7 @@ const {
   closePreviewModal, closePreviewModalSafe, closeFailedModalSafe,
 } = previewApi;
 
-// ══ SETTINGS + MODEL TEST OUTPUT API ════════════════════════════
+// -- SETTINGS + MODEL TEST OUTPUT API ----------------------------
 const settingsApi = createSettingsApi({
   MODEL_TEST_PINNED_MODELS, MODEL_TEST_MODEL_STORAGE_KEY, PIPELINE_SECONDARY_ENABLED_KEY,
   setAutoProviderEnabled: (...a) => setAutoProviderEnabled(...a),
@@ -1959,7 +1948,7 @@ const {
   exportModelTestTranslationsTxt,
 } = modelTestOutputApi;
 
-// ══ BACKUP + API KEYS + SETTINGS MODALS ════════════════════════
+// -- BACKUP + API KEYS + SETTINGS MODALS ------------------------
 const backupApi = createBackupApi({
   renderList: (...a) => renderList(...a),
   updateStats: (...a) => updateStats(...a),
@@ -2071,7 +2060,7 @@ function bindSetupCompactSummaryEvents() {
     el.dataset.compactSummaryBound = '1';
   });
 }
-// ══ STATS & SAVE ════════════════════════════════════════════════
+// -- STATS & SAVE ------------------------------------------------
 
 
 
@@ -2271,31 +2260,31 @@ function closeI18nToolHelpModal() {
   if (m) m.classList.remove('show');
 }
 const I18N_TOOL_LANGUAGES = [
-  { code: 'en', tag: 'EN', name: 'Angličtina', flag: '🇬🇧' },
-  { code: 'sk', tag: 'SK', name: 'Slovenština', flag: '🇸🇰' },
-  { code: 'pl', tag: 'PL', name: 'Polština', flag: '🇵🇱' },
-  { code: 'de', tag: 'DE', name: 'Němčina', flag: '🇩🇪' },
-  { code: 'fr', tag: 'FR', name: 'Francouzština', flag: '🇫🇷' },
-  { code: 'es', tag: 'ES', name: 'Španělština', flag: '🇪🇸' },
-  { code: 'it', tag: 'IT', name: 'Italština', flag: '🇮🇹' },
-  { code: 'pt', tag: 'PT', name: 'Portugalština', flag: '🇵🇹' },
-  { code: 'ru', tag: 'RU', name: 'Ruština', flag: '🇷🇺' },
-  { code: 'uk', tag: 'UK', name: 'Ukrajinština', flag: '🇺🇦' },
-  { code: 'bg', tag: 'BG', name: 'Bulharština', flag: '🇧🇬' },
-  { code: 'ro', tag: 'RO', name: 'Rumunština', flag: '🇷🇴' },
-  { code: 'hu', tag: 'HU', name: 'Maďarština', flag: '🇭🇺' },
-  { code: 'nl', tag: 'NL', name: 'Holandština', flag: '🇳🇱' },
-  { code: 'sv', tag: 'SV', name: 'Švédština', flag: '🇸🇪' },
-  { code: 'da', tag: 'DA', name: 'Dánština', flag: '🇩🇰' },
-  { code: 'no', tag: 'NO', name: 'Norština', flag: '🇳🇴' },
-  { code: 'fi', tag: 'FI', name: 'Finština', flag: '🇫🇮' },
-  { code: 'el', tag: 'EL', name: 'Řečtina', flag: '🇬🇷' },
-  { code: 'tr', tag: 'TR', name: 'Turečtina', flag: '🇹🇷' },
-  { code: 'ar', tag: 'AR', name: 'Arabština', flag: '🇸🇦' },
-  { code: 'zh-CN', tag: 'zh-CN', name: 'Čínština', flag: '🇨🇳' },
-  { code: 'ja', tag: 'JA', name: 'Japonština', flag: '🇯🇵' },
-  { code: 'ko', tag: 'KO', name: 'Korejština', flag: '🇰🇷' },
-  { code: 'he', tag: 'HE', name: 'Hebrejština', flag: '🇮🇱' }
+  { code: 'en', tag: 'EN', name: 'Anglictina', flag: '????' },
+  { code: 'sk', tag: 'SK', name: 'Sloven�tina', flag: '????' },
+  { code: 'pl', tag: 'PL', name: 'Pol�tina', flag: '????' },
+  { code: 'de', tag: 'DE', name: 'Nemcina', flag: '????' },
+  { code: 'fr', tag: 'FR', name: 'Francouz�tina', flag: '????' },
+  { code: 'es', tag: 'ES', name: '�panel�tina', flag: '????' },
+  { code: 'it', tag: 'IT', name: 'Ital�tina', flag: '????' },
+  { code: 'pt', tag: 'PT', name: 'Portugal�tina', flag: '????' },
+  { code: 'ru', tag: 'RU', name: 'Ru�tina', flag: '????' },
+  { code: 'uk', tag: 'UK', name: 'Ukrajin�tina', flag: '????' },
+  { code: 'bg', tag: 'BG', name: 'Bulhar�tina', flag: '????' },
+  { code: 'ro', tag: 'RO', name: 'Rumun�tina', flag: '????' },
+  { code: 'hu', tag: 'HU', name: 'Madar�tina', flag: '????' },
+  { code: 'nl', tag: 'NL', name: 'Holand�tina', flag: '????' },
+  { code: 'sv', tag: 'SV', name: '�v�d�tina', flag: '????' },
+  { code: 'da', tag: 'DA', name: 'D�n�tina', flag: '????' },
+  { code: 'no', tag: 'NO', name: 'Nor�tina', flag: '????' },
+  { code: 'fi', tag: 'FI', name: 'Fin�tina', flag: '????' },
+  { code: 'el', tag: 'EL', name: 'Rectina', flag: '????' },
+  { code: 'tr', tag: 'TR', name: 'Turectina', flag: '????' },
+  { code: 'ar', tag: 'AR', name: 'Arab�tina', flag: '????' },
+  { code: 'zh-CN', tag: 'zh-CN', name: 'C�n�tina', flag: '????' },
+  { code: 'ja', tag: 'JA', name: 'Japon�tina', flag: '????' },
+  { code: 'ko', tag: 'KO', name: 'Korej�tina', flag: '????' },
+  { code: 'he', tag: 'HE', name: 'Hebrej�tina', flag: '????' }
 ];
 const I18N_TOOL_LANG_DISPLAY_CODE = {
   en: 'GB',
@@ -2333,14 +2322,14 @@ const I18N_TOOL_TRANSLATOR_TARGET_CODES = new Set([
 function sanitizeI18nToolLanguages() {
   for (let i = I18N_TOOL_LANGUAGES.length - 1; i >= 0; i--) {
     const code = String(I18N_TOOL_LANGUAGES[i]?.code || '');
-    // "cz"/"cs" je zdroj a nechceme ho v cílovém seznamu.
+    // "cz"/"cs" je zdroj a nechceme ho v c�lov�m seznamu.
     if (code === 'cz' || code === 'cs' || !I18N_TOOL_TRANSLATOR_TARGET_CODES.has(code)) {
       I18N_TOOL_LANGUAGES.splice(i, 1);
     }
   }
-  // Bezpečnostní pojistka: EN musí být vždy dostupné jako cílový jazyk.
+  // Bezpecnostn� pojistka: EN mus� b�t v�dy dostupn� jako c�lov� jazyk.
   if (!I18N_TOOL_LANGUAGES.some((lang) => String(lang?.code || '').toLowerCase() === 'en')) {
-    I18N_TOOL_LANGUAGES.unshift({ code: 'en', tag: 'EN', name: 'Angličtina', flag: '🇬🇧' });
+    I18N_TOOL_LANGUAGES.unshift({ code: 'en', tag: 'EN', name: 'Anglictina', flag: '????' });
   }
 }
 
@@ -2426,7 +2415,7 @@ function i18nToolRenderAiTokenStats() {
   const el = document.getElementById('i18nToolAiTokens');
   if (!el) return;
   const stats = i18nToolAiTokenStats || { in: 0, out: 0, total: 0 };
-  el.textContent = `📊 Tokeny AI: ${stats.in} in / ${stats.out} out / ${stats.total} total`;
+  el.textContent = `?? Tokeny AI: ${stats.in} in / ${stats.out} out / ${stats.total} total`;
 }
 
 function i18nToolResetAiTokenStats() {
@@ -2447,10 +2436,10 @@ function i18nToolSetAiSendButtonState() {
   if (!btn) return;
   btn.disabled = false;
   btn.textContent = i18nToolAiSending ? t('i18nTool.ai.send.stop') : t('i18nTool.ai.send.start');
-  if (i18nToolAiResumeState) i18nToolSetAiResumeButtonState(true, '▶ Pokračovat od poslední dávky');
+  if (i18nToolAiResumeState) i18nToolSetAiResumeButtonState(true, '? Pokracovat od posledn� d�vky');
 }
 
-function i18nToolSetAiResumeButtonState(enabled, label = '▶ Pokračovat') {
+function i18nToolSetAiResumeButtonState(enabled, label = '? Pokracovat') {
   const btn = document.getElementById('btnI18nToolAiResume');
   if (!btn) return;
   btn.style.display = enabled ? 'inline-block' : 'none';
@@ -2895,7 +2884,7 @@ async function sendI18nToolAiPrompt(options = {}) {
     i18nToolSetAiSendButtonState();
     i18nToolSetAiResumeButtonState(false);
     startI18nToolAiBusyAnimation();
-    i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || '—');
+    i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || '�');
 
     for (let idx = startIdx; idx < chunks.length; idx++) {
       currentIdx = idx;
@@ -2919,7 +2908,7 @@ async function sendI18nToolAiPrompt(options = {}) {
         i18nToolSetAiStatus(t('i18nTool.ai.status.sendingBatch', { index: idx + 1, total: chunks.length, size: chunk.length, provider, model }));
         try {
           const raw = await callAIWithRetry(provider, apiKey, model, [
-            { role: 'system', content: getResolvedSystemMessage() },
+            { role: 'system', content: getActiveSystemMessage() },
             { role: 'user', content: chunkPrompt }
           ]);
           i18nToolAccumulateAiTokenStats(raw?.usage || null);
@@ -2963,7 +2952,7 @@ async function sendI18nToolAiPrompt(options = {}) {
             || msg.includes('service unavailable')
             || msg.includes('timeout')
             || msg.includes('request canceled')
-            || msg.includes('blokovaný účet')
+            || msg.includes('blokovan� �cet')
             || msg.includes('restricted')
             || msg.includes('organization');
           if ((msg.includes('413') || msg.includes('too large') || msg.includes('content too large')) && localBatchSize > 20) {
@@ -3022,7 +3011,7 @@ async function sendI18nToolAiPrompt(options = {}) {
 
     responseEl.value = JSON.stringify(merged, null, 2);
     renderI18nToolAiPreview(merged);
-    stopI18nToolAiBusyAnimation('✅ AI audit dokončen.');
+    stopI18nToolAiBusyAnimation('? AI audit dokoncen.');
     i18nToolSetAiStatus(t('i18nTool.ai.status.loadedInBatches', {
       batches: chunks.length,
       total: merged.length,
@@ -3317,7 +3306,7 @@ async function copyI18nToolCmd() {
 async function loadI18nToolSourceCsData() {
   if (i18nToolSourceCsData) return i18nToolSourceCsData;
   const res = await fetch('./i18n/cs.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Nepodařilo se načíst i18n/cs.json (HTTP ${res.status})`);
+  if (!res.ok) throw new Error(`Nepodarilo se nac�st i18n/cs.json (HTTP ${res.status})`);
   i18nToolSourceCsData = await res.json();
   return i18nToolSourceCsData;
 }
@@ -3382,7 +3371,6 @@ async function i18nToolTranslateText(text, targetLang) {
           if (out) return out;
         }
       } catch (error) {
-        console.warn('DeepL failed, fallback to Google', error);
       }
     }
   }
@@ -3414,11 +3402,6 @@ async function i18nToolTranslateText(text, targetLang) {
   }
   i18nToolGoogleFailureCount++;
   if (i18nToolGoogleFailureCount <= 5 || i18nToolGoogleFailureCount % 100 === 0) {
-    console.warn('Google translation failed, returning original text', {
-      targetLang,
-      failures: i18nToolGoogleFailureCount,
-      error: lastError?.message || String(lastError || '')
-    });
   }
   return text;
 }
@@ -3499,7 +3482,7 @@ async function i18nToolTranslateValue(value, targetLang, targetTag, targetLangua
     if (typeof onProgress === 'function') onProgress(path);
     let withRestoredTags = i18nToolRestoreTagsAndWords(translated, targetTag, targetLanguageName);
     let restored = i18nToolRestoreImmutableSegments(withRestoredTags, protectedValue.immutableSegments);
-    // Když engine vrátí useknutý text a ztratí placeholdery, zkusíme překlad ještě 2x.
+    // Kdy� engine vr�t� useknut� text a ztrat� placeholdery, zkus�me preklad je�te 2x.
     for (let retry = 0; retry < 2 && !i18nToolHasSamePlaceholderSet(value, restored); retry++) {
       translated = await i18nToolTranslateText(textToTranslate, targetLang);
       await new Promise((resolve) => setTimeout(resolve, 25));
@@ -3597,30 +3580,30 @@ function openI18nToolOutputEditor() {
 
 function buildI18nToolEditorHelpText() {
   return [
-    'Nápověda: Editor výstupního JSON',
+    'N�poveda: Editor v�stupn�ho JSON',
     '',
-    'K čemu slouží:',
-    '- Upravuje už přeložený soubor po jednotlivých klíčích.',
-    '- Přehled je ve formátu: key.path<TAB>"hodnota".',
-    '- Ukládá změny jen do aktuálně vybraného jazyka.',
+    'K cemu slou��:',
+    '- Upravuje u� prelo�en� soubor po jednotliv�ch kl�c�ch.',
+    '- Prehled je ve form�tu: key.path<TAB>"hodnota".',
+    '- Ukl�d� zmeny jen do aktu�lne vybran�ho jazyka.',
     '',
     'Postup:',
-    '1) Vyber jazyk v poli „Jazyk výstupu“.',
-    '2) Najdi řádek, který chceš opravit.',
-    '3) Uprav jen text vpravo za tabulátorem.',
-    '4) Klikni na „💾 Uložit JSON“.',
-    '5) Stáhne se nový soubor <lang>.json s úpravami.',
+    '1) Vyber jazyk v poli �Jazyk v�stupu�.',
+    '2) Najdi r�dek, kter� chce� opravit.',
+    '3) Uprav jen text vpravo za tabul�torem.',
+    '4) Klikni na �?? Ulo�it JSON�.',
+    '5) St�hne se nov� soubor <lang>.json s �pravami.',
     '',
-    'Důležitá pravidla:',
-    '- Levou část (key.path) neměň.',
-    '- Každý řádek musí obsahovat tabulátor mezi klíčem a hodnotou.',
-    '- Hodnota má být JSON string, typicky v uvozovkách.',
-    '- Neplatné/rozbité řádky se ignorují.',
+    'Dule�it� pravidla:',
+    '- Levou c�st (key.path) nemen.',
+    '- Ka�d� r�dek mus� obsahovat tabul�tor mezi kl�cem a hodnotou.',
+    '- Hodnota m� b�t JSON string, typicky v uvozovk�ch.',
+    '- Neplatn�/rozbit� r�dky se ignoruj�.',
     '',
-    'Na co si dát pozor:',
-    '- Placeholdery jako {name}, {count}, {lang} musí zůstat přesně stejné.',
-    '- Nemaž technické značky a proměnné.',
-    '- Po uložení doporučuji rychlou kontrolu ve UI.'
+    'Na co si d�t pozor:',
+    '- Placeholdery jako {name}, {count}, {lang} mus� zustat presne stejn�.',
+    '- Nema� technick� znacky a promenn�.',
+    '- Po ulo�en� doporucuji rychlou kontrolu ve UI.'
   ].join('\n');
 }
 
@@ -3709,7 +3692,7 @@ function openI18nToolAiModal() {
   const m = document.getElementById('i18nToolAiModal');
   syncI18nToolAiModalDefaults();
   i18nToolRenderAiTokenStats();
-  i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || '—');
+  i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || '�');
   const previewEl = document.getElementById('i18nToolAiPreview');
   if (previewEl && !String(previewEl.value || '').trim()) {
     previewEl.value = t('i18nTool.ai.preview.waitingForResponse');
@@ -3720,6 +3703,60 @@ function openI18nToolAiModal() {
 function closeI18nToolAiModal() {
   const m = document.getElementById('i18nToolAiModal');
   if (m) m.classList.remove('show');
+}
+
+function showPromptEditModal() {
+  const modal = document.getElementById('editPromptModal');
+  const sysTextarea = document.getElementById('editSystemPrompt');
+  const userTextarea = document.getElementById('editUserPrompt');
+  const status = document.getElementById('editPromptStatus');
+  if (!modal || !sysTextarea || !userTextarea) return;
+  sysTextarea.value = getActiveSystemMessage();
+  userTextarea.value = getActiveMainPromptTemplate('batch');
+  if (status) status.textContent = '';
+  modal.classList.add('show');
+}
+
+function closeEditPromptModal() {
+  const modal = document.getElementById('editPromptModal');
+  if (modal) modal.classList.remove('show');
+}
+
+function restoreDefaultPrompt() {
+  localStorage.removeItem('strong_custom_system_prompt');
+  setMainPrompt(getResolvedDefaultPrompt(), 'system');
+  updatePromptStatusIndicator();
+  const sysTextarea = document.getElementById('editSystemPrompt');
+  const userTextarea = document.getElementById('editUserPrompt');
+  const status = document.getElementById('editPromptStatus');
+  if (sysTextarea) sysTextarea.value = getActiveSystemMessage();
+  if (userTextarea) userTextarea.value = getActiveMainPromptTemplate('batch');
+  if (status) {
+    status.textContent = '? Obnoveno v�choz�';
+    setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+  }
+}
+
+function saveEditedPrompt() {
+  const sysTextarea = document.getElementById('editSystemPrompt');
+  const userTextarea = document.getElementById('editUserPrompt');
+  const status = document.getElementById('editPromptStatus');
+  if (!sysTextarea || !userTextarea) return;
+  const sysVal = (sysTextarea.value || '').trim();
+  const userVal = (userTextarea.value || '').trim();
+  if (!sysVal) {
+    if (status) status.textContent = '? Syst�mov� prompt nesm� b�t pr�zdn�';
+    return;
+  }
+  if (!userVal) {
+    if (status) status.textContent = '? U�ivatelsk� prompt nesm� b�t pr�zdn�';
+    return;
+  }
+  localStorage.setItem('strong_custom_system_prompt', sysVal);
+  setMainPrompt(userVal, 'custom');
+  updatePromptStatusIndicator();
+  closeEditPromptModal();
+  showToast('? AI prompt ulo�en');
 }
 
 function onI18nToolEditorLangChange() {
@@ -3888,7 +3925,6 @@ async function runI18nToolBrowserTranslate() {
     if (etaEl) etaEl.textContent = t('i18nTool.eta.done');
     i18nToolStopRunAnimation(t('i18nTool.animation.done'));
     if (placeholderIssues.length) {
-      console.warn('[i18n-tool] Placeholder mismatch audit', placeholderAuditByLang);
     }
     if (downloads) {
       downloads.style.display = 'grid';
@@ -3983,10 +4019,10 @@ window.resumeI18nToolAiPrompt = resumeI18nToolAiPrompt;
 window.applyI18nToolAiResponse = applyI18nToolAiResponse;
 window.downloadI18nToolAiResult = downloadI18nToolAiResult;
 
-// ══ RESIZE PANELS (logika v ./ui/resize.js) ─────────────────────
+// -- RESIZE PANELS (logika v ./ui/resize.js) ---------------------
 
 
-// Toast s akčním tlačítkem (např. Undo). Vydrží 2× déle.
+// Toast s akcn�m tlac�tkem (napr. Undo). Vydr�� 2� d�le.
 
 
 const { download, exportTXT, exportJSON, exportRange } = createExportApi({
@@ -4000,7 +4036,6 @@ const { download, exportTXT, exportJSON, exportRange } = createExportApi({
    if (el) el.textContent = msg;
    
    // Also log to console
-   console.log('[LOG]', msg);
  }
 
  function logTokenEntry(provider, inT, outT, total) {
@@ -4103,7 +4138,7 @@ function showModelTestLibrary() {
         const total = Math.max(1, (r.okKeys||0)+(r.failedKeys||0));
         const rate = (((r.okKeys||0)/total)*100).toFixed(1);
         const avgMs = r.latencySamples ? (r.latencyMsTotal/r.latencySamples) : 0;
-        lines.push(`- ${r.model} | ${r.calls||0} volání | ${r.totalKeys||0} hesel | OK ${r.okKeys||0} | ERR ${r.failedKeys||0} | ${rate}% | ${formatAiResponseTime(avgMs)}`);
+        lines.push(`- ${r.model} | ${r.calls||0} vol�n� | ${r.totalKeys||0} hesel | OK ${r.okKeys||0} | ERR ${r.failedKeys||0} | ${rate}% | ${formatAiResponseTime(avgMs)}`);
       }
       lines.push('');
     }
@@ -4193,8 +4228,36 @@ window.toggleAuto = toggleAuto;
 window.stopAuto = stopAuto;
 
 // Z topicRepairApi
+window.startTopicRepairFlow = startTopicRepairFlow;
+window.closeTopicRepairModalSafe = closeTopicRepairModalSafe;
+window.stopTopicRepairTicker = stopTopicRepairTicker;
+window.applyTopicRepairProviderCheckboxes = applyTopicRepairProviderCheckboxes;
+window.setTopicRepairStrategy = setTopicRepairStrategy;
+window.startTopicRepairSequentialWorker = startTopicRepairSequentialWorker;
+window.toggleTopicRepairTask = toggleTopicRepairTask;
+window.toggleTopicRepairRun = toggleTopicRepairRun;
+window.setTopicRepairSpecialistaDecision = setTopicRepairSpecialistaDecision;
+window.setTopicRepairDetectedTopicDecision = setTopicRepairDetectedTopicDecision;
+window.applyTopicRepairSelected = applyTopicRepairSelected;
+window.closeTopicRepairModalOnly = closeTopicRepairModalOnly;
+window.minimizeTopicRepairModal = minimizeTopicRepairModal;
 window.restoreTopicRepairModal = restoreTopicRepairModal;
-window.applySystemPromptForCurrentTask = applySystemPromptForCurrentTask;
+window.saveTopicRepairBatchPromptDraft = saveTopicRepairBatchPromptDraft;
+window.resetTopicRepairBatchPromptToDefault = resetTopicRepairBatchPromptToDefault;
+window.refreshTopicRepairBatchPromptEditor = refreshTopicRepairBatchPromptEditor;
+window.toggleTopicRepairBulkListFilter = toggleTopicRepairBulkListFilter;
+window.syncTopicRepairBulkRunInputsToHidden = syncTopicRepairBulkRunInputsToHidden;
+window.runTopicRepairBulkTranslation = runTopicRepairBulkTranslation;
+window.toggleTopicRepairBulkInclude = toggleTopicRepairBulkInclude;
+window.setTopicRepairBulkIncludeAll = setTopicRepairBulkIncludeAll;
+window.getTopicPromptTemplateByPromptType = getTopicPromptTemplateByPromptType;
+window.syncTopicPromptTemplatesReport = syncTopicPromptTemplatesReport;
+window.buildTopicPrompt = buildTopicPrompt;
+window.openTopicPromptModal = openTopicPromptModal;
+window.runTopicPromptAI = runTopicPromptAI;
+window.applyTopicPromptResult = applyTopicPromptResult;
+window.shouldReplaceSpecialista = shouldReplaceSpecialista;
+window.closeTopicPromptModal = closeTopicPromptModal;
 window.openSystemPromptModal = openSystemPromptModal;
 window.runSystemPromptAI = runSystemPromptAI;
 window.closeSystemPromptModal = closeSystemPromptModal;
@@ -4202,6 +4265,41 @@ window.translateSystemPromptText = translateSystemPromptText;
 window.translateSystemPromptBackToEnglish = translateSystemPromptBackToEnglish;
 window.reviewSystemPromptWithAI = reviewSystemPromptWithAI;
 window.buildSystemPromptFromRequirement = buildSystemPromptFromRequirement;
+window.extractTopicValueFromAI = extractTopicValueFromAI;
+window.applySystemPromptForCurrentTask = applySystemPromptForCurrentTask;
+window.syncTopicPromptTemplatesReport = syncTopicPromptTemplatesReport;
+window.buildTopicPrompt = buildTopicPrompt;
+window.openTopicPromptModal = openTopicPromptModal;
+window.runTopicPromptAI = runTopicPromptAI;
+window.applyTopicPromptResult = applyTopicPromptResult;
+window.shouldReplaceSpecialista = shouldReplaceSpecialista;
+window.closeTopicPromptModal = closeTopicPromptModal;
+window.openSystemPromptModal = openSystemPromptModal;
+window.runSystemPromptAI = runSystemPromptAI;
+window.closeSystemPromptModal = closeSystemPromptModal;
+window.translateSystemPromptText = translateSystemPromptText;
+window.translateSystemPromptBackToEnglish = translateSystemPromptBackToEnglish;
+window.reviewSystemPromptWithAI = reviewSystemPromptWithAI;
+window.buildSystemPromptFromRequirement = buildSystemPromptFromRequirement;
+window.extractTopicValueFromAI = extractTopicValueFromAI;
+window.applySystemPromptForCurrentTask = applySystemPromptForCurrentTask;
+window.setTopicRepairStrategy = setTopicRepairStrategy;
+window.refreshTopicRepairBatchPromptEditor = refreshTopicRepairBatchPromptEditor;
+window.startTopicRepairSequentialWorker = startTopicRepairSequentialWorker;
+window.toggleTopicRepairTask = toggleTopicRepairTask;
+window.toggleTopicRepairRun = toggleTopicRepairRun;
+window.setTopicRepairSpecialistaDecision = setTopicRepairSpecialistaDecision;
+window.setTopicRepairDetectedTopicDecision = setTopicRepairDetectedTopicDecision;
+window.applyTopicRepairSelected = applyTopicRepairSelected;
+window.closeTopicRepairModalOnly = closeTopicRepairModalOnly;
+window.minimizeTopicRepairModal = minimizeTopicRepairModal;
+window.saveTopicRepairBatchPromptDraft = saveTopicRepairBatchPromptDraft;
+window.resetTopicRepairBatchPromptToDefault = resetTopicRepairBatchPromptToDefault;
+window.toggleTopicRepairBulkListFilter = toggleTopicRepairBulkListFilter;
+window.syncTopicRepairBulkRunInputsToHidden = syncTopicRepairBulkRunInputsToHidden;
+window.runTopicRepairBulkTranslation = runTopicRepairBulkTranslation;
+window.toggleTopicRepairBulkInclude = toggleTopicRepairBulkInclude;
+window.setTopicRepairBulkIncludeAll = setTopicRepairBulkIncludeAll;
 
 // Z modelTestUiApi
 window.cancelModelTest = cancelModelTest;
@@ -4216,6 +4314,12 @@ window.updateModelTestProviderUi = updateModelTestProviderUi;
 // Z promptLibraryApi
 window.togglePromptAutoMode = togglePromptAutoMode;
 window.togglePromptModeQuick = togglePromptModeQuick;
+
+// Prompt edit modal
+window.showPromptEditModal = showPromptEditModal;
+window.closeEditPromptModal = closeEditPromptModal;
+window.restoreDefaultPrompt = restoreDefaultPrompt;
+window.saveEditedPrompt = saveEditedPrompt;
 
 // Z exportDataApi
 window.exportTXT = exportTXT;
@@ -4237,10 +4341,10 @@ window.addEventListener('beforeunload', () => {
   stopTopicRepairTicker();
   if (state.elapsedTimer) clearInterval(state.elapsedTimer);
   stopResize();
-  // Debounced save musí být proveden synchronně před zavřením
+  // Debounced save mus� b�t proveden synchronne pred zavren�m
   saveProgress.flush();
 });
-// Při skrytí tabu také flushni, aby se nic neztratilo
+// Pri skryt� tabu tak� flushni, aby se nic neztratilo
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveProgress.flush();
 });
@@ -4257,7 +4361,6 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   loadSavedSettings().catch(err => {
-    console.error('[i18n] Startup failed:', err);
     showToast(t('toast.error.withMessage', { message: err?.message || String(err) }));
   });
 });

@@ -4,7 +4,8 @@ export const UI_LANG_KEY = 'strong_ui_lang';
 export const DEFAULT_UI_LANG = 'cs';
 export const UI_LANGS = new Set([
   'cs', 'en', 'sk', 'pl', 'de', 'fr', 'es', 'it', 'pt', 'ru',
-  'da', 'fi', 'hu', 'nl', 'no', 'ro', 'sv', 'ar', 'el', 'tr', 'zh-cn'
+  'da', 'fi', 'hu', 'nl', 'no', 'ro', 'sv', 'ar', 'el', 'tr', 'zh-cn',
+  'he', 'ja', 'ko', 'uk', 'bg'
 ]);
 const FIXED_EN_KEYS = new Set([
   'detail.label.definitionEn',
@@ -18,15 +19,31 @@ const TARGET_TO_CONTENT_TAG = {
   en: 'EN',
   sk: 'SK',
   pl: 'PL',
+  de: 'DE',
+  fr: 'FR',
+  es: 'ES',
+  it: 'IT',
+  pt: 'PT',
+  ru: 'RU',
+  da: 'DA',
+  fi: 'FI',
+  hu: 'HU',
+  nl: 'NL',
+  no: 'NO',
+  ro: 'RO',
+  sv: 'SV',
   bg: 'BG',
   ch: 'zh-CN',
+  'zh-cn': 'ZH_CN',
   sp: 'ES',
   gr: 'EL',
   he: 'HE',
   ar: 'AR',
   el: 'EL',
   tr: 'TR',
-  'zh-cn': 'ZH_CN'
+  ja: 'JA',
+  ko: 'KO',
+  uk: 'UK'
 };
 
 export const CONTENT_TAG_LANG_KEY = 'strong_content_tag_lang';
@@ -48,13 +65,47 @@ export function getContentLangTag() {
   if (typeof localStorage === 'undefined') return 'EN';
   // Tag v závorkách řídíme jazykem UI, aby nebyl mix (např. Definition (EN) v češtině).
   const ui = getUiLang();
-  if (ui === 'cs') return 'CZ';
-  if (ui === 'en') return 'EN';
-  if (ui === 'sk') return 'SK';
-  if (ui === 'pl') return 'PL';
+  
+  // Map UI language to content tag (brackets language)
+  const UI_TO_CONTENT_TAG = {
+    cs: 'CZ',
+    en: 'EN',
+    sk: 'SK',
+    pl: 'PL',
+    de: 'DE',
+    fr: 'FR',
+    es: 'ES',
+    it: 'IT',
+    pt: 'PT',
+    ru: 'RU',
+    da: 'DA',
+    fi: 'FI',
+    hu: 'HU',
+    nl: 'NL',
+    no: 'NO',
+    ro: 'RO',
+    sv: 'SV',
+  bg: 'BG',
+  el: 'EL',
+  ar: 'AR',
+  tr: 'TR',
+  'zh-cn': 'ZH_CN',
+  ja: 'JA',
+  ko: 'KO',
+  he: 'HE',
+  uk: 'UK'
+};
+  
+  const uiTag = UI_TO_CONTENT_TAG[ui];
+  // Pro základní UI jazyky (CS/EN/SK/PL/DE/FR/ES/IT/PT) mapujeme na odpovídající tag,
+  // pro ostatní používáme manuální nastavení, pokud existuje, jinak mapování nebo default.
+  const BASIC_UI = new Set(['cs', 'en', 'sk', 'pl', 'de', 'fr', 'es', 'it', 'pt']);
+  if (BASIC_UI.has(ui)) return uiTag || 'CZ';
+
+  // Fallback to stored manual tag or default based on target language
   const stored = String(localStorage.getItem(CONTENT_TAG_LANG_KEY) || '').trim();
   const manual = localStorage.getItem(CONTENT_TAG_LANG_MANUAL_KEY) === '1';
-  // Legacy migrace: staré uložené tagy bez "manual" příznaku ignorujeme a bereme dynamický default.
+  // Legacy migration: old stored tags without "manual" flag are ignored and we use dynamic default.
   if (stored && manual) return stored;
   return getDefaultContentTag();
 }
@@ -89,6 +140,12 @@ export const INLINE_UI_MESSAGES = {
   ru: {
     'toast.error.withMessage': '✗ Ошибка: {message}'
   },
+  uk: {
+    'toast.error.withMessage': '✗ Помилка: {message}'
+  },
+  bg: {
+    'toast.error.withMessage': '✗ Грешка: {message}'
+  },
   da: {
     'toast.error.withMessage': '✗ Error: {message}'
   },
@@ -121,6 +178,21 @@ export const INLINE_UI_MESSAGES = {
   },
   'zh-cn': {
     'toast.error.withMessage': '✗ 错误: {message}'
+  },
+  he: {
+    'toast.error.withMessage': '✗ Error: {message}'
+  },
+  ja: {
+    'toast.error.withMessage': '✗ Error: {message}'
+  },
+  ko: {
+    'toast.error.withMessage': '✗ Error: {message}'
+  },
+  uk: {
+    'toast.error.withMessage': '✗ Помилка: {message}'
+  },
+  bg: {
+    'toast.error.withMessage': '✗ Грешка: {message}'
   }
 };
 
@@ -173,7 +245,7 @@ export function validateUiMessages(messages) {
     const dict = messages[lang] || {};
     const missing = baseKeys.filter(key => !(key in dict));
     if (missing.length) {
-      console.warn(`[i18n] Missing keys in "${lang}":`, missing);
+      console.warn(`[i18n] Missing keys in "${lang}":`, missing)
     }
   }
 }
@@ -186,21 +258,18 @@ export function loadUiMessages(force = false) {
     try {
       loaded[DEFAULT_UI_LANG] = await fetchUiDictionary(DEFAULT_UI_LANG);
     } catch (err) {
-      console.warn('[i18n] Failed loading default UI dictionary, using inline fallback:', err);
       loaded[DEFAULT_UI_LANG] = fallback[DEFAULT_UI_LANG] || {};
     }
     await Promise.all(Array.from(UI_LANGS).filter(lang => lang !== DEFAULT_UI_LANG).map(async lang => {
       try {
         loaded[lang] = await fetchUiDictionary(lang);
       } catch (err) {
-        console.warn(`[i18n] Failed loading "${lang}" dictionary, using fallback:`, err);
         loaded[lang] = fallback[lang] || {};
       }
     }));
     try {
       await mergePromptPacksIntoLoaded(loaded);
     } catch (err) {
-      console.warn('[i18n] Failed merging prompt packs:', err);
     }
     UI_MESSAGES = loaded;
     validateUiMessages(UI_MESSAGES);

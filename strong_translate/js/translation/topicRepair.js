@@ -1,6 +1,7 @@
 import { PROVIDERS } from '../config.js';
 import { isSideFallbackAborted, sleepMsWithAbort } from '../ai/fallback.js';
 import { hasMeaningfulValue, isDefinitionLowQuality, isDefinitionLikelyEnglish } from './utils.js';
+import { sleepMs } from '../utils.js';
 import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPromptsResolve.js';
 
 export function createTopicRepairApi(deps) {
@@ -9,7 +10,7 @@ export function createTopicRepairApi(deps) {
     log, logError,
     showToast,
     saveProgress,
-    renderList, renderDetail, updateStats,
+    renderList, renderDetail, updateStats, updateFailedCount,
     TOPIC_LABELS, TOPIC_PROMPT_PRESET_MAP,
     callAIWithRetry,
     getPipelineModelForProvider, getCurrentApiKey,
@@ -17,6 +18,7 @@ export function createTopicRepairApi(deps) {
     parseWithOpenRouterNormalization, applyFallbacksToParsedMap,
     isAutoProviderEnabled,
     resolveProviderForInteractiveAction,
+    resolveMainBatchProvider,
     getFailedTopicsForFallback, getMissingTopicsForRepair,
     cloneTranslationTopicFields, shouldReplaceTopicValue,
     getProviderCooldownLeftSec,
@@ -194,6 +196,10 @@ function buildTopicRepairTasks(keys) {
   for (const key of keys) {
     const t = state.translated[key] || {};
     const missing = getMissingTopicsForRepair(t);
+    // Debug log
+    if (window.DEBUG_TOPIC_REPAIR) {
+      console.log('TopicRepair build:', key, 'translated:', t, 'missing:', missing);
+    }
     for (const topicId of missing) {
       tasks.push({
         key,
@@ -345,6 +351,12 @@ function startTopicRepairFlow(keys) {
     showToast(t('toast.topicRepair.noEligible'));
     return;
   }
+  // Reset bulk filters to show all topics for new flow
+  state.bulkTopicId = 'all';
+  state.bulkListTopicFilter = defaultBulkListTopicFilter();
+  // Reset strategy and paused state (top-level)
+  state.repairStrategy = 'sequential';
+  state.paused = true;
   state.topicRepairState = {
     tasks,
     paused: true,
@@ -411,7 +423,7 @@ async function processTopicRepairQueue() {
     while (state.topicRepairState && !state.topicRepairState.closed) {
       if (state.topicRepairState.repairStrategy !== 'sequential') break;
       if (state.topicRepairState.paused) {
-        await sleep(350);
+        await sleepMs(350);
         continue;
       }
       const nextTask = findNextTopicRepairWaitingTask(state.topicRepairState);
@@ -421,7 +433,7 @@ async function processTopicRepairQueue() {
         showToast(t('toast.topicRepair.enableProvider'));
         state.topicRepairState.paused = true;
         updateTopicRepairModalUI();
-        await sleep(500);
+        await sleepMs(500);
         continue;
       }
       nextTask.status = 'running';
@@ -444,9 +456,6 @@ async function processTopicRepairQueue() {
           const raw = await callAIWithRetry(prov, apiKey, model, messages);
           const rawText = String(raw?.content || '').trim();
           log(t('topicRepair.log.rawRepairPrinted', { key: nextTask.key, topic: nextTask.topicId }));
-          console.groupCollapsed(`🤖 RAW AI oprava ${nextTask.key}.${nextTask.topicId} (${prov}/${model})`);
-          console.log(rawText || t('topicRepair.log.emptyResponse'));
-          console.groupEnd();
 
           // Kontrola dalších témat: zobraz jen skutečně označená pole v RAW odpovědi (striktní parser).
           state.translated[nextTask.key] = state.translated[nextTask.key] || {};
@@ -546,7 +555,7 @@ async function processTopicRepairQueue() {
       }
       updateTopicRepairModalUI();
       saveProgress();
-      await sleep(80);
+      await sleepMsMs(80);
     }
     updateTopicRepairModalUI();
     if (state.topicRepairState && !state.topicRepairState.closed) {
@@ -722,20 +731,22 @@ function defaultBulkListTopicFilter() {
 }
 
 function getTopicRepairModalVisibleTasks(state) {
-  if (!state || !Array.isArray(state.tasks)) return [];
+  const topicRepairState = state.topicRepairState;
+  if (!topicRepairState || !Array.isArray(topicRepairState.tasks)) return [];
   const bid = state.bulkTopicId || 'all';
   if (bid === 'all') {
     const m = state.bulkListTopicFilter || defaultBulkListTopicFilter();
-    return state.tasks.filter(t => m[t.topicId] !== false);
+    return topicRepairState.tasks.filter(t => m[t.topicId] !== false);
   }
-  return state.tasks.filter(t => t.topicId === bid);
+  return topicRepairState.tasks.filter(t => t.topicId === bid);
 }
 
 /** Další čekající úloha v pořadí `topicRepairState.tasks`, ale jen pokud spadá do aktuálního filtru tématu. */
 function findNextTopicRepairWaitingTask(state) {
-  if (!state || !Array.isArray(state.tasks)) return null;
+  const topicRepairState = state.topicRepairState;
+  if (!topicRepairState || !Array.isArray(topicRepairState.tasks)) return null;
   const vset = new Set(getTopicRepairModalVisibleTasks(state));
-  return state.tasks.find(t => t.status === 'waiting' && vset.has(t)) || null;
+  return topicRepairState.tasks.find(t => t.status === 'waiting' && vset.has(t)) || null;
 }
 
 const TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX = 'strong_topic_repair_batch_prompt_v1_';
@@ -936,7 +947,7 @@ async function waitTopicRepairSequentialIdle(maxMs = 60000) {
     const running = !!state.topicRepairState?.tasks?.some(t => t.status === 'running');
     const current = !!state.topicRepairState?.currentTask;
     if (!running && !current) return true;
-    await sleep(120);
+    await sleepMsMs(120);
   }
   return false;
 }
@@ -979,7 +990,7 @@ function initTopicRepairBulkRunInputs() {
 
 /** Jedno téma — vnitřní smyčka dávek (režim „Vše“ i jedno téma z editoru). */
 async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate, onlyFailed, bs) {
-  const tasks = state.tasks.filter(t => t && t.topicId === topicId && t.includeBulk !== false);
+  const tasks = state.topicRepairState.tasks.filter(t => t && t.topicId === topicId && t.includeBulk !== false);
   const picked = onlyFailed
     ? tasks.filter(t => t.status === 'failed' || !hasMeaningfulValue(t.candidateValue))
     : tasks;
@@ -1015,14 +1026,11 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
 
     const rawText = String(raw?.content || '').trim();
     log(t('topicRepair.log.rawBatchPrinted', { topic: topicId }));
-    console.groupCollapsed(`🤖 RAW AI batch oprava ${topicId} (${prov}/${model})`);
-    console.log(rawText || t('topicRepair.log.emptyResponse'));
-    console.groupEnd();
 
-    const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
-    for (const key of batchKeys) {
-      const task = state.tasks.find(t => t.key === key && t.topicId === topicId);
-      if (!task) continue;
+     const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
+     for (const key of batchKeys) {
+       const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
+       if (!task) continue;
       const val = String(parsedMap[key] || '').trim();
       if (hasMeaningfulValue(val)) {
         task.candidateValue = val;
@@ -1047,7 +1055,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       const stopAt = Date.now() + Math.max(0, interval) * 1000;
       while (Date.now() < stopAt) {
         if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-        await sleep(250);
+        await sleepMsMs(250);
       }
     }
   }
@@ -1116,7 +1124,7 @@ async function runTopicRepairBulkTranslation() {
         }
         const res = await runTopicRepairBulkTranslationCore(state, topicId, promptTemplate, onlyFailed, bs);
         if (res.count > 0) ranAny = true;
-        if (ti < topicsToRun.length - 1 && iv0 > 0) await sleep(iv0 * 1000);
+        if (ti < topicsToRun.length - 1 && iv0 > 0) await sleepMs(iv0 * 1000);
       }
       showToast(ranAny ? t('topicRepair.bulkAllDone', { count: topicsToRun.length }) : t('topicRepair.bulkAllNone'));
     } else {
@@ -1297,9 +1305,6 @@ async function runTopicPromptAI() {
     resultInput.value = rawText;
     log(t('topicRepair.log.topicTranslationEngine', { engine: getTranslationEngineLabel(raw, prov, model) }));
     log(t('topicRepair.log.rawTopicPrinted', { key: state.topicPromptState.key, topic: state.topicPromptState.topicId }));
-    console.groupCollapsed(`🤖 RAW AI ${state.topicPromptState.key}.${state.topicPromptState.topicId}`);
-    console.log(rawText || t('topicRepair.log.emptyResponse'));
-    console.groupEnd();
   } catch (e) {
     logError('runTopicPromptAI', e, { key: state.topicPromptState.key, topic: state.topicPromptState.topicId });
     showToast(t('toast.error.withMessage', { message: e.message }));
@@ -1418,33 +1423,33 @@ function countBracketRefs(text) {
 }
 
 function scoreTopicRepairText(topicId, text) {
-  const t = String(text || '').trim();
-  if (!hasMeaningfulValue(t)) return { score: 0, notes: [t('topicRepair.analysis.note.empty')] };
+ const textStr = String(text || '').trim();
+  if (!hasMeaningfulValue(textStr)) return { score: 0, notes: [t('topicRepair.analysis.note.empty')] };
   const notes = [];
   let score = 0;
 
   if (topicId === 'definice') {
-    const len = t.length;
+    const len = textStr.length;
     score += Math.min(6, Math.floor(len / 120));
-    score += Math.min(3, countBracketRefs(t));
-    score += Math.min(3, Math.floor(countCzDiacritics(t) / 6));
-    if (isDefinitionLowQuality(t)) {
+    score += Math.min(3, countBracketRefs(textStr));
+    score += Math.min(3, Math.floor(countCzDiacritics(textStr) / 6));
+    if (isDefinitionLowQuality(textStr)) {
       score -= 8;
       notes.push(t('topicRepair.analysis.note.definitionLowQuality'));
     }
-    if (isDefinitionLikelyEnglish(t)) {
+    if (isDefinitionLikelyEnglish(textStr)) {
       score -= 6;
       notes.push(t('topicRepair.analysis.note.definitionEnglishTone'));
     }
-    score -= Math.min(4, countEnglishNoiseWords(t));
+    score -= Math.min(4, countEnglishNoiseWords(textStr));
     return { score, notes };
   }
 
   if (topicId === 'vyznam') {
-    const words = t.split(/\s+/).filter(Boolean).length;
+    const words = textStr.split(/\s+/).filter(Boolean).length;
     score += Math.min(4, words);
-    score += Math.min(3, Math.floor(countCzDiacritics(t) / 2));
-    score -= Math.min(4, countEnglishNoiseWords(t));
+    score += Math.min(3, Math.floor(countCzDiacritics(textStr) / 2));
+    score -= Math.min(4, countEnglishNoiseWords(textStr));
     if (words > 14) {
       score -= 2;
       notes.push(t('topicRepair.analysis.note.meaningTooLong'));
@@ -1453,40 +1458,40 @@ function scoreTopicRepairText(topicId, text) {
   }
 
   if (topicId === 'kjv') {
-    score += Math.min(5, Math.floor(t.length / 40));
-    score += Math.min(3, countBracketRefs(t));
-    score += Math.min(3, Math.floor(countCzDiacritics(t) / 4));
-    score -= Math.min(5, countEnglishNoiseWords(t));
+    score += Math.min(5, Math.floor(textStr.length / 40));
+    score += Math.min(3, countBracketRefs(textStr));
+    score += Math.min(3, Math.floor(countCzDiacritics(textStr) / 4));
+    score -= Math.min(5, countEnglishNoiseWords(textStr));
     return { score, notes };
   }
 
   if (topicId === 'pouziti') {
-    const refs = countBracketRefs(t);
+    const refs = countBracketRefs(textStr);
     score += Math.min(6, refs * 2);
-    score += Math.min(3, Math.floor(t.length / 80));
-    score += Math.min(2, Math.floor(countCzDiacritics(t) / 6));
-    score -= Math.min(4, countEnglishNoiseWords(t));
+    score += Math.min(3, Math.floor(textStr.length / 80));
+    score += Math.min(2, Math.floor(countCzDiacritics(textStr) / 6));
+    score -= Math.min(4, countEnglishNoiseWords(textStr));
     if (refs === 0) notes.push(t('topicRepair.analysis.note.usageFewRefs'));
     return { score, notes };
   }
 
   if (topicId === 'puvod') {
-    score += Math.min(5, Math.floor(t.length / 60));
-    score += Math.min(3, Math.floor(countCzDiacritics(t) / 5));
-    score -= Math.min(4, countEnglishNoiseWords(t));
-    if (!/(řec|hebr|lat|sém|indoev|kořen|odvoz)/i.test(t)) notes.push(t('topicRepair.analysis.note.originMissingContext'));
+    score += Math.min(5, Math.floor(textStr.length / 60));
+    score += Math.min(3, Math.floor(countCzDiacritics(textStr) / 5));
+    score -= Math.min(4, countEnglishNoiseWords(textStr));
+    if (!/(řec|hebr|lat|sém|indoev|kořen|odvoz)/i.test(textStr)) notes.push(t('topicRepair.analysis.note.originMissingContext'));
     return { score, notes };
   }
 
   if (topicId === 'specialista') {
-    const s = getSpecialistaQualityScore(t);
+    const s = getSpecialistaQualityScore(textStr);
     score += s;
     notes.push(t('topicRepair.analysis.note.specialistScore', { score: s }));
     return { score, notes };
   }
 
-  score += Math.min(6, Math.floor(t.length / 80));
-  score -= Math.min(4, countEnglishNoiseWords(t));
+  score += Math.min(6, Math.floor(textStr.length / 80));
+  score -= Math.min(4, countEnglishNoiseWords(textStr));
   return { score, notes };
 }
 

@@ -172,8 +172,9 @@
     <div class="hdr-btns">
       <button class="hbtn" id="btnImport" onclick="document.getElementById('importFileInput').click()" aria-label="Importovat TXT nebo JSON soubor s překlady">⬆ Import TXT/JSON</button>
       <input type="file" id="importFileInput" class="is-hidden" accept=".txt,.json,application/json,text/plain" onchange="importFile(this)" aria-label="Výběr TXT nebo JSON souboru k importu">
-      <button class="hbtn auto" id="btnAuto" onclick="toggleAuto()" aria-label="Spustit automatický překlad">▶ AUTO</button>
-      <button class="hbtn" id="btnToggleList" onclick="toggleListPane()" title="Skrýt/ukázat seznam" aria-label="Skrýt/ukázat seznam">≡ Seznam</button>
+       <button class="hbtn auto" id="btnAuto" onclick="toggleAuto()" aria-label="Spustit automatický překlad">▶ AUTO</button>
+       <button class="hbtn" id="btnEditPrompt" onclick="showPromptEditModal()" title="Zobrazit a upravit AI prompt" aria-label="Upravit AI prompt">📝 Prompt</button>
+       <button class="hbtn" id="btnToggleList" onclick="toggleListPane()" title="Skrýt/ukázat seznam" aria-label="Skrýt/ukázat seznam">≡ Seznam</button>
       <button class="hbtn" id="btnStep" onclick="translateNext()" aria-label="Přeložit další dávku">⚡ Dávka</button>
       <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů (nejdřív modal, pak ▶ Test provideru)" aria-label="Test modelů — otevře nastavení">🧪 Test modelů</button>
       <button class="hbtn" id="btnI18nHelpTop" onclick="openI18nToolHelpModal()" title="Nápověda">❓</button>
@@ -376,15 +377,23 @@
           <option value="20">20 hesel</option>
         </select>
       </div>
-      <div class="mobl-set-row">
-        <label id="settingsSpeedLabel">Rychlost</label>
-        <select id="intervalRunMobile" aria-label="Rychlost" title="Rychlost">
-          <option value="5">5s</option>
-          <option value="10">10s</option>
-          <option value="20">20s</option>
-          <option value="30">30s</option>
-        </select>
-      </div>
+  <div class="mobl-set-row">
+    <label id="settingsSpeedLabel">Rychlost</label>
+    <select id="intervalRunMobile" aria-label="Rychlost" title="Rychlost">
+      <option value="5">5s</option>
+      <option value="10">10s</option>
+      <option value="20">20s</option>
+      <option value="30">30s</option>
+    </select>
+  </div>
+  <div class="mobl-set-row">
+    <label id="settingsTokenLimitLabel">Limit tokenů</label>
+    <input type="number" id="tokenLimitRunMobile" min="0" step="100" placeholder="0 = vypnuto"
+      class="auto-token-limit-input"
+      title="Po dosažení této hodnoty se AUTO zastaví. 0 = bez limitu."
+      aria-label="Limit tokenů pro automatické zastavení překladu">
+  </div>
+</div>
 <button class="mobl-btn grn" id="btnSettingsSave" onclick="closeSettingsModal()" aria-label="Uložit">✓ Uložit</button>
       <button class="mobl-btn cancel" id="btnSettingsClose" onclick="closeSettingsModal()" aria-label="Zavřít">✕ Zavřít</button>
     </div>
@@ -734,8 +743,16 @@
     <option value="ro">Rumunština</option>
     <option value="sv">Švédština</option>
     <option value="ar">Arabština</option>
+    <option value="bg">Bulharština</option>
+    <option value="de">Němčina</option>
     <option value="el">Řečtina</option>
+    <option value="fr">Francouzština</option>
+    <option value="he">Hebrejština</option>
+    <option value="ja">Japonština</option>
+    <option value="ko">Korejština</option>
+    <option value="ru">Ruština</option>
     <option value="tr">Turečtina</option>
+    <option value="uk">Ukrajinština</option>
     <option value="zh-cn">Čínština</option>
   </select>
 </div>
@@ -755,36 +772,7 @@
     <option value="tr">Turečtina</option>
   </select>
 </div>
-      <div class="mobl-set-row">
-        <label id="contentTagLanguageLabel" for="contentTagLanguage">Kód cíle v textech (…)</label>
-        <select id="contentTagLanguage" class="prompt-ai-select">
-          <option value="CZ">—</option>
-          <option value="SK">—</option>
-          <option value="PL">—</option>
-          <option value="DE">—</option>
-          <option value="FR">—</option>
-          <option value="ES">—</option>
-          <option value="IT">—</option>
-          <option value="PT">—</option>
-          <option value="RU">—</option>
-          <option value="UK">—</option>
-          <option value="BG">—</option>
-          <option value="RO">—</option>
-          <option value="HU">—</option>
-          <option value="NL">—</option>
-          <option value="SV">—</option>
-          <option value="DA">—</option>
-          <option value="NO">—</option>
-          <option value="FI">—</option>
-          <option value="EL">—</option>
-          <option value="TR">—</option>
-          <option value="AR">—</option>
-          <option value="zh-CN">—</option>
-          <option value="JA">—</option>
-          <option value="KO">—</option>
-        </select>
-        <div id="contentTagLanguageHint" class="content-tag-language-hint"></div>
-      </div>
+
       <div class="mobl-set-row prompt-lang-i18n-tool-row">
         <button type="button" class="prompt-btn lang" id="btnI18nTranslateTool" onclick="showI18nToolModal()">🌍 Překladač/Editor Jazyka rozhraní</button>
       </div>
@@ -970,6 +958,26 @@
     </div>
   </div>
 
-   <script type="module" src="js/main.js"></script>
-</body>
-</html>
+   <div id="editPromptModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeEditPromptModal()">
+     <div class="prompt-modal-box i18n-tool-modal-box" style="max-width: 900px; max-height: 92vh;" onclick="event.stopPropagation()">
+       <div class="prompt-modal-title">📝 Upravit AI prompt (systém + uživatelský)</div>
+       <div class="prompt-actions prompt-actions-gap-0">
+         <button type="button" class="prompt-btn" onclick="restoreDefaultPrompt()">🔄 Obnovit výchozí</button>
+         <button type="button" class="prompt-btn ok" onclick="saveEditedPrompt()">💾 Uložit prompt</button>
+         <button type="button" class="prompt-btn cancel" onclick="closeEditPromptModal()">✕ Zavřít</button>
+       </div>
+       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 70vh; overflow: auto;">
+         <div>
+           <label for="editSystemPrompt" class="i18n-tool-label">Systémový prompt (role: system)</label>
+           <textarea id="editSystemPrompt" class="i18n-tool-cmd i18n-tool-ai-prompt" style="height: 32vh; font-size: 12px;" spellcheck="false"></textarea>
+         </div>
+         <div>
+           <label for="editUserPrompt" class="i18n-tool-label">Uživatelský prompt (role: user)</label>
+           <textarea id="editUserPrompt" class="i18n-tool-cmd i18n-tool-ai-prompt" style="height: 32vh; font-size: 12px;" spellcheck="false"></textarea>
+         </div>
+       </div>
+       <div id="editPromptStatus" class="i18n-tool-status" style="margin-top: 8px;"></div>
+     </div>
+   </div>
+
+    <script type="module" src="js/main.js"></script>

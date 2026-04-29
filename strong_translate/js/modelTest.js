@@ -20,7 +20,8 @@ export function createModelTestUiApi(deps) {
     isModelTestPromptCompareEnabled,
     getModelTestPromptType,
     getModelTestPromptCompareType,
-    getModelTestCustomPromptText
+    getModelTestCustomPromptText,
+    getModelTestPromptTemplate
   } = deps;
 
   function showModelTestModal(providerLabel, clearOutput = false) {
