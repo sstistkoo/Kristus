@@ -1822,6 +1822,7 @@ const {
 const settingsApi = createSettingsApi({
   MODEL_TEST_PINNED_MODELS, MODEL_TEST_MODEL_STORAGE_KEY, PIPELINE_SECONDARY_ENABLED_KEY,
   setAutoProviderEnabled: (...a) => setAutoProviderEnabled(...a),
+  updateAutoProviderCountdowns: (...a) => updateAutoProviderCountdowns(...a),
 });
 const {
   getApiKeyForModelTest, getPinnedModelOptionsForProvider, getPinnedModelQueue,

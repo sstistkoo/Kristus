@@ -163,15 +163,26 @@ function getDefaultContentTagForTarget(targetRaw) {
 
  function showSettingsModal() {
    initPipelineModelSelectorsInSettingsModal();
-   document.getElementById('batchSizeRunMobile').value = document.getElementById('batchSize').value;
-   document.getElementById('intervalRunMobile').value = document.getElementById('interval').value;
+   const batchSizeRunMobile = document.getElementById('batchSizeRunMobile');
+   const batchSize = document.getElementById('batchSize');
+   if (batchSizeRunMobile && batchSize) {
+     batchSizeRunMobile.value = batchSize.value;
+   }
+   const intervalRunMobile = document.getElementById('intervalRunMobile');
+   const interval = document.getElementById('interval');
+   if (intervalRunMobile && interval) {
+     intervalRunMobile.value = interval.value;
+   }
    const autoTokenLimitEl = document.getElementById('autoTokenLimit');
    const tokenLimitRunMobileEl = document.getElementById('tokenLimitRunMobile');
+   console.log('[showSettingsModal] autoTokenLimit:', autoTokenLimitEl, 'tokenLimitRunMobile:', tokenLimitRunMobileEl);
    if (autoTokenLimitEl && tokenLimitRunMobileEl) {
      tokenLimitRunMobileEl.value = autoTokenLimitEl.value;
-   }
-   document.getElementById('settingsModal').classList.add('show');
- }
+   } else {
+    console.warn('showSettingsModal: element missing', { autoTokenLimitEl, tokenLimitRunMobileEl });
+  }
+  document.getElementById('settingsModal').classList.add('show');
+}
 
 function closeSettingsModal() {
   const mainGroq = document.getElementById('providerRunMainGroqModel')?.value || '';
@@ -189,26 +200,27 @@ function closeSettingsModal() {
    updateAutoProviderCountdowns();
    const providerEl = document.getElementById('provider');
    if (providerEl) providerEl.value = 'groq';
-   const modelEl = document.getElementById('model');
-   if (mainGroq && modelEl) modelEl.value = mainGroq;
+   const mainGroqEl = document.getElementById('model');
+   if (mainGroq && mainGroqEl) mainGroqEl.value = mainGroq;
    const batchSizeRunMobile = document.getElementById('batchSizeRunMobile');
    const batchSize = document.getElementById('batchSize');
    if (batchSizeRunMobile && batchSize) batchSize.value = batchSizeRunMobile.value;
    const intervalRunMobile = document.getElementById('intervalRunMobile');
    const interval = document.getElementById('interval');
    if (intervalRunMobile && interval) interval.value = intervalRunMobile.value;
+   // Set token limit BEFORE init calls – original order
    const tokenLimitRunMobile = document.getElementById('tokenLimitRunMobile');
    const autoTokenLimit = document.getElementById('autoTokenLimit');
    if (tokenLimitRunMobile && autoTokenLimit) {
      autoTokenLimit.value = tokenLimitRunMobile.value;
    } else {
-     console.warn('tokenLimitRunMobile or autoTokenLimit not found', { tokenLimitRunMobile, autoTokenLimit });
+     console.warn('closeSettingsModal: tokenLimitRunMobile or autoTokenLimit not found (initial)', { tokenLimitRunMobile, autoTokenLimit });
    }
    onProviderChange();
-  initPipelineModelSelectors();
-  initRunSelects();
-  updateSetupCompactSummary();
-  document.getElementById('settingsModal').classList.remove('show');
+   initPipelineModelSelectors();
+   initRunSelects();
+   updateSetupCompactSummary();
+   document.getElementById('settingsModal').classList.remove('show');
 }
 
 // â”€â”€ Limits Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
