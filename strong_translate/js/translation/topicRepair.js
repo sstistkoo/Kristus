@@ -682,7 +682,22 @@ function applyTopicRepairSelected() {
         miniBtn.classList.remove('topicRepairMiniBusy');
       }
     } else {
-      showToast(t('toast.topic.overwritten.count', { count: applied }));
+      // Stále jsou nevyřešená témata — obnovíme tasky a překreslíme modal
+      const newTasks = buildTopicRepairTasks(keysInModal);
+      if (newTasks.length === 0) {
+        showToast(t('toast.topic.overwritten', { count: applied }));
+        stopTopicRepairTicker();
+        state.topicRepairState.closed = true;
+        closeTopicRepairModalSafe();
+        state.topicRepairState = null;
+        const miniBtn = document.getElementById('btnTopicRepairMini');
+        if (miniBtn) miniBtn.style.display = 'none';
+      } else {
+        state.topicRepairState.tasks = newTasks;
+        updateTopicRepairModalUI();
+        renderTopicRepairModal();
+        showToast(t('toast.topic.overwritten.count', { count: applied }));
+      }
     }
   }
   syncTopicRepairMinimizeBusyIndicator();
@@ -1055,7 +1070,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       const stopAt = Date.now() + Math.max(0, interval) * 1000;
       while (Date.now() < stopAt) {
         if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-        await sleepMsMs(100);
+        await sleepMsMs(250);
       }
     }
   }
@@ -1068,11 +1083,6 @@ async function runTopicRepairBulkTranslation() {
   if (state.topicRepairBulkRunning) {
     state.topicRepairBulkAbortVersion++;
     showToast(t('toast.topicRepair.bulkStopping'));
-    const bulkBtn = document.getElementById('topicRepairBulkRunBtn');
-    if (bulkBtn) {
-      bulkBtn.disabled = true;
-      bulkBtn.textContent = t('topicRepair.bulk.button');
-    }
     return;
   }
   syncTopicRepairBulkRunInputsToHidden();
