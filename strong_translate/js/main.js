@@ -703,7 +703,7 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
         // ¦-? DEBUG LOG: Kompletní prompt odeslaný AI (kontrola formátu, tokeny)
         // ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
         batch.forEach(e => {
-          const def = (e.definice || e.def || '').substring(0, 80);
+           const def = (e.definice || e.def || '');
         });
         // ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 
@@ -4367,18 +4367,18 @@ function printRecentAICalls() {
       if (call.messages && call.messages.length) {
         console.log('%c?? Prompt(s):', 'color: #0066cc; font-weight: bold;');
         call.messages.forEach((msg) => {
-          const preview = String(msg.content || '').replace(/\n/g, '\n    ').substring(0, 300);
-          console.log(
-            `  ${msg.role.toUpperCase()}:`,
-            `\n    ${preview}${msg.content && msg.content.length > 300 ? '...' : ''}`
-          );
-        });
-      }
-      if (call.response) {
-        const preview = String(call.response).replace(/\n/g, '\n    ').substring(0, 400);
-        console.log('%c?? AI Response:', 'color: #cc6600; font-weight: bold;',
-          `\n    ${preview}${call.response.length > 400 ? '...' : ''}`);
-      }
+         const preview = String(msg.content || '').replace(/\n/g, '\n    ');
+         console.log(
+           `  ${msg.role.toUpperCase()}:`,
+           `\n    ${preview}`
+         );
+       });
+     }
+     if (call.response) {
+       const preview = String(call.response).replace(/\n/g, '\n    ');
+       console.log('%c?? AI Response:', 'color: #cc6600; font-weight: bold;',
+         `\n    ${preview}`);
+     }
       if (call.usage) {
         const inT = call.usage.prompt_tokens || call.usage.promptTokenCount || call.usage.input_tokens || 0;
         const outT = call.usage.completion_tokens || call.usage.candidatesTokenCount || call.usage.output_tokens || 0;

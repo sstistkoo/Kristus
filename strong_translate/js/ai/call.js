@@ -43,18 +43,18 @@ function logAICallToConsole(callEntry) {
   if (error) {
     console.log('%c❌ Error:', 'color: #ff0000; font-weight: bold;', error);
   }
-  if (messages && messages.length) {
-    console.log('%c📨 Prompt(s):', 'color: #0066cc; font-weight: bold;');
-    messages.forEach((msg) => {
-      const preview = String(msg.content || '').replace(/\n/g, '\n    ').substring(0, 300);
-      console.log(`  ${msg.role.toUpperCase()}:\n    ${preview}${msg.content && msg.content.length > 300 ? '...' : ''}`);
-    });
-  }
-  if (response) {
-    const preview = String(response).replace(/\n/g, '\n    ').substring(0, 400);
-    console.log('%c📤 AI Response:', 'color: #cc6600; font-weight: bold;',
-      `\n    ${preview}${response.length > 400 ? '...' : ''}`);
-  }
+   if (messages && messages.length) {
+     console.log('%c📨 Prompt(s):', 'color: #0066cc; font-weight: bold;');
+     messages.forEach((msg) => {
+       const preview = String(msg.content || '').replace(/\n/g, '\n    ');
+       console.log(`  ${msg.role.toUpperCase()}:\n    ${preview}`);
+     });
+   }
+   if (response) {
+     const preview = String(response).replace(/\n/g, '\n    ');
+     console.log('%c📤 AI Response:', 'color: #cc6600; font-weight: bold;',
+       `\n    ${preview}`);
+   }
   if (usage) {
     const inT = usage.prompt_tokens || usage.promptTokenCount || usage.input_tokens || 0;
     const outT = usage.completion_tokens || usage.candidatesTokenCount || usage.output_tokens || 0;
