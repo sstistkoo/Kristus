@@ -1076,10 +1076,39 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       throw new Error('missing_api_key');
     }
 
-    const raw = await callAIWithRetry(prov, apiKey, model, [
-      { role: 'system', content: getResolvedSystemMessage() },
-      { role: 'user', content: enforceSpecialistaFormat(userContent) }
-    ]);
+  // Reset čítačů při spuštění nové dávky
+  if (!window.repairStats) window.repairStats = { total: 0, ok: 0, err: 0, lastError: '' };
+  function updRepairUI() {
+    const pan = document.getElementById('repairStatPanel');
+    if (!pan) return;
+    const s = window.repairStats;
+    pan.style.display = (s.total > 0) ? 'block' : 'none';
+    document.getElementById('statTotal').textContent = s.total;
+    document.getElementById('statOk').textContent = s.ok;
+    document.getElementById('statErr').textContent = s.err;
+    document.getElementById('statLastError').textContent = s.lastError;
+  }
+  updRepairUI();
+
+    let raw;
+    try {
+      raw = await callAIWithRetry(prov, apiKey, model, [
+        { role: 'system', content: getResolvedSystemMessage() },
+        { role: 'user', content: enforceSpecialistaFormat(userContent) }
+      ]);
+      // Úspěch - zvětšíme okno
+      window.repairStats.total += batchKeys.length;
+      window.repairStats.ok += batchKeys.length;
+    } catch (e) {
+      // Chyba - zaznamenáme
+      window.repairStats.total += batchKeys.length;
+      window.repairStats.err += batchKeys.length;
+      window.repairStats.lastError = `[${prov}] ${e.message || String(e)}`.substring(0, 60);
+    }
+    updRepairUI();
+    if (!raw) return { count: 0, error: true };
+
+
     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
 
     const rawText = String(raw?.content || '').trim();

@@ -269,8 +269,12 @@
         </div>
       </div>
        <button class="hbtn list-wide-action is-hidden" id="btnSelectAllVisible" onclick="selectAll()" aria-label="Označit všechna zobrazená hesla">☑ Označit vše zobrazené</button>
-       <button class="hbtn grn list-wide-action list-wide-action-secondary is-hidden" id="btnTranslateSelected" onclick="translateSelected()" aria-label="Přeložit vybraná hesla">⚡ Přeložit vybrané</button>
-       <div class="list-scroll" id="listScroll">
+        <button class="hbtn grn list-wide-action list-wide-action-secondary is-hidden" id="btnTranslateSelected" onclick="translateSelected()" aria-label="Přeložit vybraná hesla">⚡ Přeložit vybrané</button>
+        <div id="repairStatPanel" style="display:none; margin:8px 0; padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; text-align:center; background:var(--bg3); border:1px solid var(--brd);">
+          📤 Posláno: <b id="statTotal">0</b> | ✅ OK: <b id="statOk">0</b> | ❌ Chyby: <b id="statErr">0</b>
+          <span id="statLastError" style="color:var(--red); margin-left:10px;"></span>
+        </div>
+        <div class="list-scroll" id="listScroll">
          <div class="phantom-spacer"></div>
          <div class="visible-items"></div>
        </div>
