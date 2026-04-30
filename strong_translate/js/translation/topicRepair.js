@@ -1556,28 +1556,28 @@ function scoreTopicRepairText(topicId, text) {
 function verdictTopicRepairCompare(prevScore, nextScore) {
   if (!Number.isFinite(prevScore) || !Number.isFinite(nextScore)) return { kind: 'unclear', label: t('topicRepair.analysis.verdict.unclear'), tone: 'var(--txt3)' };
   const d = nextScore - prevScore;
-  if (nextScore <= 0 && prevScore > 0) return { kind: 'worse', label: t('topicRepair.analysis.verdict.worse'), tone: 'var(--red)' };
-  if (d >= 2) return { kind: 'better', label: t('topicRepair.analysis.verdict.better'), tone: 'var(--acc3)' };
-  if (d <= -2) return { kind: 'worse', label: t('topicRepair.analysis.verdict.worse'), tone: 'var(--red)' };
+  if (nextScore <= 0 && prevScore > 0) return { kind: 'better', label: t('topicRepair.analysis.verdict.better'), tone: 'var(--acc3)' };
+  if (d >= 2) return { kind: 'worse', label: t('topicRepair.analysis.verdict.worse'), tone: 'var(--red)' };
+  if (d <= -2) return { kind: 'better', label: t('topicRepair.analysis.verdict.better'), tone: 'var(--acc3)' };
   return { kind: 'similar', label: t('topicRepair.analysis.verdict.similar'), tone: 'var(--txt3)' };
 }
 
-function formatTopicRepairQuickCompare(topicId, previousValue, candidateValue) {
-  const prev = String(previousValue || '').trim();
-  const next = String(candidateValue || '').trim();
-  if (!hasMeaningfulValue(next)) {
-    return `<div style="margin-top:6px;padding:8px;border:1px dashed var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt3)"><b>${t('topicRepair.analysis.title')}</b> ${t('topicRepair.analysis.cannotCompare')}</div>`;
+  function formatTopicRepairQuickCompare(topicId, previousValue, candidateValue) {
+    const prev = String(previousValue || '').trim();
+    const next = String(candidateValue || '').trim();
+    if (!hasMeaningfulValue(next)) {
+      return `<div style="margin-top:6px;padding:8px;border:1px dashed var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt3)"><b>${t('topicRepair.analysis.title')}</b> ${t('topicRepair.analysis.cannotCompare')}</div>`;
+    }
+    const p = scoreTopicRepairText(topicId, prev);
+    const n = scoreTopicRepairText(topicId, next);
+    const v = verdictTopicRepairCompare(p.score, n.score);
+    const notes = [...new Set([...(p.notes || []), ...(n.notes || [])])].slice(0, 3);
+    const notesHtml = notes.length ? ` · ${notes.map(x => escHtml(x)).join(' · ')}` : '';
+    return `<div style="margin-top:6px;padding:8px;border:1px solid var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt2)">
+     <b>${t('topicRepair.analysis.title')}</b> <span style="color:${v.tone};font-weight:bold">${escHtml(v.label)}</span>
+     <span style="color:var(--txt3)">(${t('topicRepair.analysis.score', { from: p.score, to: n.score })})</span>${notesHtml}
+   </div>`;
   }
-  const p = scoreTopicRepairText(topicId, prev);
-  const n = scoreTopicRepairText(topicId, next);
-  const v = verdictTopicRepairCompare(p.score, n.score);
-  const notes = [...new Set([...(p.notes || []), ...(n.notes || [])])].slice(0, 3);
-  const notesHtml = notes.length ? ` · ${notes.map(x => escHtml(x)).join(' · ')}` : '';
-  return `<div style="margin-top:6px;padding:8px;border:1px solid var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt2)">
-    <b>${t('topicRepair.analysis.title')}</b> <span style="color:${v.tone};font-weight:bold">${escHtml(v.label)}</span>
-    <span style="color:var(--txt3)">(${t('topicRepair.analysis.score', { from: p.score, to: n.score })})</span>${notesHtml}
-  </div>`;
-}
 
 function closeTopicPromptModal() {
   const modal = document.getElementById('topicPromptModal');
