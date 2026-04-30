@@ -4049,18 +4049,24 @@ const { download, exportTXT, exportJSON, exportRange } = createExportApi({
    // Also log to console
  }
 
- function logTokenEntry(provider, inT, outT, total) {
-  state.totalTokens.in += inT;
-  state.totalTokens.out += outT;
-  state.totalTokens.total += total;
-  refreshTokenStatsDisplay();
+function logTokenEntry(provider, inT, outT, total) {
+   if (provider === 'groq') {
+     state.groqTokens.in += inT;
+     state.groqTokens.out += outT;
+     state.groqTokens.total += total;
+   }
+   // Update total tokens for all providers (used elsewhere)
+   state.totalTokens.in += inT;
+   state.totalTokens.out += outT;
+   state.totalTokens.total += total;
+   refreshTokenStatsDisplay();
 
-  if (state.autoRunning && isAutoTokenLimitReached()) {
-    stopAuto();
-    log(t('auto.log.stoppedTokenLimit'));
-    showToast(t('toast.auto.stoppedTokenLimit'));
-  }
-}
+   if (state.autoRunning && isAutoTokenLimitReached()) {
+     stopAuto();
+     log(t('auto.log.stoppedTokenLimit'));
+     showToast(t('toast.auto.stoppedTokenLimit'));
+   }
+ }
 
 // Preview modal pro hromadny preklad
 

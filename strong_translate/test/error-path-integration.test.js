@@ -44,11 +44,12 @@ test('auto error-path: runAutoStep stops and toasts when groq is disabled', asyn
     strong_auto_provider_enabled_groq: '0'
   });
 
-  const snap = {
-    autoRunning: state.autoRunning,
-    autoStepRunning: state.autoStepRunning,
-    totalTokens: state.totalTokens
-  };
+   const snap = {
+     autoRunning: state.autoRunning,
+     autoStepRunning: state.autoStepRunning,
+     totalTokens: state.totalTokens,
+     groqTokens: state.groqTokens
+   };
   state.autoRunning = true;
   state.autoStepRunning = false;
   state.totalTokens = { in: 0, out: 0, total: 0 };
@@ -115,12 +116,14 @@ test('auto error-path: startAuto stops immediately on token limit reached', () =
     autoRunning: state.autoRunning,
     autoStepRunning: state.autoStepRunning,
     currentInterval: state.currentInterval,
-    totalTokens: state.totalTokens
+    totalTokens: state.totalTokens,
+    groqTokens: state.groqTokens
   };
   state.autoRunning = false;
   state.autoStepRunning = false;
   state.currentInterval = 20;
-  state.totalTokens = { in: 0, out: 0, total: 100 };
+  state.totalTokens = { in: 0, out: 0, total: 0 };
+  state.groqTokens = { in: 0, out: 0, total: 100 };
 
   const toasts = [];
   let api;
@@ -155,6 +158,7 @@ test('auto error-path: startAuto stops immediately on token limit reached', () =
     state.autoStepRunning = snap.autoStepRunning;
     state.currentInterval = snap.currentInterval;
     state.totalTokens = snap.totalTokens;
+    state.groqTokens = snap.groqTokens;
     globalThis.window = prevWindow;
     globalThis.document = prevDocument;
     globalThis.localStorage = prevLocalStorage;

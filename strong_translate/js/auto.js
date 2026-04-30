@@ -255,23 +255,23 @@ export function createAutoApi(deps) {
     return Number.isNaN(fromStorage) ? 0 : Math.max(0, fromStorage);
   }
 
-  function isAutoTokenLimitReached() {
-    const limit = getAutoTokenLimit();
-    return limit > 0 && state.totalTokens.total >= limit;
-  }
+function isAutoTokenLimitReached() {
+     const limit = getAutoTokenLimit();
+     return limit > 0 && state.groqTokens.total >= limit;
+   }
 
-  function refreshTokenStatsDisplay() {
-    const el = document.getElementById('tokenStats');
-    if (!el) return;
-    const limit = getAutoTokenLimit();
-    const suffix = limit > 0 ? ` / limit ${limit}` : '';
-    el.textContent = t('stats.tokens', {
-      input: state.totalTokens.in,
-      output: state.totalTokens.out,
-      total: state.totalTokens.total,
-      suffix
-    });
-  }
+function refreshTokenStatsDisplay() {
+     const el = document.getElementById('tokenStats');
+     if (!el) return;
+     const limit = getAutoTokenLimit();
+     const suffix = limit > 0 ? ` / limit ${limit}` : '';
+     el.textContent = t('stats.tokens', {
+       input: state.groqTokens.in,
+       output: state.groqTokens.out,
+       total: state.groqTokens.total,
+       suffix
+     });
+   }
 
   return {
     toggleAuto,

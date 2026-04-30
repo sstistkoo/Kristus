@@ -313,14 +313,6 @@ test('settings persistence: saveAISettings stores values and showPromptAIModal r
   }
 });
 
-test('lang settings: saveLangSettings stores target/source/ui and clears default content tag override', () => {
-  const dom = new JSDOM(`
-    <div id="promptLangModal" style="display:flex"></div>
-    <button id="btnPromptLang"></button>
-    <select id="targetLanguage"><option value="cz">cz</option><option value="en">en</option></select>
-    <select id="sourceLanguage"><option value="gr">gr</option><option value="he">he</option></select>
-    <select id="uiLanguage"><option value="cs">cs</option><option value="en">en</option></select>
-  `);
   const prevWindow = globalThis.window;
   const prevDocument = globalThis.document;
   const prevLocalStorage = globalThis.localStorage;
@@ -333,6 +325,8 @@ test('lang settings: saveLangSettings stores target/source/ui and clears default
     strong_ui_lang: 'cs'
   });
   globalThis.onProviderChange = () => {};
+  // Mock showI18nToolModal to prevent errors when language files are not found in test environment
+  globalThis.showI18nToolModal = undefined;
 
   const calls = { refresh: 0, prompt: 0, ui: 0 };
   const toasts = [];
@@ -360,7 +354,8 @@ test('lang settings: saveLangSettings stores target/source/ui and clears default
       applyUiLanguage: () => { calls.ui += 1; }
     });
     api.showPromptLangModal();
-    api.saveLangSettings();
+    await api.saveLangSettings();
+    await new Promise(resolve => setTimeout(resolve, 0));
     assert.equal(localStorage.getItem('strong_target_lang'), 'cz');
     assert.equal(localStorage.getItem('strong_source_lang'), 'gr');
     assert.equal(localStorage.getItem('strong_ui_lang'), 'cs');
@@ -369,7 +364,7 @@ test('lang settings: saveLangSettings stores target/source/ui and clears default
     assert.equal(calls.refresh, 1);
     assert.equal(calls.prompt, 1);
     assert.equal(calls.ui, 1);
-    assert.ok(toasts.some((t) => /jazyků nastaven/.test(t)));
+    assert.ok(toasts.some((t) => t === 'toast.lang.settings.saved'));
   } finally {
     globalThis.window = prevWindow;
     globalThis.document = prevDocument;

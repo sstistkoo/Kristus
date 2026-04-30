@@ -55,6 +55,7 @@ export const state = {
   elapsedTimer: null,
   selectedKeys: new Set(),
   totalTokens: { in: 0, out: 0, total: 0 },
+  groqTokens: { in: 0, out: 0, total: 0 },
   topicRepairState: null,
   topicRepairWorkerRunning: false,
   topicRepairTicker: null,
