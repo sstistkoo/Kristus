@@ -13,42 +13,255 @@ import core from '../../strong_translator_core_new.js';
 
 const { buildRetryMessages } = core;
 
+export function createBatchApi(deps) {
+  const {
+    state, t, escHtml,
+    log, logError, logWarn,
+    showToast,
+    TOPIC_PROMPT_PRESET_MAP,
+    parseTranslations,
+    parseWithOpenRouterNormalization, applyFallbacksToParsedMap,
+    extractTopicValueFromAI,
+    shouldReplaceSpecialista,
+    fillMissingVyznamFromSource, fillMissingKjvFromSource, annotateEnglishDefinitionsInTranslated,
+    buildPromptMessages,
+    callOnce, callAIWithRetry,
+    getApiKeyForModelTest, getPipelineModelForProvider, getCurrentApiKey,
+    getModelTestSelectedModelForProvider,
+    resolveMainBatchProvider,
+    appendModelTestUsage, buildModelTestMessages,
+    isPipelineSecondaryEnabled,
+    upsertModelTestStats, pushTestHistory,
+    renderList, updateStats, renderDetail,
+    startElapsedTimer, stopElapsedTimer, updateFailedCount,
+    saveProgress,
+    logTokenEntry, logEntry,
+    getTranslationEngineLabel,
+    isAutoProviderEnabled,
+    translateSelected,
+  } = deps;
+function formatPreviewRawTranslation(rawDef) {
+  const text = String(rawDef || '').trim();
+  if (!text) return '—';
+  const esc = escHtml(text);
+  const formatted = esc
+    .replace(/(VÝZNAM:|Význam:)/g, '<br><b>$1</b>')
+    .replace(/(DEFINICE:|Definice:)/g, '<br><b>$1</b>')
+    .replace(/(POUŽIT[ÍI]:|Použit[íi]:)/g, '<br><b>$1</b>')
+    .replace(/(SPECIALISTA:|Specialista:|VÝKLAD:|Výklad:)/g, '<br><b>$1</b>');
+  return formatted.replace(/^<br>/, '');
+}
+
+// -- PREKLAD — SINGLE --------------------------------------------
+async function translateSingle(key) {
+  const btn = document.querySelector('.translate-btn');
+  if (btn) { btn.disabled = true; btn.textContent = t('translate.single.translating'); }
+  
+  const prov = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
+  const apiKey = getCurrentApiKey(prov);
+  const model = getPipelineModelForProvider(prov) || document.getElementById('model').value;
+
+   if (!apiKey) {
+     showToast(t('toast.apiKey.enterForProvider', { provider: prov }));
+     if (btn) { btn.disabled = false; btn.textContent = t('translate.single.button'); }
+     return;
+   }
+
+   const e = state.entryMap.get(key);
+  if (!e) {
+    if (btn) { btn.disabled = false; btn.textContent = t('translate.single.button'); }
+    return;
+  }
+  
+  const messages = buildPromptMessages([e]);
+  
+  try {
+    const raw = await callAIWithRetry(prov, apiKey, model, messages);
+    log(`?? Preklad: ${getTranslationEngineLabel(raw, prov, model)}`);
+    if (window.DEBUG_AI) {
+    }
+    let missingKeys = parseTranslations(raw.content, [key]);
+    
+    if (missingKeys.length > 0) {
+      const entries = `${key}
+DEF: ${e.definice || e.def || ''}
+KJV: ${e.kjv || ''}
+ORIG: ${e.orig || ''}`;
+      const retryContent = t('batch.retry.missingG', { entries });
+      
+       const raw2 = await callOnce(prov, apiKey, model, buildRetryMessages(retryContent));
+       missingKeys = parseTranslations(raw2.content, [key]);
+     }
+
+   } catch(e) {
+     logError('translateSingle', e, {
+       key,
+       provider: prov,
+       model
+     });
+     showToast(t('toast.error.withMessage', { message: e.message }));
+   }
+  
+  if (btn) { btn.disabled = false; btn.textContent = t('translate.single.button'); }
+  renderDetail();
+  updateStats();
+  renderList();
+}
+
+// -- PREKLAD — ZNOVU --------------------------------------------
+async function retranslateSingle(key) {
+  if (!confirm(t('confirm.retranslate', { key }))) return;
+  
+  // Oznac jako nepreložené pro další zpracování
+  delete state.translated[key];
+  saveProgress();
+  
+  // Vyber jen tento klíc
+  state.selectedKeys.clear();
+  state.selectedKeys.add(key);
+  renderList();
+  
+  // Zavolej preklad
+  await translateSelected();
+}
+
+// -- PREKLAD — DÁVKA ----------------------------------------------
+async function translateNext() {
+  if (state.autoRunning) return;
+  const activeProvider = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
+  if (!isAutoProviderEnabled(activeProvider)) {
+    showToast(t('toast.provider.enableOne'));
+    return;
+  }
+  
+  // Retry mode - použij state.retryKeysList místo getNextBatch
+  let batch;
+  if (state.retryMode && state.retryKeysList.length > 0) {
+    batch = state.retryKeysList.slice(0, state.currentBatchSize);
+    state.retryKeysList = state.retryKeysList.slice(state.currentBatchSize);
+    if (state.retryKeysList.length === 0) {
+      state.retryMode = false;
+    }
+  } else {
+    batch = getNextBatch(state.currentBatchSize);
+  }
+  
+  if (!batch.length) { 
+    if (state.retryMode) {
+      showToast(t('toast.retry.done'));
+      state.retryMode = false;
+    } else {
+      showToast(t('toast.allTranslated')); 
+    }
+    stopElapsedTimer();
+    return; 
+  }
+  
+  // Info o retry módu
+  if (state.retryMode) {
+    document.getElementById('btnStep').title = t('batch.retry.remaining', { count: state.retryKeysList.length + batch.length });
+  }
+  
+  document.getElementById('btnStep').disabled = true;
+  document.getElementById('btnStep').textContent = t('btn.step.loading');
+  await translateBatch(batch);
+  document.getElementById('btnStep').disabled = false;
+  document.getElementById('btnStep').textContent = t('btn.step.default');
+  updateStats();
+  renderList();
+  if (state.activeKey && state.translated[state.activeKey]) renderDetail();
+}
+
+function jumpToStart() {
+  const num = parseInt(document.getElementById('startFrom').value);
+  if (!num || num < 1) { showToast(t('toast.jump.enterGNumber')); return; }
+  const key = 'G' + num;
+  const found = state.entryMap.get(key);
+  if (!found) { showToast(t('toast.entry.notFoundInFile', { key: `G${num}` })); return; }
+
+  // Oznac všechna hesla PRED tímto císlem jako preskocená (zachováme existující preklady)
+  for (const e of state.entries) {
+    const n = parseInt(e.key.slice(1));
+    if (n < num && !state.translated[e.key]) {
+      state.translated[e.key] = { vyznam: '—', definice: '(preskoceno)', pouziti: '—', puvod: '—', skipped: true };
+    }
+  }
+   saveProgress();
+   updateStats();
+   renderList();
+   showToast(t('toast.translation.resumeFrom', { key: `G${num}` }));
+   // Scroll na heslo v listu (virtuální)
+   setTimeout(() => {
+     const scroll = document.getElementById('listScroll');
+     const idx = state.filteredKeys.indexOf(key);
+     if (idx !== -1) {
+       scroll.scrollTop = idx * ITEM_HEIGHT - (scroll.clientHeight / 2) + (ITEM_HEIGHT / 2);
+     }
+   }, 0);
+ }
+
+
+function getNextBatch(size) {
+  const result = [];
+  const sourceLang = localStorage.getItem('strong_source_lang') || 'gr';
+  const includeG = sourceLang === 'gr' || sourceLang === 'both';
+  const includeH = sourceLang === 'he' || sourceLang === 'both';
+  
+  for (const e of state.entries) {
+    if (result.length >= size) break;
+    if (!state.translated[e.key] || state.translated[e.key].skipped) {
+      const startsWithG = e.key.startsWith('G');
+      const startsWithH = e.key.startsWith('H');
+      
+      if ((includeG && startsWithG) || (includeH && startsWithH)) {
+        result.push(e.key);
+      }
+    }
+  }
+  return result;
+}
+
+const FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'pouziti', 'puvod', 'specialista'];
+
+function getFailedTopicsForFallback(translationEntry) {
+  const t = translationEntry || {};
+  const failed = [];
+  for (const topicId of FALLBACK_TOPIC_ORDER) {
+    const val = String(t[topicId] || '').trim();
+    if (!hasMeaningfulValue(val)) {
+      failed.push(topicId);
+      continue;
+    }
+    if (topicId === 'definice' && isDefinitionLowQuality(val)) {
+      failed.push(topicId);
+    }
+  }
+  return failed;
+}
+
+function getMissingTopicsForRepair(translationEntry) {
+  const allMissing = getFailedTopicsForFallback(translationEntry);
+  return allMissing.slice(0, 2);
+}
+
+function cloneTranslationTopicFields(entry) {
+  const src = entry || {};
+  return {
+    vyznam: String(src.vyznam || ''),
+    definice: String(src.definice || ''),
+    kjv: String(src.kjv || ''),
+    pouziti: String(src.pouziti || ''),
+    puvod: String(src.puvod || ''),
+    specialista: String(src.specialista || '')
+  };
+}
+
 function isBetterGenericTopicValue(prev, next) {
   const prevText = String(prev || '').trim();
   const nextText = String(next || '').trim();
   if (!hasMeaningfulValue(nextText)) return false;
   if (!hasMeaningfulValue(prevText)) return true;
-  
-  // --- 1. DETEKCE BIBLICKÝCH ZKRATEK (CZ vs EN) ---
-  // Anglické formáty (typické pro strojový p?eklad)
-  const enBibleRefs = (prevText.match(/\b(?:Gen|Ex|Lev|Num|Dt|Josh|Judg|Ruth|1Sam|2Sam|1Kgs|2Kgs|1Chr|2Chr|Ezra|Neh|Esth|Job|Ps|Prov|Eccl|Song|Isa|Jer|Lam|Ezek|Dan|Hos|Joel|Amos|Obad|Jonah|Mic|Nah|Hab|Zeph|Hag|Zech|Mal|Matt|Mark|Luke|John|Acts|Rom|1Cor|2Cor|Gal|Eph|Phil|Col|1Thess|2Thess|1Tim|2Tim|Titus|Philem|Heb|James|1Pet|2Pet|1John|2John|3John|Jude|Rev)[\s\d,:.;\]]/gi) || []).length;
-  
-  // ?eské formáty (Rut, Joz, Jób, Žal, atd.) - indikují kvalitní p?eklad
-  const czBibleRefs = (nextText.match(/\b(?:Gen|Ex|Lev|Num|Dt|Joz|Sd|Rut|1S|2S|1K|2K|1P|2P|Job|Zal|Pis|Kaz|Hoj|Am|Oz|Jon|Mih|Nah|Ab|Zch|Mal|Mt|Mk|Lk|Jh|Sk|Rim|1Kor|2Kor|Gal|Ef|Fil|Kol|1Tes|2Tes|1Tim|2Tim|Tit|Filem|Zid|Jak|1Pet|2Pet|1Jh|2Jh|3Jh|Jud|Zj)[\s\d,:.;\]]/gi) || []).length;
-  
-  // ?ím víc ?eských biblických odkaz?, tím lepší p?eklad
-  if (czBibleRefs > enBibleRefs && czBibleRefs >= 1) return true;
-  if (enBibleRefs > czBibleRefs && enBibleRefs >= 1) return false;
-
-  // --- 2. KONTROLA ANGLICKÉHO NÁDECHU ---
-  const prevHasEnglish = countEnglishNoiseWords(prevText) > 0 || /\b(primarily|hence|metaphorically|in cl\.|in LXX|for exx|ut supr|etc\.|with dative|with accusative)\b/i.test(prevText);
-  const nextHasEnglish = countEnglishNoiseWords(nextText) > 0 || /\b(primarily|hence|metaphorically|in cl\.|in LXX|for exx|ut supr|etc\.|with dative|with accusative)\b/i.test(nextText);
-  
-  if (prevHasEnglish && !nextHasEnglish) return true;
-  if (!prevHasEnglish && nextHasEnglish) return false;
-  
-  // --- 3. KONTROLA DÉLKY (po?et slov) ---
-  const prevWords = prevText.split(/\s+/).filter(Boolean).length;
-  const nextWords = nextText.split(/\s+/).filter(Boolean).length;
-  
-  // Tolerance: dobrý p?eklad by m?l mít zhruba stejnou délku
-  const wordRatio = nextWords / prevWords;
-  if (wordRatio > 1.5) return false;
-  if (wordRatio < 0.6 && prevWords > 3) return false;
-  
-  if (wordRatio > 1.05) return true;
-  if (prevWords < 4 && nextWords >= 5) return true;
-  
+  if (nextText.length >= prevText.length + 40) return true;
   return false;
 }
 
@@ -63,8 +276,7 @@ function shouldReplaceTopicValue(topicId, previousValue, candidateValue) {
     if (isDefinitionLowQuality(prev) && !isDefinitionLowQuality(next)) return true;
     return isBetterGenericTopicValue(prev, next);
   }
-  // Pro vyznam, puvod, pouziti, kjv: preferujeme, pokud je nový text delší (dopln?ní), ale nekontrolujeme slova/anglictinu
-  return next.length >= prev.length + 10;
+  return isBetterGenericTopicValue(prev, next);
 }
 
 function preserveBetterTopicsAfterBatch(keys, previousMap) {

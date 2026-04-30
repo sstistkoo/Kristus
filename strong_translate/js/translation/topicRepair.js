@@ -27,25 +27,6 @@ export function createTopicRepairApi(deps) {
     getModelTestPromptCatalog,
     buildPromptMessages,
   } = deps;
-
-const FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'pouziti', 'puvod', 'specialista'];
-
-function getFailedTopicsForFallbackFn(translationEntry) {
-  const t = translationEntry || {};
-  const failed = [];
-  for (const topicId of FALLBACK_TOPIC_ORDER) {
-    const val = String(t[topicId] || '').trim();
-    if (!hasMeaningfulValue(val)) {
-      failed.push(topicId);
-      continue;
-    }
-    if (topicId === 'definice' && isDefinitionLowQuality(val)) {
-      failed.push(topicId);
-    }
-  }
-  return failed;
-}
-
 function getTopicSourceTextForPreview(key, topicId) {
   const e = state.entryMap.get(key) || {};
   if (topicId === 'definice') return String(e.definice || e.def || '').trim();
@@ -688,7 +669,7 @@ function applyTopicRepairSelected() {
     }
   } else {
     const keysInModal = [...new Set(topicRepairState.tasks.map(t => t.key))];
-    const allTopicsOk = keysInModal.every(k => getFailedTopicsForFallbackFn(state.translated[k] || {}).length === 0);
+    const allTopicsOk = keysInModal.every(k => getFailedTopicsForFallback(state.translated[k] || {}).length === 0);
     if (allTopicsOk) {
       showToast(t('toast.topic.overwrittenAndClosing', { count: applied }));
       stopTopicRepairTicker();
@@ -701,46 +682,7 @@ function applyTopicRepairSelected() {
         miniBtn.classList.remove('topicRepairMiniBusy');
       }
     } else {
-      // Stále jsou nevyřešená témata — obnovíme tasky a překreslíme modal
-      const newTasks = [];
-      for (const key of keysInModal) {
-        const t = state.translated[key] || {};
-        const missing = getFailedTopicsForFallbackFn(t);
-        for (const topicId of missing) {
-          newTasks.push({
-            key,
-            topicId,
-            status: 'waiting',
-            checked: true,
-            includeBulk: true,
-            currentValue: String(t[topicId] || '').trim(),
-            sourceValue: getTopicSourceTextForPreview(key, topicId),
-            candidateValue: '',
-            provider: '',
-            error: '',
-            specialistaInRaw: false,
-            specialistaDecision: '',
-            specialistaPreviousValue: String(t.specialista || '').trim(),
-            specialistaCandidateValue: '',
-            detectedTopics: [],
-            rawHeaderTopics: []
-          });
-        }
-      }
-      if (newTasks.length === 0) {
-        showToast(t('toast.topic.overwritten', { count: applied }));
-        stopTopicRepairTicker();
-        state.topicRepairState.closed = true;
-        closeTopicRepairModalSafe();
-        state.topicRepairState = null;
-        const miniBtn = document.getElementById('btnTopicRepairMini');
-        if (miniBtn) miniBtn.style.display = 'none';
-      } else {
-        state.topicRepairState.tasks = newTasks;
-        updateTopicRepairModalUI();
-        renderTopicRepairModal();
-        showToast(t('toast.topic.overwritten.count', { count: applied }));
-      }
+      showToast(t('toast.topic.overwritten.count', { count: applied }));
     }
   }
   syncTopicRepairMinimizeBusyIndicator();
@@ -1076,44 +1018,11 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       throw new Error('missing_api_key');
     }
 
-  // Reset čítačů při spuštění nové dávky
-  if (!window.repairStats) window.repairStats = { total: 0, ok: 0, err: 0, lastError: '' };
-  function updRepairUI() {
-    const pan = document.getElementById('repairStatPanel');
-    if (!pan) return;
-    const s = window.repairStats;
-    pan.style.display = (s.total > 0) ? 'block' : 'none';
-    document.getElementById('statTotal').textContent = s.total;
-    document.getElementById('statOk').textContent = s.ok;
-    document.getElementById('statErr').textContent = s.err;
-    document.getElementById('statLastError').textContent = s.lastError;
-  }
-  updRepairUI();
-
-    let raw;
-    try {
-      raw = await callAIWithRetry(prov, apiKey, model, [
-        { role: 'system', content: getResolvedSystemMessage() },
-        { role: 'user', content: enforceSpecialistaFormat(userContent) }
-      ]);
-      // Úspěch - zvětšíme okno
-      window.repairStats.total += batchKeys.length;
-      window.repairStats.ok += batchKeys.length;
-    } catch (e) {
-      // Chyba - zaznamenáme
-      window.repairStats.total += batchKeys.length;
-      window.repairStats.err += batchKeys.length;
-      window.repairStats.lastError = `[${prov}] ${e.message || String(e)}`.substring(0, 60);
-    }
-    updRepairUI();
-
-    if (!raw) {
-      log(t('topicRepair.log.noRawResponse'));
-      continue;
-    }
-
+    const raw = await callAIWithRetry(prov, apiKey, model, [
+      { role: 'system', content: getResolvedSystemMessage() },
+      { role: 'user', content: enforceSpecialistaFormat(userContent) }
+    ]);
     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-
 
     const rawText = String(raw?.content || '').trim();
     log(t('topicRepair.log.rawBatchPrinted', { topic: topicId }));
@@ -1146,7 +1055,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       const stopAt = Date.now() + Math.max(0, interval) * 1000;
       while (Date.now() < stopAt) {
         if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-        await sleepMsMs(250);
+        await sleepMsMs(100);
       }
     }
   }
@@ -1159,6 +1068,11 @@ async function runTopicRepairBulkTranslation() {
   if (state.topicRepairBulkRunning) {
     state.topicRepairBulkAbortVersion++;
     showToast(t('toast.topicRepair.bulkStopping'));
+    const bulkBtn = document.getElementById('topicRepairBulkRunBtn');
+    if (bulkBtn) {
+      bulkBtn.disabled = true;
+      bulkBtn.textContent = t('topicRepair.bulk.button');
+    }
     return;
   }
   syncTopicRepairBulkRunInputsToHidden();
@@ -1589,28 +1503,28 @@ function scoreTopicRepairText(topicId, text) {
 function verdictTopicRepairCompare(prevScore, nextScore) {
   if (!Number.isFinite(prevScore) || !Number.isFinite(nextScore)) return { kind: 'unclear', label: t('topicRepair.analysis.verdict.unclear'), tone: 'var(--txt3)' };
   const d = nextScore - prevScore;
-  if (nextScore <= 0 && prevScore > 0) return { kind: 'better', label: t('topicRepair.analysis.verdict.better'), tone: 'var(--acc3)' };
-  if (d >= 2) return { kind: 'worse', label: t('topicRepair.analysis.verdict.worse'), tone: 'var(--red)' };
-  if (d <= -2) return { kind: 'better', label: t('topicRepair.analysis.verdict.better'), tone: 'var(--acc3)' };
+  if (nextScore <= 0 && prevScore > 0) return { kind: 'worse', label: t('topicRepair.analysis.verdict.worse'), tone: 'var(--red)' };
+  if (d >= 2) return { kind: 'better', label: t('topicRepair.analysis.verdict.better'), tone: 'var(--acc3)' };
+  if (d <= -2) return { kind: 'worse', label: t('topicRepair.analysis.verdict.worse'), tone: 'var(--red)' };
   return { kind: 'similar', label: t('topicRepair.analysis.verdict.similar'), tone: 'var(--txt3)' };
 }
 
-  function formatTopicRepairQuickCompare(topicId, previousValue, candidateValue) {
-    const prev = String(previousValue || '').trim();
-    const next = String(candidateValue || '').trim();
-    if (!hasMeaningfulValue(next)) {
-      return `<div style="margin-top:6px;padding:8px;border:1px dashed var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt3)"><b>${t('topicRepair.analysis.title')}</b> ${t('topicRepair.analysis.cannotCompare')}</div>`;
-    }
-    const p = scoreTopicRepairText(topicId, prev);
-    const n = scoreTopicRepairText(topicId, next);
-    const v = verdictTopicRepairCompare(p.score, n.score);
-    const notes = [...new Set([...(p.notes || []), ...(n.notes || [])])].slice(0, 3);
-    const notesHtml = notes.length ? ` · ${notes.map(x => escHtml(x)).join(' · ')}` : '';
-    return `<div style="margin-top:6px;padding:8px;border:1px solid var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt2)">
-     <b>${t('topicRepair.analysis.title')}</b> <span style="color:${v.tone};font-weight:bold">${escHtml(v.label)}</span>
-     <span style="color:var(--txt3)">(${t('topicRepair.analysis.score', { from: p.score, to: n.score })})</span>${notesHtml}
-   </div>`;
+function formatTopicRepairQuickCompare(topicId, previousValue, candidateValue) {
+  const prev = String(previousValue || '').trim();
+  const next = String(candidateValue || '').trim();
+  if (!hasMeaningfulValue(next)) {
+    return `<div style="margin-top:6px;padding:8px;border:1px dashed var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt3)"><b>${t('topicRepair.analysis.title')}</b> ${t('topicRepair.analysis.cannotCompare')}</div>`;
   }
+  const p = scoreTopicRepairText(topicId, prev);
+  const n = scoreTopicRepairText(topicId, next);
+  const v = verdictTopicRepairCompare(p.score, n.score);
+  const notes = [...new Set([...(p.notes || []), ...(n.notes || [])])].slice(0, 3);
+  const notesHtml = notes.length ? ` · ${notes.map(x => escHtml(x)).join(' · ')}` : '';
+  return `<div style="margin-top:6px;padding:8px;border:1px solid var(--brd);border-radius:6px;background:var(--bg2);font-size:11px;color:var(--txt2)">
+    <b>${t('topicRepair.analysis.title')}</b> <span style="color:${v.tone};font-weight:bold">${escHtml(v.label)}</span>
+    <span style="color:var(--txt3)">(${t('topicRepair.analysis.score', { from: p.score, to: n.score })})</span>${notesHtml}
+  </div>`;
+}
 
 function closeTopicPromptModal() {
   const modal = document.getElementById('topicPromptModal');
