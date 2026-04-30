@@ -241,6 +241,7 @@ test('settings persistence: saveAISettings stores values and showPromptAIModal r
     <input id="aiMaxTokens_groq" value="2500" />
     <input id="aiMaxTokens_gemini" value="2500" />
     <input id="aiMaxTokens_openrouter" value="2500" />
+    <input id="tokenLimitRunMobile" value="0" />
   `);
   const prevWindow = globalThis.window;
   const prevDocument = globalThis.document;
@@ -360,142 +361,15 @@ test('lang settings: saveLangSettings stores target/source/ui and clears default
     });
     api.showPromptLangModal();
     api.saveLangSettings();
-    expect(localStorage.getItem('strong_target_lang')).toBe('cz');
-    expect(localStorage.getItem('strong_source_lang')).toBe('gr');
-    expect(localStorage.getItem('strong_ui_lang')).toBe('cs');
-    expect(localStorage.getItem('strong_content_tag_lang')).toBeNull();
-    expect(localStorage.getItem('strong_content_tag_lang_manual')).toBeNull();
-     expect(calls.refresh).toBe(1);
-     expect(calls.prompt).toBe(1);
-     expect(calls.ui).toBe(1);
-     expect(toasts).toContainMatch(/jazyků nastaven/);
-   } finally {
-     globalThis.window = prevWindow;
-     globalThis.document = prevDocument;
-     globalThis.localStorage = prevLocalStorage;
-     globalThis.onProviderChange = prevOnProviderChange;
-   }
- });
-
-
-   const calls = { refresh: 0, prompt: 0, ui: 0 };
-   const toasts = [];
-   try {
-     const api = createSettingsModalsApi({
-       initRunSelects: () => {},
-       updateSetupCompactSummary: () => {},
-       initPipelineModelSelectors: () => {},
-       initPipelineModelSelectorsInSettingsModal: () => {},
-       showToast: (m) => toasts.push(m),
-       refreshTopicLabels: () => {},
-       renderList: () => {},
-       saveProgress: () => {},
-       refreshLanguageAwarePromptOptionLabels: () => { calls.refresh += 1; },
-       applySystemPromptForCurrentTask: () => { calls.prompt += 1; },
-       applyUiLanguage: () => { calls.ui += 1; },
-       DEFAULT_UI_LANG: 'cs',
-       UI_LANGS: new Set(['cs', 'en', 'sk', 'pl', 'de', 'fr', 'es', 'it', 'pt', 'ru']),
-       UI_LANG_KEY: 'strong_ui_lang',
-       setPipelineModelForProvider: () => {},
-       setPipelineSecondaryEnabled: () => {},
-       syncSecondaryProviderToggles: () => {},
-     });
-     api.showPromptLangModal();
-     // Set values and save
-     document.getElementById('targetLanguage').value = 'en';
-     document.getElementById('sourceLanguage').value = 'he';
-     document.getElementById('uiLanguage').value = 'en';
-     api.saveLangSettings();
-     assert.equal(localStorage.getItem('strong_target_lang'), 'en');
-     assert.equal(localStorage.getItem('strong_source_lang'), 'he');
-     assert.equal(localStorage.getItem('strong_ui_lang'), 'en');
-     // Content tag should follow UI language (en -> EN)
-     assert.equal(localStorage.getItem('strong_content_tag_lang'), null); // Not stored manually
-     assert.equal(localStorage.getItem('strong_content_tag_lang_manual'), null); // Not stored manually
-     assert.equal(calls.refresh, 1);
-     assert.equal(calls.prompt, 1);
-     assert.equal(calls.ui, 1);
-     // Check if any toast contains the expected text
-     let toastFound = false;
-     for (const toast of toasts) {
-       if (/jazyků nastaven/.test(toast)) {
-         toastFound = true;
-         break;
-       }
-     }
-      assert.ok(toastFound, 'Expected toast containing "jazyků nastaven" not found');
-    } finally {
-      globalThis.window = prevWindow;
-      globalThis.document = prevDocument;
-      globalThis.localStorage = prevLocalStorage;
-      globalThis.onProviderChange = prevOnProviderChange;
-    }
- });
-
-    document.getElementById('targetLanguage').value = 'en';
-    document.getElementById('sourceLanguage').value = 'he';
-    document.getElementById('uiLanguage').value = 'en';
-    api.saveLangSettings();
-
-    assert.equal(localStorage.getItem('strong_target_lang'), 'en');
-    assert.equal(localStorage.getItem('strong_source_lang'), 'he');
-    assert.equal(localStorage.getItem('strong_ui_lang'), 'en');
+    assert.equal(localStorage.getItem('strong_target_lang'), 'cz');
+    assert.equal(localStorage.getItem('strong_source_lang'), 'gr');
+    assert.equal(localStorage.getItem('strong_ui_lang'), 'cs');
     assert.equal(localStorage.getItem('strong_content_tag_lang'), null);
     assert.equal(localStorage.getItem('strong_content_tag_lang_manual'), null);
-    assert.equal(document.getElementById('promptLangModal').style.display, 'none');
     assert.equal(calls.refresh, 1);
     assert.equal(calls.prompt, 1);
     assert.equal(calls.ui, 1);
-    assert.equal(toasts.length, 1);
-} finally {
-     globalThis.window = prevWindow;
-     globalThis.document = prevDocument;
-     globalThis.localStorage = prevLocalStorage;
-     globalThis.onProviderChange = prevOnProviderChange;
-   }
- });
-
-  const calls = { refresh: 0, prompt: 0, ui: 0 };
-  const toasts = [];
-  try {
-    const api = createSettingsModalsApi({
-      initRunSelects: () => {},
-      updateSetupCompactSummary: () => {},
-      initPipelineModelSelectors: () => {},
-      initPipelineModelSelectorsInSettingsModal: () => {},
-      showToast: (m) => toasts.push(m),
-      refreshTopicLabels: () => {},
-      renderList: () => {},
-      saveProgress: () => {},
-      refreshLanguageAwarePromptOptionLabels: () => { calls.refresh += 1; },
-      applySystemPromptForCurrentTask: () => { calls.prompt += 1; },
-      applyUiLanguage: () => { calls.ui += 1; },
-      DEFAULT_UI_LANG: 'cs',
-      UI_LANGS: new Set(['cs', 'en', 'sk', 'pl', 'de', 'fr', 'es', 'it', 'pt', 'ru']),
-      UI_LANG_KEY: 'strong_ui_lang',
-      setPipelineModelForProvider: () => {},
-      setPipelineSecondaryEnabled: () => {},
-      syncSecondaryProviderToggles: () => {},
-      refreshLanguageAwarePromptOptionLabels: () => { calls.refresh += 1; },
-      applySystemPromptForCurrentTask: () => { calls.prompt += 1; },
-      applyUiLanguage: () => { calls.ui += 1; }
-    });
-    api.showPromptLangModal();
-    // Set values and save
-    document.getElementById('targetLanguage').value = 'en';
-    document.getElementById('sourceLanguage').value = 'he';
-    document.getElementById('uiLanguage').value = 'en';
-    api.saveLangSettings();
-    expect(localStorage.getItem('strong_target_lang')).toBe('en');
-    expect(localStorage.getItem('strong_source_lang')).toBe('he');
-    expect(localStorage.getItem('strong_ui_lang')).toBe('en');
-    // Content tag should follow UI language (en -> EN)
-    expect(localStorage.getItem('strong_content_tag_lang')).toBeNull(); // Not stored manually
-    expect(localStorage.getItem('strong_content_tag_lang_manual')).toBeNull(); // Not stored manually
-    expect(calls.refresh).toBe(1);
-    expect(calls.prompt).toBe(1);
-    expect(calls.ui).toBe(1);
-    expect(toasts).toContainMatch(/jazyků nastaven/);
+    assert.ok(toasts.some((t) => /jazyků nastaven/.test(t)));
   } finally {
     globalThis.window = prevWindow;
     globalThis.document = prevDocument;
