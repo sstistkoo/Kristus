@@ -1284,7 +1284,8 @@ function loadTXT(input) {
 
 function loadDefaultFile() {
   const lastFile = localStorage.getItem(LAST_FILE_KEY) || DEFAULT_TXT_FILE;
-  const fallbacks = [lastFile, `${GITHUB_RAW_BASE}${encodeURIComponent(lastFile)}`, 'strong_greek_detailed.txt'];
+  const githubUrl = `${GITHUB_RAW_BASE}${encodeURIComponent(lastFile)}`;
+  const fallbacks = [lastFile, githubUrl, 'strong_greek_detailed.txt'];
 
   const tryFetch = (idx) => {
     if (idx >= fallbacks.length) {
