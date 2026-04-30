@@ -8,7 +8,62 @@ import { state } from '../state.js';
 const { validateAPIResponse } = core;
 
 export function createCallApi({ log, logError, logWarn, showToast, t, rateInfoFromErrorMessage, parseWithOpenRouterNormalization }) {
-const blockedModelsByProvider = new Map();
+ const blockedModelsByProvider = new Map();
+
+// Store recent AI calls for debugging/inspection
+const MAX_RECENT_CALLS = 3;
+const recentAICalls = [];
+
+function addRecentCall({ type, provider, model, messages, response, usage, error, durationMs }) {
+  const entry = {
+    type,
+    provider,
+    model,
+    timestamp: new Date().toISOString(),
+    durationMs: Math.round(durationMs),
+    messages: Array.isArray(messages) ? messages.map(m => ({ role: m.role, content: m.content })) : [],
+    response: response,
+    usage: usage,
+    error: error ? String(error) : null
+  };
+  recentAICalls.unshift(entry);
+  if (recentAICalls.length > MAX_RECENT_CALLS) {
+    recentAICalls.pop();
+  }
+  return entry;
+}
+
+function getRecentAICalls() {
+  return recentAICalls.slice();
+}
+
+function logAICallToConsole(callEntry) {
+  const { type, provider, model, timestamp, durationMs, messages, response, usage, error } = callEntry;
+  console.groupCollapsed(`🤖 AI ${type} — ${provider} | ${model} — ${durationMs}ms — ${timestamp}`);
+  if (error) {
+    console.log('%c❌ Error:', 'color: #ff0000; font-weight: bold;', error);
+  }
+  if (messages && messages.length) {
+    console.log('%c📨 Prompt(s):', 'color: #0066cc; font-weight: bold;');
+    messages.forEach((msg) => {
+      const preview = String(msg.content || '').replace(/\n/g, '\n    ').substring(0, 300);
+      console.log(`  ${msg.role.toUpperCase()}:\n    ${preview}${msg.content && msg.content.length > 300 ? '...' : ''}`);
+    });
+  }
+  if (response) {
+    const preview = String(response).replace(/\n/g, '\n    ').substring(0, 400);
+    console.log('%c📤 AI Response:', 'color: #cc6600; font-weight: bold;',
+      `\n    ${preview}${response.length > 400 ? '...' : ''}`);
+  }
+  if (usage) {
+    const inT = usage.prompt_tokens || usage.promptTokenCount || usage.input_tokens || 0;
+    const outT = usage.completion_tokens || usage.candidatesTokenCount || usage.output_tokens || 0;
+    const total = usage.total_tokens || (inT + outT) || 0;
+    console.log('%c📊 Token Usage:', 'color: #aa00aa; font-weight: bold;',
+      ` Input: ${inT} | Output: ${outT} | Total: ${total}`);
+  }
+  console.groupEnd();
+}
 
 function isModelBlocked(provider, model) {
   const blocked = blockedModelsByProvider.get(provider);
@@ -131,11 +186,16 @@ async function callAIWithRetry(provider, apiKey, model, messages) {
            });
            break;
          }
-         // Other errors - log and try next model/attempt
-         logWarn('callAIWithRetry', t('ai.log.callError', { model: m, attempt: attempt + 1, message: e.message }), {
-           provider, model: m, attempt: attempt + 1, error: e.message
-         });
-         break;
+          // Other errors - log and try next model/attempt
+          logWarn('callAIWithRetry', t('ai.log.callError', { model: m, attempt: attempt + 1, message: e.message }), {
+            provider, model: m, attempt: attempt + 1, error: e.message
+          });
+          // Log to console for debugging
+          console.groupCollapsed(`%c⚠️ AI Error — ${provider} | ${m} — attempt ${attempt + 1}`, 'color: #ff4444; font-weight: bold;');
+          console.log('Error:', e.message);
+          console.log('Messages:', messages);
+          console.groupEnd();
+          break;
        }
     }
   }
@@ -155,7 +215,8 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
   return `${provider} | ${resolved}`;
 }
 
-async function callOnce(provider, apiKey, model, messages, externalSignal = null) {
+ async function callOnce(provider, apiKey, model, messages, externalSignal = null) {
+  const startTime = performance.now();
   apiKey = apiKey.trim();
   const controller = new AbortController();
   let externalAbortHandler = null;
@@ -219,9 +280,20 @@ async function callOnce(provider, apiKey, model, messages, externalSignal = null
     if (content.length > 0 && weirdChars > content.length * 0.5) {
       throw new Error(t('ai.error.gibberishResponse'));
     }
-    if (shouldLogFullResponse) {
-    }
-    return { content, usage: d.usage, resolvedModel: d.model || model, rateInfo };
+      if (shouldLogFullResponse) {
+      }
+      const durationMs = performance.now() - startTime;
+      const callEntry = addRecentCall({
+        type: 'call',
+        provider,
+        model,
+        messages,
+        response: content,
+        usage: d.usage,
+        durationMs
+      });
+      logAICallToConsole(callEntry);
+      return { content, usage: d.usage, resolvedModel: d.model || model, rateInfo };
 
    } else if (provider === 'gemini') {
      const userContent = messages.find(m => m.role === 'user')?.content || '';
@@ -250,10 +322,21 @@ async function callOnce(provider, apiKey, model, messages, externalSignal = null
      if (d.usageMetadata) {
        log(`📊 Gemini: ${d.usageMetadata.promptTokenCount} in / ${d.usageMetadata.candidatesTokenCount} out`);
      }
-      const content = d.candidates[0].content.parts[0].text;
-      if (shouldLogFullResponse) {
-      }
-      return { content, usage: d.usageMetadata, resolvedModel: d.modelVersion || d.model || model, rateInfo: { provider: 'gemini' } };
+       const content = d.candidates[0].content.parts[0].text;
+       if (shouldLogFullResponse) {
+       }
+       const durationMs = performance.now() - startTime;
+       const callEntry = addRecentCall({
+        type: 'call',
+        provider,
+        model,
+        messages,
+        response: content,
+        usage: d.usageMetadata,
+        durationMs
+      });
+      logAICallToConsole(callEntry);
+       return { content, usage: d.usageMetadata, resolvedModel: d.modelVersion || d.model || model, rateInfo: { provider: 'gemini' } };
 
      } else if (provider === 'openrouter') {
       const r = await fetch('https://corsproxy.io/?https://openrouter.ai/api/v1/chat/completions', {
@@ -278,14 +361,36 @@ async function callOnce(provider, apiKey, model, messages, externalSignal = null
        throw new Error(`OpenRouter ${r.status}: ${errMsg}`);
      }
      validateAPIResponse(d, 'openrouter');
-     const content = extractOpenRouterText(d);
-     if (!content) throw new Error(t('ai.error.openrouterNoText'));
-    if (shouldLogFullResponse) {
-    }
-    return { content, usage: d.usage, resolvedModel: d.model || model, rateInfo: { provider: 'openrouter' } };
+      const content = extractOpenRouterText(d);
+      if (!content) throw new Error(t('ai.error.openrouterNoText'));
+     if (shouldLogFullResponse) {
+     }
+     const durationMs = performance.now() - startTime;
+     const callEntry = addRecentCall({
+        type: 'call',
+        provider,
+        model,
+        messages,
+        response: content,
+        usage: d.usage,
+        durationMs
+      });
+      logAICallToConsole(callEntry);
+     return { content, usage: d.usage, resolvedModel: d.model || model, rateInfo: { provider: 'openrouter' } };
   }
   throw new Error(t('ai.error.unknownProvider'));
   } catch (e) {
+    const durationMs = performance.now() - startTime;
+    addRecentCall({
+      type: 'call',
+      provider,
+      model,
+      messages,
+      response: null,
+      usage: null,
+      error: e,
+      durationMs
+    });
     if (timedOut && e?.name === 'AbortError') {
       throw new Error(t('ai.error.apiTimeout', { seconds: Math.round(CONFIG.API_TIMEOUT / 1000) }));
     }
@@ -320,5 +425,5 @@ async function callOnce(provider, apiKey, model, messages, externalSignal = null
     }
   }
 
-  return { callAIWithRetry, callOnce, getTranslationEngineLabel, getProviderConfiguredModels, getFallbackModels, parseTranslations };
+   return { callAIWithRetry, callOnce, getTranslationEngineLabel, getProviderConfiguredModels, getFallbackModels, parseTranslations, getRecentAICalls };
 }

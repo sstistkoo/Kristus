@@ -1604,7 +1604,7 @@ const callApi = createCallApi({
   rateInfoFromErrorMessage: (...a) => rateInfoFromErrorMessage(...a),
   parseWithOpenRouterNormalization,
 });
-const { callAIWithRetry, callOnce, getTranslationEngineLabel, parseTranslations } = callApi;
+const { callAIWithRetry, callOnce, getTranslationEngineLabel, parseTranslations, getRecentAICalls } = callApi;
 
 // -- UI MODULY ---------------------------------------------------
 const toastApi = createToastApi({ CONFIG, logError });
@@ -4343,6 +4343,51 @@ window.confirmModal = confirmModal;
 window.closeModelTestModal = closeModelTestModal;
 window.openModelTestPromptPreviewModal = openModelTestPromptPreviewModal;
 window.closeModelTestPromptPreviewModal = closeModelTestPromptPreviewModal;
+window.printRecentAICalls = printRecentAICalls;
+
+// Recent AI calls debugging utility
+function printRecentAICalls() {
+  const calls = getRecentAICalls();
+  if (!calls.length) {
+    console.log('No recent AI calls recorded yet.');
+    return;
+  }
+  console.groupCollapsed(`?? Recent AI Calls: ${calls.length}`);
+  calls.forEach((call, i) => {
+    console.groupCollapsed(`#${calls.length - i}: ${call.type} — ${call.provider} | ${call.model} — ${call.durationMs}ms`);
+    if (call.error) {
+      console.log('%c? Error:', 'color: #ff0000; font-weight: bold;', call.error);
+    } else {
+      if (call.messages && call.messages.length) {
+        console.log('%c?? Prompt(s):', 'color: #0066cc; font-weight: bold;');
+        call.messages.forEach((msg) => {
+          const preview = String(msg.content || '').replace(/\n/g, '\n    ').substring(0, 300);
+          console.log(
+            `  ${msg.role.toUpperCase()}:`,
+            `\n    ${preview}${msg.content && msg.content.length > 300 ? '...' : ''}`
+          );
+        });
+      }
+      if (call.response) {
+        const preview = String(call.response).replace(/\n/g, '\n    ').substring(0, 400);
+        console.log('%c?? AI Response:', 'color: #cc6600; font-weight: bold;',
+          `\n    ${preview}${call.response.length > 400 ? '...' : ''}`);
+      }
+      if (call.usage) {
+        const inT = call.usage.prompt_tokens || call.usage.promptTokenCount || call.usage.input_tokens || 0;
+        const outT = call.usage.completion_tokens || call.usage.candidatesTokenCount || call.usage.output_tokens || 0;
+        const total = call.usage.total_tokens || (inT + outT) || 0;
+        console.log('%c?? Token Usage:', 'color: #aa00aa; font-weight: bold;',
+          ` Input: ${inT} | Output: ${outT} | Total: ${total}`);
+      }
+    }
+    console.groupEnd();
+  });
+  console.groupEnd();
+}
+
+// Print recent AI calls to console for debugging
+window.printRecentAICalls = printRecentAICalls;
 
 // Cleanup on page unload - auto-save progress
 window.addEventListener('beforeunload', () => {

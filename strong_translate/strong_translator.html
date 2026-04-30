@@ -174,8 +174,9 @@
       <input type="file" id="importFileInput" class="is-hidden" accept=".txt,.json,application/json,text/plain" onchange="importFile(this)" aria-label="Výběr TXT nebo JSON souboru k importu">
        <button class="hbtn auto" id="btnAuto" onclick="toggleAuto()" aria-label="Spustit automatický překlad">▶ AUTO</button>
        <button class="hbtn" id="btnEditPrompt" onclick="showPromptEditModal()" title="Zobrazit a upravit AI prompt" aria-label="Upravit AI prompt">📝 Prompt</button>
-       <button class="hbtn" id="btnToggleList" onclick="toggleListPane()" title="Skrýt/ukázat seznam" aria-label="Skrýt/ukázat seznam">≡ Seznam</button>
-      <button class="hbtn" id="btnStep" onclick="translateNext()" aria-label="Přeložit další dávku">⚡ Dávka</button>
+        <button class="hbtn" id="btnToggleList" onclick="toggleListPane()" title="Skrýt/ukázat seznam" aria-label="Skrýt/ukázat seznam">≡ Seznam</button>
+       <button class="hbtn" id="btnDebugAICalls" onclick="printRecentAICalls()" aria-label="Vypsat AI logy do konzole">📋 AI Log</button>
+       <button class="hbtn" id="btnStep" onclick="translateNext()" aria-label="Přeložit další dávku">⚡ Dávka</button>
       <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů (nejdřív modal, pak ▶ Test provideru)" aria-label="Test modelů — otevře nastavení">🧪 Test modelů</button>
       <button class="hbtn" id="btnI18nHelpTop" onclick="openI18nToolHelpModal()" title="Nápověda">❓</button>
       <button class="hbtn grn" id="btnExportTxt" onclick="exportTXT()" aria-label="Exportovat do TXT">⬇ TXT</button>
