@@ -1106,10 +1106,14 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       window.repairStats.lastError = `[${prov}] ${e.message || String(e)}`.substring(0, 60);
     }
     updRepairUI();
-    if (!raw) return { count: 0, error: true };
 
+    if (!raw) {
+      log(t('topicRepair.log.noRawResponse'));
+      continue;
+    }
 
     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+
 
     const rawText = String(raw?.content || '').trim();
     log(t('topicRepair.log.rawBatchPrinted', { topic: topicId }));
