@@ -27,6 +27,25 @@ export function createTopicRepairApi(deps) {
     getModelTestPromptCatalog,
     buildPromptMessages,
   } = deps;
+
+const FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'pouziti', 'puvod', 'specialista'];
+
+function getFailedTopicsForFallbackFn(translationEntry) {
+  const t = translationEntry || {};
+  const failed = [];
+  for (const topicId of FALLBACK_TOPIC_ORDER) {
+    const val = String(t[topicId] || '').trim();
+    if (!hasMeaningfulValue(val)) {
+      failed.push(topicId);
+      continue;
+    }
+    if (topicId === 'definice' && isDefinitionLowQuality(val)) {
+      failed.push(topicId);
+    }
+  }
+  return failed;
+}
+
 function getTopicSourceTextForPreview(key, topicId) {
   const e = state.entryMap.get(key) || {};
   if (topicId === 'definice') return String(e.definice || e.def || '').trim();
@@ -669,7 +688,7 @@ function applyTopicRepairSelected() {
     }
   } else {
     const keysInModal = [...new Set(topicRepairState.tasks.map(t => t.key))];
-    const allTopicsOk = keysInModal.every(k => getFailedTopicsForFallback(state.translated[k] || {}).length === 0);
+    const allTopicsOk = keysInModal.every(k => getFailedTopicsForFallbackFn(state.translated[k] || {}).length === 0);
     if (allTopicsOk) {
       showToast(t('toast.topic.overwrittenAndClosing', { count: applied }));
       stopTopicRepairTicker();
@@ -686,7 +705,7 @@ function applyTopicRepairSelected() {
       const newTasks = [];
       for (const key of keysInModal) {
         const t = state.translated[key] || {};
-        const missing = getMissingTopicsForFallback(t);
+        const missing = getFailedTopicsForFallbackFn(t);
         for (const topicId of missing) {
           newTasks.push({
             key,
