@@ -1055,7 +1055,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       const stopAt = Date.now() + Math.max(0, interval) * 1000;
       while (Date.now() < stopAt) {
         if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-        await sleepMsMs(250);
+        await sleepMsMs(100);
       }
     }
   }
@@ -1068,6 +1068,11 @@ async function runTopicRepairBulkTranslation() {
   if (state.topicRepairBulkRunning) {
     state.topicRepairBulkAbortVersion++;
     showToast(t('toast.topicRepair.bulkStopping'));
+    const bulkBtn = document.getElementById('topicRepairBulkRunBtn');
+    if (bulkBtn) {
+      bulkBtn.disabled = true;
+      bulkBtn.textContent = t('topicRepair.bulk.button');
+    }
     return;
   }
   syncTopicRepairBulkRunInputsToHidden();
