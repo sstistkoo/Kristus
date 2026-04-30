@@ -29,7 +29,9 @@ function getApiKeyProfiles(prov) {
   try {
     const parsed = JSON.parse(localStorage.getItem(API_KEY_PROFILES_PREFIX + prov) || '[]');
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(p => p && p.id && typeof p.key === 'string');
+    const filtered = parsed.filter(p => p && p.id && typeof p.key === 'string');
+    // Keep only last 3 (most recent)
+    return filtered.slice(-3);
   } catch (e) {
     return [];
   }
@@ -52,7 +54,9 @@ function setupApiKeySwitcher(prov) {
   const profiles = getApiKeyProfiles(prov);
   const activeId = localStorage.getItem(API_KEY_ACTIVE_PROFILE_PREFIX + prov) || '__manual__';
   const options = [`<option value="__manual__">${t('apiKey.profile.manual')}</option>`];
-  for (const p of profiles) {
+  // Show newest profiles first (reverse order)
+  const reversedProfiles = [...profiles].reverse();
+  for (const p of reversedProfiles) {
     options.push(`<option value="${p.id}">${escHtml(p.name || t('apiKey.profile.defaultName'))} · ${maskApiKey(p.key)}</option>`);
   }
   select.innerHTML = options.join('');
@@ -98,16 +102,26 @@ function saveCurrentApiKeyAsProfile() {
   const existing = profiles.find(p => p.key === key);
   if (existing) {
     existing.name = name;
-    setApiKeyProfiles(prov, profiles);
+    // Remove from current position and push to end to make it newest
+    const filtered = profiles.filter(p => p.key !== key);
+    filtered.push(existing);
+    const trimmed = filterProfiles(filtered);
+    setApiKeyProfiles(prov, trimmed);
     localStorage.setItem(API_KEY_ACTIVE_PROFILE_PREFIX + prov, existing.id);
   } else {
     const id = `k_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     profiles.push({ id, name, key });
-    setApiKeyProfiles(prov, profiles);
+    const trimmed = filterProfiles(profiles);
+    setApiKeyProfiles(prov, trimmed);
     localStorage.setItem(API_KEY_ACTIVE_PROFILE_PREFIX + prov, id);
   }
   setupApiKeySwitcher(prov);
   onApiKeyProfileChange();
+}
+
+function filterProfiles(profiles) {
+  // Keep only last 3 profiles (most recently added/updated)
+  return profiles.slice(-3);
 }
 
 function deleteApiKeyProfile() {
@@ -139,4 +153,5 @@ function getCurrentApiKey(prov) {
 }
 
   return { saveApiKey, getApiKeyProfiles, setApiKeyProfiles, maskApiKey, setupApiKeySwitcher, onApiKeyProfileChange, saveCurrentApiKeyAsProfile, deleteApiKeyProfile, getCurrentApiKey };
+
 }
