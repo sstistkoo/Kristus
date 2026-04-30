@@ -683,7 +683,31 @@ function applyTopicRepairSelected() {
       }
     } else {
       // Stále jsou nevyřešená témata — obnovíme tasky a překreslíme modal
-      const newTasks = buildTopicRepairTasks(keysInModal);
+      const newTasks = [];
+      for (const key of keysInModal) {
+        const t = state.translated[key] || {};
+        const missing = getMissingTopicsForFallback(t);
+        for (const topicId of missing) {
+          newTasks.push({
+            key,
+            topicId,
+            status: 'waiting',
+            checked: true,
+            includeBulk: true,
+            currentValue: String(t[topicId] || '').trim(),
+            sourceValue: getTopicSourceTextForPreview(key, topicId),
+            candidateValue: '',
+            provider: '',
+            error: '',
+            specialistaInRaw: false,
+            specialistaDecision: '',
+            specialistaPreviousValue: String(t.specialista || '').trim(),
+            specialistaCandidateValue: '',
+            detectedTopics: [],
+            rawHeaderTopics: []
+          });
+        }
+      }
       if (newTasks.length === 0) {
         showToast(t('toast.topic.overwritten', { count: applied }));
         stopTopicRepairTicker();
