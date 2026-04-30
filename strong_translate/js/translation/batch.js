@@ -261,7 +261,37 @@ function isBetterGenericTopicValue(prev, next) {
   const nextText = String(next || '').trim();
   if (!hasMeaningfulValue(nextText)) return false;
   if (!hasMeaningfulValue(prevText)) return true;
-  if (nextText.length >= prevText.length + 40) return true;
+  
+  // --- 1. DETEKCE BIBLICKÝCH ZKRATEK (CZ vs EN) ---
+  // Anglické formáty (typické pro strojový p?eklad)
+  const enBibleRefs = (prevText.match(/\b(?:Gen|Ex|Lev|Num|Dt|Josh|Judg|Ruth|1Sam|2Sam|1Kgs|2Kgs|1Chr|2Chr|Ezra|Neh|Esth|Job|Ps|Prov|Eccl|Song|Isa|Jer|Lam|Ezek|Dan|Hos|Joel|Amos|Obad|Jonah|Mic|Nah|Hab|Zeph|Hag|Zech|Mal|Matt|Mark|Luke|John|Acts|Rom|1Cor|2Cor|Gal|Eph|Phil|Col|1Thess|2Thess|1Tim|2Tim|Titus|Philem|Heb|James|1Pet|2Pet|1John|2John|3John|Jude|Rev)[\s\d,:.;\]]/gi) || []).length;
+  
+  // ?eské formáty (Rut, Joz, Jób, Žal, atd.) - indikují kvalitní p?eklad
+  const czBibleRefs = (nextText.match(/\b(?:Gen|Ex|Lev|Num|Dt|Joz|Sd|Rut|1S|2S|1K|2K|1P|2P|Job|Zal|Pis|Kaz|Hoj|Am|Oz|Jon|Mih|Nah|Ab|Zch|Mal|Mt|Mk|Lk|Jh|Sk|Rim|1Kor|2Kor|Gal|Ef|Fil|Kol|1Tes|2Tes|1Tim|2Tim|Tit|Filem|Zid|Jak|1Pet|2Pet|1Jh|2Jh|3Jh|Jud|Zj)[\s\d,:.;\]]/gi) || []).length;
+  
+  // ?ím víc ?eských biblických odkaz?, tím lepší p?eklad
+  if (czBibleRefs > enBibleRefs && czBibleRefs >= 1) return true;
+  if (enBibleRefs > czBibleRefs && enBibleRefs >= 1) return false;
+
+  // --- 2. KONTROLA ANGLICKÉHO NÁDECHU ---
+  const prevHasEnglish = countEnglishNoiseWords(prevText) > 0 || /\b(primarily|hence|metaphorically|in cl\.|in LXX|for exx|ut supr|etc\.|with dative|with accusative)\b/i.test(prevText);
+  const nextHasEnglish = countEnglishNoiseWords(nextText) > 0 || /\b(primarily|hence|metaphorically|in cl\.|in LXX|for exx|ut supr|etc\.|with dative|with accusative)\b/i.test(nextText);
+  
+  if (prevHasEnglish && !nextHasEnglish) return true;
+  if (!prevHasEnglish && nextHasEnglish) return false;
+  
+  // --- 3. KONTROLA DÉLKY (po?et slov) ---
+  const prevWords = prevText.split(/\s+/).filter(Boolean).length;
+  const nextWords = nextText.split(/\s+/).filter(Boolean).length;
+  
+  // Tolerance: dobrý p?eklad by m?l mít zhruba stejnou délku
+  const wordRatio = nextWords / prevWords;
+  if (wordRatio > 1.5) return false;
+  if (wordRatio < 0.6 && prevWords > 3) return false;
+  
+  if (wordRatio > 1.05) return true;
+  if (prevWords < 4 && nextWords >= 5) return true;
+  
   return false;
 }
 
@@ -276,7 +306,8 @@ function shouldReplaceTopicValue(topicId, previousValue, candidateValue) {
     if (isDefinitionLowQuality(prev) && !isDefinitionLowQuality(next)) return true;
     return isBetterGenericTopicValue(prev, next);
   }
-  return isBetterGenericTopicValue(prev, next);
+  // Pro vyznam, puvod, pouziti, kjv: preferujeme, pokud je nový text delší (dopln?ní), ale nekontrolujeme slova/anglictinu
+  return next.length >= prev.length + 10;
 }
 
 function preserveBetterTopicsAfterBatch(keys, previousMap) {
