@@ -173,14 +173,18 @@ function getDefaultContentTagForTarget(targetRaw) {
    if (intervalRunMobile && interval) {
      intervalRunMobile.value = interval.value;
    }
-   const autoTokenLimitEl = document.getElementById('autoTokenLimit');
-   const tokenLimitRunMobileEl = document.getElementById('tokenLimitRunMobile');
-   console.log('[showSettingsModal] autoTokenLimit:', autoTokenLimitEl, 'tokenLimitRunMobile:', tokenLimitRunMobileEl);
-   if (autoTokenLimitEl && tokenLimitRunMobileEl) {
-     tokenLimitRunMobileEl.value = autoTokenLimitEl.value;
-   } else {
-    console.warn('showSettingsModal: element missing', { autoTokenLimitEl, tokenLimitRunMobileEl });
-  }
+    const autoTokenLimitEl = document.getElementById('autoTokenLimit');
+    const tokenLimitRunMobileEl = document.getElementById('tokenLimitRunMobile');
+    console.log('[showSettingsModal] autoTokenLimit:', autoTokenLimitEl, 'tokenLimitRunMobile:', tokenLimitRunMobileEl);
+    if (autoTokenLimitEl && tokenLimitRunMobileEl) {
+      tokenLimitRunMobileEl.value = autoTokenLimitEl.value;
+    } else if (tokenLimitRunMobileEl) {
+      const saved = localStorage.getItem('strong_auto_token_limit') || '0';
+      tokenLimitRunMobileEl.value = saved;
+      console.log('[showSettingsModal] fallback to localStorage:', saved);
+    } else {
+      console.warn('showSettingsModal: tokenLimitRunMobile missing', { autoTokenLimitEl, tokenLimitRunMobileEl });
+    }
   document.getElementById('settingsModal').classList.add('show');
 }
 
@@ -208,14 +212,18 @@ function closeSettingsModal() {
    const intervalRunMobile = document.getElementById('intervalRunMobile');
    const interval = document.getElementById('interval');
    if (intervalRunMobile && interval) interval.value = intervalRunMobile.value;
-   // Set token limit BEFORE init calls – original order
-   const tokenLimitRunMobile = document.getElementById('tokenLimitRunMobile');
-   const autoTokenLimit = document.getElementById('autoTokenLimit');
-   if (tokenLimitRunMobile && autoTokenLimit) {
-     autoTokenLimit.value = tokenLimitRunMobile.value;
-   } else {
-     console.warn('closeSettingsModal: tokenLimitRunMobile or autoTokenLimit not found (initial)', { tokenLimitRunMobile, autoTokenLimit });
-   }
+    // Set token limit BEFORE init calls – original order
+    const tokenLimitRunMobile = document.getElementById('tokenLimitRunMobile');
+    if (tokenLimitRunMobile) {
+      const newVal = tokenLimitRunMobile.value || '0';
+      localStorage.setItem('strong_auto_token_limit', newVal);
+      const autoTokenLimit = document.getElementById('autoTokenLimit');
+      if (autoTokenLimit) {
+        autoTokenLimit.value = newVal;
+      }
+    } else {
+      console.warn('closeSettingsModal: tokenLimitRunMobile not found', { tokenLimitRunMobile });
+    }
    onProviderChange();
    initPipelineModelSelectors();
    initRunSelects();
