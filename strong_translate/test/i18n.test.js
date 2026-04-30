@@ -111,7 +111,8 @@ test('i18n guard: all UI languages contain all keys from cs.json', async () => {
 
   const missingByLang = {};
   for (const lang of Array.from(UI_LANGS).filter((x) => x !== 'cs')) {
-    const dictPath = path.join(i18nDir, `${lang}.json`);
+    const actualFilename = lang === 'zh-cn' ? 'zh-CN' : lang;
+    const dictPath = path.join(i18nDir, `${actualFilename}.json`);
     const dict = JSON.parse(await readFile(dictPath, 'utf8'));
     const missing = baseKeys.filter((k) => !(k in dict));
     if (missing.length) missingByLang[lang] = missing;
@@ -133,7 +134,8 @@ test('i18n guard: UI languages do not contain extra typo keys beyond cs.json', a
 
   const extraByLang = {};
   for (const lang of Array.from(UI_LANGS).filter((x) => x !== 'cs')) {
-    const dictPath = path.join(i18nDir, `${lang}.json`);
+    const actualFilename = lang === 'zh-cn' ? 'zh-CN' : lang;
+    const dictPath = path.join(i18nDir, `${actualFilename}.json`);
     const dict = JSON.parse(await readFile(dictPath, 'utf8'));
     const extra = Object.keys(dict).filter((k) => !baseKeys.has(k));
     if (extra.length) extraByLang[lang] = extra;

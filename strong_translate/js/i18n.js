@@ -204,10 +204,14 @@ let uiMessagesLoadPromise = null;
 export async function fetchUiDictionary(lang) {
   const url = `./i18n/${lang}.json`;
   const response = await fetch(url, { cache: 'no-store' });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} for ${url}`);
+  if (response.ok) return response.json();
+  // GitHub/file-system case mismatch fallback: try capitalized zh-CN variant
+  if (lang === 'zh-cn') {
+    const altUrl = './i18n/zh-CN.json';
+    const altResponse = await fetch(altUrl, { cache: 'no-store' });
+    if (altResponse.ok) return altResponse.json();
   }
-  return response.json();
+  throw new Error(`HTTP ${response.status} for ${url}`);
 }
 
 /**
