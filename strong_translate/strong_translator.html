@@ -145,8 +145,9 @@
     <div class="hdr-title">
       <span id="hdrLangPair">GR-—</span>
       <span id="fileIdBadge" class="file-id-badge" title="Aktivní soubor (vlastní slot průběhu)"></span>
-      <button class="hbtn red hdr-close" onclick="clearProgress()" title="Smazat veškerý uložený průběh" aria-label="Smazat veškerý uložený průběh">Res.</button>
-      <button class="hbtn hdr-close is-hidden" id="btnRestoreBackup" onclick="restoreFromBackup('backup')" title="Obnovit ze zálohy" aria-label="Obnovit ze zálohy">↺ Záloha</button>
+       <button class="hbtn red hdr-close" onclick="clearProgress()" title="Smazat veškerý uložený průběh" aria-label="Smazat veškerý uložený průběh">Res.</button>
+       <button class="hbtn red hdr-close" id="btnClearTranslations" onclick="clearTranslations()" title="Vymazat všechny uložené překlady (všechny sloty)" aria-label="Vymazat všechny uložené překlady">🗑 Vymazat</button>
+       <button class="hbtn hdr-close is-hidden" id="btnRestoreBackup" onclick="restoreFromBackup('backup')" title="Obnovit ze zálohy" aria-label="Obnovit ze zálohy">↺ Záloha</button>
     </div>
     <div class="stat"><span id="lblDone">Přeloženo:</span> <b id="sDone">0</b></div>
     <div class="stat"><span id="lblRemain">Zbývá:</span> <b id="sRemain">0</b></div>
