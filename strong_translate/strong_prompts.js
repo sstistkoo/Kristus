@@ -1,6 +1,6 @@
-const SYSTEM_MESSAGE = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+const SYSTEM_MESSAGE = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.
 
-const DEFAULT_PROMPT = `FORMÁT ODPOVĚDI (Striktně dodržet):
+FORMÁT ODPOVĚDI (Striktně dodržet):
 ###[číslo]###
 V: [česky význam]
 D: [věrný překlad EN definice do češtiny včetně závorek a značek]
@@ -26,7 +26,9 @@ OMEZENÍ:
 
 Pole POUŽITÍ negeneruj (odkazy zůstávají v poli D, uživatel si je extrahuje sám).
 
-Používej pouze jednopísmenné klíče (V, D, P, K, S) pro úsporu tokenů.
+Používej pouze jednopísmenné klíče (V, D, P, K, S) pro úsporu tokenů.`;
+
+const DEFAULT_PROMPT = `Přelož následující hesla z angličtiny a originálních jazyků do češtiny podle pravidel. Doplňuj české přepisy v závorkách i v rámci překladu definice. Vrat pouze data bez komentářů.
 
 HESLA:
 {HESLA}`;
