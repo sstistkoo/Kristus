@@ -1,6 +1,35 @@
-const SYSTEM_MESSAGE = `You are a biblical lexicon translation assistant.`;
+const SYSTEM_MESSAGE = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
 
-const DEFAULT_PROMPT = `Translate entries from {SOURCE_LANG} to {TARGET_LANG} and return parser-safe blocks.\n\n###Gx###\nVYZNAM: ...\nDEFINICE: ...\nPOUZITI: ...\nPUVOD: ...\nKJV: ...\nSPECIALISTA: ...\n\nHESLA:\n{HESLA}`;
+const DEFAULT_PROMPT = `FORMÁT ODPOVĚDI (Striktně dodržet):
+###[číslo]###
+V: [česky význam]
+D: [věrný překlad EN definice do češtiny včetně závorek a značek]
+P: [jazyk + původní písmo (český přepis v závorce) + etymologie]
+K: [překlad hlavního KJV významu do češtiny]
+S: [odborný český výklad 3-5 vět]
+
+PRAVIDLA PRO ČEŠTINU A KVALITU:
+
+PŘEPISY: U všech cizích slov (řečtina, hebrejština, aramejština) v poli P, D i S vždy doplň český fonetický přepis v závorce.
+
+PŘEKLAD ODKAZŮ: Biblické zkratky v [ ] uvnitř pole D musí být v češtině (např. [Act] na [Sk], [Mat] na [Mt], [John] na [Jan]).
+
+DŮSLEDNOST: Přelož vše z EN do CZ (včetně termínů jako properly, figuratively, lit., spec.).
+
+NORMALIZACE: Nahraď __1. za 1. a __2. za 2.
+
+K (KJV): Odvoď hlavní význam z kontextu a přelož jej do češtiny.
+
+S (SPECIALISTA): Musí obsahovat teologický a lexikální kontext. Žádná angličtina.
+
+OMEZENÍ:
+
+Pole POUŽITÍ negeneruj (odkazy zůstávají v poli D, uživatel si je extrahuje sám).
+
+Používej pouze jednopísmenné klíče (V, D, P, K, S) pro úsporu tokenů.
+
+HESLA:
+{HESLA}`;
 
 const CATEGORY_LABELS = {
   default: 'Default',
