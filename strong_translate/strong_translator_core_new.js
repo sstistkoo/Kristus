@@ -143,18 +143,27 @@ export function parseTranslations(raw, keys, translated = {}) {
     const content = block.slice(km[0].length).trim();
     
     const normalizedLabels = {
+      'V': 'VYZNAM',
+      'D': 'DEFINICE',
+      'P': 'PUVOD',
+      'K': 'KJV',
+      'S': 'SPECIALISTA',
       'DEF': 'DEFINICE',
       'CZ': 'VYZNAM',
       'VÝZNAM': 'VYZNAM',
+      'DEFINICE': 'DEFINICE',
       'DEFINITION': 'DEFINICE',
       'MEANING': 'VYZNAM',
       'USAGE': 'POUZITI',
+      'POUZITI': 'POUZITI',
       'ORIGIN': 'PUVOD',
+      'PUVOD': 'PUVOD',
       'ETYMOLOGY': 'PUVOD',
       'ETYMOLOGIES': 'PUVOD',
       'COMMENTARY': 'SPECIALISTA',
       'EXEGESIS': 'SPECIALISTA',
-      'KJV': 'KJV'
+      'KJV': 'KJV',
+      'SPECIALISTA': 'SPECIALISTA'
     };
     
     const fieldPositions = [];
@@ -208,9 +217,22 @@ export function parseTranslations(raw, keys, translated = {}) {
       puvod: fields['PUVOD'] || '',
       specialista: fields['SPECIALISTA'] || '',
       kjv: fields['KJV'] || '',
-      _rawDefinition: content  // Store full raw content
+      _rawDefinition: content
     };
-  }
+
+    // Extrahuj reference z definice, pokud neexistuje explicitní POUZITI
+    if (!translated[targetKey].pouziti && translated[targetKey].definice) {
+      const rawRefs = translated[targetKey].definice.match(/\[([A-Za-z0-9]+(?:\.[0-9]+(?::[0-9]+)?(?:,\s*\d+(?::\d+)?)*)?)\]/g) || [];
+      if (rawRefs.length) {
+        const splitRefs = rawRefs
+          .map(r => r.replace(/[\[\]]/g, ''))
+          .join(', ')
+          .split(/\s*,\s*/)
+          .filter(r => r.length > 0);
+        translated[targetKey].pouziti = splitRefs.join(', ');
+      }
+    }
+  } // end for blocks
   
   return keys.filter(k => !translated[k]?.vyznam || !translated[k]?.specialista);
 }
