@@ -114,6 +114,67 @@ function finishEntry(e) {
   }
 }
 
+/**
+ * Normalizuje a deduplikuje biblické reference.
+ * Podporuje: [Job.26:6, 28:22], [Act.10:14; 1Co.7:14], "Gen 1:1", "1Co.7:14"
+ * Odvozuje chybějící knihu z předchozí reference.
+ * Výstup: čárkami oddělený, seřazený seznam.
+ */
+function normalizeReferences(input) {
+  if (!input) return '';
+  const text = String(input);
+  const matches = [];
+
+  // Hledá reference ve formátu book.chap:verse nebo book chap:verse
+  // Příklad: "Gen.1:1", "Gen 1:1", "1Co.7:14", "28:22" (bez knihy)
+  const re = /\b([A-Za-z0-9]+\.?\s*[0-9]+:[0-9]+)\b/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    matches.push(m[1]);
+  }
+
+  if (!matches.length) return '';
+
+  // Normalizace mezery (Gen 1:1 -> Gen.1:1) a odvození chybějící knihy
+  const normalized = [];
+  let lastBook = null;
+  for (let ref of matches) {
+    ref = ref.trim().replace(/^["']|["']$/g, '');
+    if (!ref) continue;
+
+    // "Gen 1:1" -> "Gen.1:1"
+    const spaceMatch = ref.match(/^([A-Za-z0-9]+)\s+([0-9].*)$/);
+    if (spaceMatch) {
+      ref = spaceMatch[1] + '.' + spaceMatch[2];
+    }
+
+    if (ref.includes('.')) {
+      lastBook = ref.split('.')[0];
+      normalized.push(ref);
+    } else if (lastBook) {
+      normalized.push(lastBook + '.' + ref);
+    } else {
+      normalized.push(ref);
+    }
+  }
+
+  // Deduplikace case-insensitive
+  const seen = new Set();
+  const unique = [];
+  for (const r of normalized) {
+    const key = r.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(r);
+    }
+  }
+
+  // Seřadit abecedně
+  unique.sort();
+
+  return unique.join(', ');
+}
+
 export function parseTranslations(raw, keys, translated = {}) {
   const normalized = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const blocks = normalized.split(/(?=###[GH]\d+###)/);
@@ -171,7 +232,7 @@ export function parseTranslations(raw, keys, translated = {}) {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const labelMatch = line.match(/^(VYZNAM|DEFINICE|POUZITI|PUVOD|KJV|SPECIALISTA|VYKLAD|KOMENTAR|EXEGEZE|DEFINITION|MEANING|USAGE|ORIGIN|ETYMOLOGY|ETYMOLOGIES|COMMENTARY|EXEGESIS|DEF)\b\s*[-:–—=.]?\s*/i);
+      const labelMatch = line.match(/^(VYZNAM|DEFINICE|POUZITI|PUVOD|KJV|SPECIALISTA|VYKLAD|KOMENTAR|EXEGEZE|DEFINITION|MEANING|USAGE|ORIGIN|ETYMOLOGY|ETYMOLOGIES|COMMENTARY|EXEGESIS|DEF|V|D|P|K|S)\b\s*[-:–—=.]?\s*/i);
       if (labelMatch) {
         let label = labelMatch[1].toUpperCase();
         if (label === 'VYKLAD' || label === 'KOMENTAR' || label === 'EXEGEZE') label = 'SPECIALISTA';
@@ -210,31 +271,36 @@ export function parseTranslations(raw, keys, translated = {}) {
       fields[label] = value.trim();
     }
     
-    translated[targetKey] = {
-      vyznam: fields['VYZNAM'] || '',
-      definice: fields['DEFINICE'] || '',
-      pouziti: fields['POUZITI'] || '',
-      puvod: fields['PUVOD'] || '',
-      specialista: fields['SPECIALISTA'] || '',
-      kjv: fields['KJV'] || '',
-      _rawDefinition: content
-    };
+     translated[targetKey] = {
+       vyznam: fields['VYZNAM'] || '',
+       definice: fields['DEFINICE'] || '',
+       pouziti: fields['POUZITI'] || '',
+       puvod: fields['PUVOD'] || '',
+       specialista: fields['SPECIALISTA'] || '',
+       kjv: fields['KJV'] || '',
+       _rawDefinition: content
+     };
 
-    // Extrahuj reference z definice, pokud neexistuje explicitní POUZITI
-    if (!translated[targetKey].pouziti && translated[targetKey].definice) {
-      const rawRefs = translated[targetKey].definice.match(/\[([A-Za-z0-9]+(?:\.[0-9]+(?::[0-9]+)?(?:,\s*\d+(?::\d+)?)*)?)\]/g) || [];
-      if (rawRefs.length) {
-        const splitRefs = rawRefs
-          .map(r => r.replace(/[\[\]]/g, ''))
-          .join(', ')
-          .split(/\s*,\s*/)
-          .filter(r => r.length > 0);
-        translated[targetKey].pouziti = splitRefs.join(', ');
+     // Normalizace a deduplikace referencí v POUZITI (pokud existuje)
+     if (translated[targetKey].pouziti) {
+       translated[targetKey].pouziti = normalizeReferences(translated[targetKey].pouziti);
+     }
+
+      // Pokud pole POUZITI není explicitně vyplněno, extrahuj reference z DEF (biblické verše)
+      if (!translated[targetKey].pouziti && translated[targetKey].definice) {
+        const extracted = normalizeReferences(translated[targetKey].definice);
+        if (extracted) {
+          translated[targetKey].pouziti = extracted;
+        }
       }
-    }
   } // end for blocks
   
-  return keys.filter(k => !translated[k]?.vyznam || !translated[k]?.specialista);
+  // Vrátí klíče, které mají prázdné vyznam nebo specialista
+  const missingKeys = keys.filter(function(k) {
+    const entry = translated[k];
+    return !entry || !entry.vyznam || !entry.specialista;
+  });
+  return missingKeys;
 }
 
 export function escHtml(s) {
