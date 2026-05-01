@@ -4207,6 +4207,24 @@ window.exportModelTestTranslationsTxt = exportModelTestTranslationsTxt;
 window.clearLog = clearLog;
 window.logEntry = logEntry;
 
+// Funkce pro vymazání všech p?eklad? z localStorage (všechny sloty)
+function clearTranslations() {
+  if (!confirm(t('confirm.clearTranslations'))) return;
+  Object.keys(localStorage)
+    .filter(k => k.startsWith('strong_gr_cz_v3_'))
+    .forEach(k => localStorage.removeItem(k));
+  state.translated = {};
+  state.sourceEntryEdits = {};
+  updateStats();
+  renderList();
+  clearLog();
+  const pane = document.getElementById('detailPane');
+  if (pane) pane.innerHTML = `<div class="detail-empty">${t('detail.empty')}</div>`;
+  showToast(t('toast.translationsCleared'));
+}
+
+window.clearTranslations = clearTranslations;
+
 // Expose for debugging
 window.PROVIDERS = PROVIDERS;
 window.populateOpenRouterModels = populateOpenRouterModels;
