@@ -1905,6 +1905,11 @@ function shouldAutoCheckTopicRepairTask(topicId, currentValue, candidateValue) {
 function normalizeTopicFieldLabel(raw) {
   const u = String(raw || '').trim().toUpperCase();
   if (u === 'DEF' || u === 'DEFINITION') return 'DEFINICE';
+  if (u === 'V') return 'VYZNAM';
+  if (u === 'D') return 'DEFINICE';
+  if (u === 'P') return 'PUVOD';
+  if (u === 'K') return 'KJV';
+  if (u === 'S') return 'SPECIALISTA';
   if (u === 'MEANING') return 'VYZNAM';
   if (u === 'USAGE') return 'POUZITI';
   if (u === 'ORIGIN') return 'PUVOD';
@@ -1914,17 +1919,18 @@ function normalizeTopicFieldLabel(raw) {
 }
 
 /** Alternace názvů polí v AI odpovědi (jednotný zdroj pro anchor / řádkové parsování). */
-const TOPIC_FIELD_LABEL_ALTS_FOR_RE = 'VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|DEF';
+const TOPIC_FIELD_LABEL_ALTS_FOR_RE = 'VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|DEF|V|D|P|K|S';
 
 /** Po klíčovém slově často následuje „(specialista)“ / poznámka v závorce — bez toho selhával \s*[-:]. */
 function makeTopicFieldHeaderScanRegex() {
-  return new RegExp(`\\b(${TOPIC_FIELD_LABEL_ALTS_FOR_RE})(?:\\*\\*|__)?\\s*(?:\\([^)\\n]{0,240}\\))?\\s*[-:–—=.|]{0,3}\\s*`, 'giu');
+  // Match label followed by colon, space, dash, or end
+  return new RegExp(`(${TOPIC_FIELD_LABEL_ALTS_FOR_RE})(?:\\*\\*|__)?\\s*[:–—=.]`, 'giu');
 }
 
 /** Stejná pravidla jako u anchor regexu, navíc prefix markdownu / číslování na začátku řádku. */
 function makeTopicFieldLineStartRegex() {
   return new RegExp(
-    `^(?:(?:\\d+)[.)]\\s+)?(?:(?:[-*+>]|#{1,6})\\s+)?(?:(?:\\*\\*|__)\\s*)?(${TOPIC_FIELD_LABEL_ALTS_FOR_RE})(?:\\*\\*|__)?\\s*(?:\\([^)\\n]{0,240}\\))?\\s*[-:–—=.|]{0,3}\\s*`,
+    `^(?:\\s*)(?:(?:\\d+)[.)]\\s+)?(?:(?:[-*+>]|#{1,6})\\s+)?(?:(?:\\*\\*|__)\\s*)?(${TOPIC_FIELD_LABEL_ALTS_FOR_RE})(?:\\*\\*|__)?\\s*(?:\\([^)\\n]{0,240}\\))?\\s*[:–—=.|]+`,
     'iu'
   );
 }
@@ -2036,8 +2042,10 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
       if (part) out += (out ? ' ' : '') + part;
     }
     out = out.trim();
+    // Ořízni vnořený duplicitní label na začátku (např. "S: SPECIALISTA: text" → "text")
+    out = out.replace(new RegExp(`^(${TOPIC_FIELD_LABEL_ALTS_FOR_RE})\\s*[-:–—=.]{0,3}\\s*`, 'iu'), '').trim();
     // Ořízni případ, kdy AI přidá další téma ve stejné větě/řádku.
-    const foreignInline = out.match(/\b(VYZNAM|DEFINICE|POUZITI|PUVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS)\s*[-:–—=.]?\s*/iu);
+    const foreignInline = out.match(/\b(VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
     if (foreignInline && foreignInline.index !== undefined) {
       const nl = normalizeTopicFieldLabel(foreignInline[1]);
       const sameBucket = keyForTopic === 'SPECIALISTA'
@@ -2071,7 +2079,7 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
   }
   // Poslední ochrana: u single-topic odpovědi ořízni navazující cizí labely i v rámci jednoho řádku.
   if (keyForTopic) {
-    const foreignInlineGlobal = cleaned.match(/\b(VYZNAM|DEFINICE|POUZITI|PUVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS)\s*[-:–—=.]?\s*/iu);
+    const foreignInlineGlobal = cleaned.match(/\b(VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
     if (foreignInlineGlobal && foreignInlineGlobal.index !== undefined) {
       const nl = normalizeTopicFieldLabel(foreignInlineGlobal[1]);
       const sameBucket = keyForTopic === 'SPECIALISTA'

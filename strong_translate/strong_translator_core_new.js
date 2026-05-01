@@ -232,7 +232,9 @@ export function parseTranslations(raw, keys, translated = {}) {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const labelMatch = line.match(/^(VYZNAM|DEFINICE|POUZITI|PUVOD|KJV|SPECIALISTA|VYKLAD|KOMENTAR|EXEGEZE|DEFINITION|MEANING|USAGE|ORIGIN|ETYMOLOGY|ETYMOLOGIES|COMMENTARY|EXEGESIS|DEF|V|D|P|K|S)\b\s*[-:–—=.]?\s*/i);
+      // label followed by colon/space/dash/emdash (single char labels need colon, not \b)
+      // Note: allow optional leading whitespace
+      const labelMatch = line.match(/^\s*(VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEFINITION|MEANING|USAGE|ORIGIN|ETYMOLOGY|ETYMOLOGIES|COMMENTARY|EXEGESIS|DEF|V|D|P|K|S)(?:[:–—=.\s]+)/i);
       if (labelMatch) {
         let label = labelMatch[1].toUpperCase();
         if (label === 'VYKLAD' || label === 'KOMENTAR' || label === 'EXEGEZE') label = 'SPECIALISTA';
@@ -268,10 +270,17 @@ export function parseTranslations(raw, keys, translated = {}) {
           value += (value ? ' ' : '') + lineContent;
         }
       }
-      fields[label] = value.trim();
-    }
-    
-     translated[targetKey] = {
+fields[label] = value.trim();
+      }
+      
+      // Úklid: odstranění vnořených labelů na začátku hodnot (např. "S: SPECIALISTA: text" → jen "text")
+      // Match jen label následovaný : nebo -- (pro SPECIALISTA: nebo VYKLAD - text)
+      const innerLabelRe = /^(?:VYZNAM|DEFINICE|POUZITI|PUVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)(?:[:：–—=])/u;
+      for (const key of Object.keys(fields)) {
+        fields[key] = fields[key].replace(innerLabelRe, '').trim();
+      }
+     
+      translated[targetKey] = {
        vyznam: fields['VYZNAM'] || '',
        definice: fields['DEFINICE'] || '',
        pouziti: fields['POUZITI'] || '',
