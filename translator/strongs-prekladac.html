@@ -212,6 +212,7 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);cursor:pointer}
 .seg-HEBREW{background:rgba(245,169,127,.1);color:var(--hebrew);border:1px solid rgba(245,169,127,.25)}
 .seg-BIBLE_REF{background:rgba(87,211,100,.1);color:var(--bible);border:1px solid rgba(87,211,100,.25)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -316,22 +317,28 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);cursor:pointer}
           <div style="font-size:.79rem;font-weight:600;margin-bottom:.38rem">💾 Uložit definice</div>
           <div style="display:flex;gap:.55rem;align-items:center;flex-wrap:wrap;margin-bottom:.38rem">
             <label class="chk-label"><input type="radio" name="splitMode" value="single" checked onchange="updateSplitUI()"> Jeden soubor</label>
-            <label class="chk-label"><input type="radio" name="splitMode" value="split" onchange="updateSplitUI()"> Rozdělit</label>
+            <label class="chk-label"><input type="radio" name="splitMode" value="split" onchange="updateSplitUI()"> Rozdělit na části</label>
           </div>
           <div id="splitOptions" style="display:none;margin-bottom:.38rem;gap:.45rem;align-items:center;flex-wrap:wrap">
             <span style="font-size:.8rem;color:var(--muted)">Max def. na část:</span>
             <input type="number" id="splitCount" value="500" min="10" max="10000" style="width:72px">
             <span style="font-size:.71rem;color:var(--muted)" id="splitPreview"></span>
+            <label class="chk-label" style="font-size:.77rem">
+              <input type="checkbox" id="splitAsZip" checked> Zabalit do ZIP
+            </label>
           </div>
-          <button class="btn btn-ghost btn-sm" id="btnSaveExtracted" onclick="saveExtracted()" disabled>💾 Stáhnout definice (TXT)</button>
+          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" id="btnSaveExtracted" onclick="saveExtracted()" disabled>💾 Stáhnout definice</button>
+          </div>
+          <div style="font-size:.7rem;color:var(--muted);margin-top:.3rem">Dostupné hned po extrakci — není třeba čekat na překlad.</div>
         </div>
         <div style="width:1px;background:var(--border)"></div>
         <div style="flex:1;min-width:200px">
           <div style="font-size:.79rem;font-weight:600;margin-bottom:.38rem">📂 Načíst / sloučit části</div>
-          <div style="font-size:.76rem;color:var(--muted);margin-bottom:.38rem">Vyberte více souborů z dřívějšího rozdělení — sloučí se automaticky.</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-bottom:.38rem">TXT soubory nebo ZIP archiv z dřívějšího rozdělení — vyberte vše najednou, sloučí se automaticky.</div>
           <div style="display:flex;gap:.4rem;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mergeFileInput').click()">📂 Načíst soubor(y)</button>
-            <input type="file" id="mergeFileInput" accept=".txt" multiple style="display:none" onchange="loadMergeFiles(this.files)">
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mergeFileInput').click()">📂 Načíst TXT / ZIP</button>
+            <input type="file" id="mergeFileInput" accept=".txt,.zip" multiple style="display:none" onchange="loadMergeFiles(this.files)">
             <button class="btn btn-ghost btn-sm" id="btnClearMerge" onclick="clearMergeQueue()" disabled>✕ Vymazat frontu</button>
           </div>
           <div id="mergeStatus" style="font-size:.74rem;color:var(--muted);margin-top:.3rem"></div>
@@ -1080,6 +1087,67 @@ function restoreTerms(text, map) {
 }
 
 // ══════════════════════════════════════
+//  PROTECTED TERMS
+// ══════════════════════════════════════
+const PROTECTED = ['LXX','NT','OT','AS','MS','MSS','cf','etc','FlJ','LS','MM','VGT','Heb','Gr','Lat','Aram'];
+
+// ══════════════════════════════════════
+//  CHARACTER DETECTION
+// ══════════════════════════════════════
+function isGreekCP(cp){ return (cp>=0x0370&&cp<=0x03FF)||(cp>=0x1F00&&cp<=0x1FFF); }
+function isHebrewCP(cp){ return (cp>=0x0590&&cp<=0x05FF)||(cp>=0xFB1D&&cp<=0xFB4F); }
+
+// ══════════════════════════════════════
+//  STRONG NUMBER DETECTION
+// ══════════════════════════════════════
+function extractStrongNum(text) {
+  const m = text.match(/^[GH]\d+/);
+  return m ? m[0] : null;
+}
+
+// ══════════════════════════════════════
+//  TOKENIZER
+// ══════════════════════════════════════
+function tokenize(text) {
+  const tokens = []; let i = 0; const len = text.length;
+  while (i < len) {
+    const cp = text.codePointAt(i);
+    if (text[i] === '[') {
+      const cb = text.indexOf(']', i);
+      if (cb !== -1) {
+        let end = cb + 1;
+        while (end < len && '*†+‡'.includes(text[end])) end++;
+        tokens.push({ type: 'BIBLE_REF', text: text.slice(i, end) });
+        i = end; continue;
+      }
+    }
+    if (isGreekCP(cp)) {
+      let j = i;
+      while (j < len) {
+        const c = text.codePointAt(j);
+        if (isGreekCP(c) || text[j]==='·' || (c>=0x0300&&c<=0x036F)) { j++; continue; }
+        break;
+      }
+      tokens.push({ type: 'GREEK', text: text.slice(i, j) }); i = j; continue;
+    }
+    if (isHebrewCP(cp)) {
+      let j = i;
+      while (j < len && isHebrewCP(text.codePointAt(j))) j++;
+      tokens.push({ type: 'HEBREW', text: text.slice(i, j) }); i = j; continue;
+    }
+    let j = i;
+    while (j < len) {
+      const c = text.codePointAt(j);
+      if (isGreekCP(c) || isHebrewCP(c) || text[j]==='[') break;
+      j++;
+    }
+    if (j > i) { tokens.push({ type: 'ENGLISH', text: text.slice(i, j) }); i = j; }
+    else i++;
+  }
+  return tokens;
+}
+
+// ══════════════════════════════════════
 //  GOOGLE TRANSLATE COUNTERS
 // ══════════════════════════════════════
 const gtStats = { req:0, ok:0, err:0, rl:0, retry:0 };
@@ -1783,33 +1851,85 @@ function updateSplitPreview() {
 }
 function saveExtracted() {
   if (!batchQueue.length) return;
-  const mode = document.querySelector('input[name="splitMode"]:checked').value;
-  const base = (loadedFileName||'definice').replace(/\.txt$/i,'');
+  const mode  = document.querySelector('input[name="splitMode"]:checked').value;
+  const base  = (loadedFileName||'definice').replace(/\.txt$/i,'');
+  const asZip = document.getElementById('splitAsZip')?.checked;
+
   if (mode === 'single') {
-    downloadText(batchQueue.map((x,i)=>`--- ${x.strong||i+1} ---\n${x.raw}`).join('\n\n'), base+'-definice.txt');
+    const txt = batchQueue.map((x,i)=>`--- ${x.strong||i+1} ---\n${x.raw}`).join('\n\n');
+    downloadText(txt, base+'-definice.txt');
   } else {
-    const n = Math.max(1, parseInt(document.getElementById('splitCount').value)||500);
-    const parts = Math.ceil(batchQueue.length/n);
-    for (let p=0; p<parts; p++) {
-      const slice = batchQueue.slice(p*n,(p+1)*n);
-      const txt = slice.map((x,i)=>`--- ${x.strong||(p*n+i+1)} ---\n${x.raw}`).join('\n\n');
-      setTimeout(()=>downloadText(txt, `${base}-cast${p+1}z${parts}.txt`), p*130);
+    const n     = Math.max(1, parseInt(document.getElementById('splitCount').value)||500);
+    const total = batchQueue.length;
+    const parts = Math.ceil(total/n);
+
+    if (asZip) {
+      // Package all parts into one ZIP
+      const zip = new JSZip();
+      for (let p=0; p<parts; p++) {
+        const slice = batchQueue.slice(p*n, (p+1)*n);
+        const txt   = slice.map((x,i)=>`--- ${x.strong||(p*n+i+1)} ---\n${x.raw}`).join('\n\n');
+        zip.file(`${base}-cast${p+1}z${parts}.txt`, txt);
+      }
+      zip.generateAsync({ type:'blob', compression:'DEFLATE' }).then(blob => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${base}-definice-${parts}casti.zip`;
+        a.click();
+      });
+    } else {
+      // Individual TXT files with staggered download
+      for (let p=0; p<parts; p++) {
+        const slice = batchQueue.slice(p*n, (p+1)*n);
+        const txt   = slice.map((x,i)=>`--- ${x.strong||(p*n+i+1)} ---\n${x.raw}`).join('\n\n');
+        setTimeout(() => downloadText(txt, `${base}-cast${p+1}z${parts}.txt`), p*150);
+      }
     }
   }
 }
+
 async function loadMergeFiles(files) {
   if (!files||!files.length) return;
   const statusEl = document.getElementById('mergeStatus');
-  statusEl.textContent = `Načítám ${files.length} souborů…`;
-  const parts = [];
-  for (const file of Array.from(files)) { parts.push({ name: file.name, text: await readFileAsText(file) }); }
+  statusEl.textContent = `Načítám ${files.length} soubor${files.length===1?'':'ů'}…`;
+
+  const parts = []; // {name, text}
+
+  for (const file of Array.from(files)) {
+    if (file.name.toLowerCase().endsWith('.zip')) {
+      // Extract all TXT files from ZIP
+      try {
+        const zip = await JSZip.loadAsync(file);
+        const txtFiles = Object.values(zip.files).filter(f => !f.dir && f.name.toLowerCase().endsWith('.txt'));
+        for (const zf of txtFiles) {
+          const text = await zf.async('string');
+          parts.push({ name: zf.name, text });
+        }
+      } catch(e) {
+        statusEl.textContent = `⚠ Chyba čtení ZIP: ${e.message}`;
+        return;
+      }
+    } else {
+      parts.push({ name: file.name, text: await readFileAsText(file) });
+    }
+  }
+
+  // Sort numerically by filename
   parts.sort((a,b) => a.name.localeCompare(b.name, 'cs', { numeric: true }));
+
   const merged = [];
   for (const { text } of parts) {
+    // Parse "--- STRONG/N ---\ncontent" format
     const chunks = text.split(/^--- [A-Z]?\d+ ---\s*$/m).map(s=>s.trim()).filter(Boolean);
     merged.push(...chunks);
   }
-  if (!merged.length) { statusEl.textContent = '⚠ Žádné definice nenalezeny.'; document.getElementById('mergeFileInput').value=''; return; }
+
+  if (!merged.length) {
+    statusEl.textContent = '⚠ Žádné definice nenalezeny. Soubory musí být ve formátu uloženém touto aplikací.';
+    document.getElementById('mergeFileInput').value='';
+    return;
+  }
+
   loadedFileName = parts.map(p=>p.name).join('+');
   document.getElementById('fileNameLabel').textContent = `Sloučeno: ${merged.length} definic z ${parts.length} souborů`;
   batchQueue = merged.map(raw => ({ raw, translated:'', status:'wait', tokens:null, strong: extractStrongNum(raw) }));
@@ -1820,6 +1940,7 @@ async function loadMergeFiles(files) {
   document.getElementById('btnBatch').disabled=false;
   document.getElementById('btnSaveExtracted').disabled=false;
   document.getElementById('btnClearMerge').disabled=false;
+  showFileStats(merged.join('\n'), merged);
   statusEl.textContent = `✓ Sloučeno ${merged.length} definic z: ${parts.map(p=>p.name).join(', ')}`;
   document.getElementById('mergeFileInput').value='';
 }
@@ -1982,24 +2103,97 @@ function getMistralKey() {
   return document.getElementById('mistralKey').value.trim()
     || localStorage.getItem(PROVIDERS[currentProvider]?.lsKey || 'mistral_api_key') || '';
 }
-const MK = 'mistral_api_key'; // kept for backward compat
+const MK = 'mistral_api_key'; // backward compat
+
 function toggleKeyVis() {
   const el = document.getElementById('mistralKey');
   el.type = el.type === 'password' ? 'text' : 'password';
 }
 function toggleSaveKey() {
-  const save = document.getElementById('saveKey').checked;
-  const key  = document.getElementById('mistralKey').value.trim();
+  const save  = document.getElementById('saveKey').checked;
+  const key   = document.getElementById('mistralKey').value.trim();
   const lsKey = PROVIDERS[currentProvider]?.lsKey || MK;
-  if (save && key) localStorage.setItem(lsKey, key);
+  if (save && key) { localStorage.setItem(lsKey, key); pushKeyHistory(lsKey, key); }
   else localStorage.removeItem(lsKey);
 }
 function onKeyInput() {
   if (document.getElementById('saveKey').checked) {
     const key   = document.getElementById('mistralKey').value.trim();
     const lsKey = PROVIDERS[currentProvider]?.lsKey || MK;
-    if (key) localStorage.setItem(lsKey, key);
+    if (key) { localStorage.setItem(lsKey, key); pushKeyHistory(lsKey, key); }
   }
+}
+
+// ══════════════════════════════════════
+//  KEY HISTORY  (last 3 per provider)
+// ══════════════════════════════════════
+function getKeyHistoryLsKey(lsKey) { return lsKey + '_history'; }
+
+function pushKeyHistory(lsKey, key) {
+  if (!key) return;
+  const hKey = getKeyHistoryLsKey(lsKey);
+  try {
+    let hist = JSON.parse(localStorage.getItem(hKey) || '[]');
+    hist = [key, ...hist.filter(k => k !== key)].slice(0, 3);
+    localStorage.setItem(hKey, JSON.stringify(hist));
+  } catch(_) {}
+}
+
+function getKeyHistory(lsKey) {
+  try { return JSON.parse(localStorage.getItem(getKeyHistoryLsKey(lsKey)) || '[]'); }
+  catch(_) { return []; }
+}
+
+function toggleKeyHistory() {
+  const drop = document.getElementById('keyHistoryDrop');
+  if (drop.style.display !== 'none') { drop.style.display = 'none'; return; }
+  const lsKey = PROVIDERS[currentProvider]?.lsKey || MK;
+  const hist  = getKeyHistory(lsKey);
+  const list  = document.getElementById('keyHistoryList');
+  if (!hist.length) {
+    list.innerHTML = `<div style="padding:.5rem .8rem;font-size:.78rem;color:var(--muted)">Žádná uložená hesla</div>`;
+  } else {
+    list.innerHTML = hist.map((k, i) => {
+      const masked = k.slice(0, 8) + '••••' + k.slice(-4);
+      return `<div onclick="selectKeyFromHistory('${k.replace(/'/g,"\\'")}');toggleKeyHistory()"
+        style="padding:.42rem .8rem;font-size:.79rem;cursor:pointer;font-family:'Consolas',monospace;
+          border-bottom:${i<hist.length-1?'1px solid var(--border)':'none'};
+          display:flex;align-items:center;justify-content:space-between;gap:.5rem"
+        onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background=''">
+        <span>${masked}</span>
+        <button onclick="event.stopPropagation();deleteKeyFromHistory(${i})" 
+          style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;padding:.1rem .25rem"
+          title="Smazat">✕</button>
+      </div>`;
+    }).join('');
+  }
+  drop.style.display = 'block';
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function handler(e) {
+      if (!document.getElementById('keyHistoryDrop').contains(e.target) && e.target.id !== 'btnKeyHist') {
+        document.getElementById('keyHistoryDrop').style.display = 'none';
+        document.removeEventListener('click', handler);
+      }
+    });
+  }, 10);
+}
+
+function selectKeyFromHistory(key) {
+  document.getElementById('mistralKey').value = key;
+  document.getElementById('saveKey').checked = true;
+  onKeyInput();
+}
+
+function deleteKeyFromHistory(idx) {
+  const lsKey = PROVIDERS[currentProvider]?.lsKey || MK;
+  const hKey  = getKeyHistoryLsKey(lsKey);
+  try {
+    let hist = JSON.parse(localStorage.getItem(hKey) || '[]');
+    hist.splice(idx, 1);
+    localStorage.setItem(hKey, JSON.stringify(hist));
+  } catch(_) {}
+  toggleKeyHistory(); toggleKeyHistory(); // re-render
 }
 
 // ══════════════════════════════════════
@@ -2320,14 +2514,59 @@ function renderMistralQueue(){document.getElementById('mQueueBody').innerHTML=mB
 function updateMistralQRow(i){const item=mBatchQueue[i];const row=document.getElementById(`mqrow-${i}`);if(!row)return;row.className=item.status==='done'?'q-done':item.status==='active'?'q-active':'';row.querySelector('.q-st').innerHTML=badgeHTML(item.status);}
 function updateMistralStats(){const total=mBatchQueue.length,done=mBatchQueue.filter(x=>x.status==='done').length,errs=mBatchQueue.filter(x=>x.status==='error').length;document.getElementById('mQueueStats').innerHTML=`<span>Celkem: <b>${total}</b></span><span>Hotovo: <b>${done}</b></span><span>Zbývá: <b>${total-done-errs}</b></span>`+(errs?`<span style="color:var(--error)">Chyby: <b>${errs}</b></span>`:'');}
 
+// ══════════════════════════════════════
+//  AI REVIEW MODE
+// ══════════════════════════════════════
+function onModeChange() {
+  const mode = document.querySelector('input[name="mMode"]:checked')?.value;
+  const isReview = mode === 'review';
+  document.getElementById('reviewModeInfo').style.display  = isReview ? 'block' : 'none';
+  document.getElementById('btnSendGTtoAI').style.display   = isReview ? 'inline-flex' : 'none';
+  // Update system prompt suggestion
+  if (isReview) {
+    const current = document.getElementById('mistralSysPrompt').value;
+    if (!current.includes('zkontroluj') && !current.includes('oprav')) {
+      document.getElementById('mistralSysPrompt').value =
+        'Jsi odborný překladatel a teolog. Dostaneš originální anglický text a jeho strojový překlad. ' +
+        'Zkontroluj překlad a oprav případné chyby — terminologii, gramatiku, biblické zkratky. ' +
+        'Vrať POUZE opravený překlad bez komentářů, bez vysvětlení změn.';
+    }
+  }
+}
+
+function sendGTResultsToAI() {
+  // Load done items from Google Translate batch into AI queue
+  const done = batchQueue.filter(x => x.status === 'done' && x.translated);
+  if (!done.length) {
+    alert('Nejprve přeložte hesla přes Google Translate (záložka Dávkový překlad).'); return;
+  }
+  // Build AI queue with pairs: raw=original, gtTranslation=google result
+  mBatchQueue = done.map(x => ({
+    raw:           x.raw,
+    gtTranslation: x.translated,
+    translated:    '',
+    status:        'wait',
+    strong:        x.strong,
+  }));
+  renderMistralQueue(); updateMistralStats();
+  document.getElementById('mQueueWrap').style.display = 'block';
+  document.getElementById('mQueueStats').style.display = 'flex';
+  document.getElementById('btnMistralBatch').disabled = false;
+  document.getElementById('mFileLabel').textContent = `Načteno z Google Translate · ${mBatchQueue.length} hesel`;
+  switchMistralTab('batch');
+}
+
 async function doMistralBatch(){
   if(mBatchRunning)return;mBatchRunning=true;mBatchPaused=false;mBatchStartTime=Date.now();
   document.getElementById('mBatchErr').textContent='';document.getElementById('btnMistralBatch').disabled=true;document.getElementById('btnMistralPause').disabled=false;document.getElementById('mBatchProg').classList.add('show');
-  const prefix=document.getElementById('mistralUserPrompt').value.trim();
-  const groupSize=Math.max(1,parseInt(document.getElementById('mBatchSize').value)||1);
-  const delay=Math.max(200,parseInt(document.getElementById('mDelay').value)||800);
-  const total=mBatchQueue.length;const results=document.getElementById('mBatchResults');
-  let startIdx=mBatchQueue.findIndex(x=>x.status!=='done');
+  const prefix     = document.getElementById('mistralUserPrompt').value.trim();
+  const mode       = document.querySelector('input[name="mMode"]:checked')?.value || 'translate';
+  const isReview   = mode === 'review';
+  const groupSize  = Math.max(1,parseInt(document.getElementById('mBatchSize').value)||1);
+  const delay      = Math.max(200,parseInt(document.getElementById('mDelay').value)||800);
+  const total      = mBatchQueue.length;
+  const results    = document.getElementById('mBatchResults');
+  let startIdx     = mBatchQueue.findIndex(x=>x.status!=='done');
   if(startIdx===-1){mBatchRunning=false;document.getElementById('btnMistralPause').disabled=true;setMBatchProg(100,'Vše přeloženo.');return;}
   try{
     for(let i=startIdx;i<total;){
@@ -2340,17 +2579,40 @@ async function doMistralBatch(){
       const doneNow=mBatchQueue.filter(x=>x.status==='done').length;
       const speed=doneNow>0?Math.round(doneNow/((Date.now()-mBatchStartTime)/60000)):0;
       document.getElementById('mTimeEl').textContent=elapsed+'s';document.getElementById('mSpeedEl').textContent=speed;document.getElementById('mTiming').classList.add('show');
-      setMBatchProg(Math.round((i/total)*100),`Překládám ${i+1}–${Math.min(i+groupSize,total)}/${total}…`);
+      setMBatchProg(Math.round((i/total)*100),`${isReview?'Kontroluji':'Překládám'} ${i+1}–${Math.min(i+groupSize,total)}/${total}…`);
       try{
-        let userMsg=group.length===1?(prefix?`${prefix}\n\n${group[0].item.raw}`:group[0].item.raw):(prefix?prefix+'\n\n':'')+`Přelož ${group.length} hesel. Vrať ve formátu [1], [2], atd.:\n\n`+group.map(({item},gi)=>`[${gi+1}] ${item.raw}`).join('\n\n');
-        const translated=await mistralCall(userMsg,null);
-        if(group.length===1){group[0].item.translated=translated.trim();group[0].item.status='done';}
-        else{const parsed=parseNumberedResponse(translated,group.length);group.forEach(({item},gi)=>{item.translated=parsed[gi]||translated.trim();item.status='done';});}
+        let userMsg;
+        if(isReview){
+          // Review mode: send original + GT translation, ask for correction
+          if(group.length===1){
+            const item=group[0].item;
+            const gt=item.gtTranslation||'(překlad nedostupný)';
+            userMsg=(prefix?prefix+'\n\n':'')+`Originál:\n${item.raw}\n\nStrojový překlad:\n${gt}`;
+          } else {
+            userMsg=(prefix?prefix+'\n\n':'')+`Zkontroluj ${group.length} překladů. Vrať ve formátu [1], [2], atd.:\n\n`+
+              group.map(({item},gi)=>`[${gi+1}]\nOriginál: ${item.raw}\nPřeklad: ${item.gtTranslation||''}`).join('\n\n');
+          }
+        } else {
+          // Normal translation mode
+          if(group.length===1){
+            userMsg=prefix?`${prefix}\n\n${group[0].item.raw}`:group[0].item.raw;
+          } else {
+            userMsg=(prefix?prefix+'\n\n':'')+`Přelož ${group.length} hesel. Vrať ve formátu [1], [2], atd.:\n\n`+
+              group.map(({item},gi)=>`[${gi+1}] ${item.raw}`).join('\n\n');
+          }
+        }
+        const aiResult=await mistralCall(userMsg,null);
+        if(group.length===1){group[0].item.translated=aiResult.trim();group[0].item.status='done';}
+        else{const parsed=parseNumberedResponse(aiResult,group.length);group.forEach(({item},gi)=>{item.translated=parsed[gi]||aiResult.trim();item.status='done';});}
       }catch(err){if(err.message==='STOP')throw err;group.forEach(({item})=>{item.status='error';item.translated='[Chyba: '+err.message+']';});}
       group.forEach(({idx,item})=>{
         updateMistralQRow(idx);updateMistralStats();
         let card=document.getElementById(`mres-${idx}`);if(!card){card=document.createElement('div');card.className='bcard';card.id=`mres-${idx}`;results.appendChild(card);}
-        card.innerHTML=`<div class="bcard-num">${item.strong?item.strong+' · ':''}Definice ${idx+1}${item.status==='error'?' ⚠':''}</div>${ee(item.translated)}`;
+        // In review mode show both GT and AI result
+        const cardContent=isReview&&item.gtTranslation
+          ?`<div style="font-size:.72rem;color:var(--muted);margin-bottom:.2rem">GT: ${ee(item.gtTranslation.slice(0,120))}${item.gtTranslation.length>120?'…':''}</div><div style="color:var(--bible)">AI: ${ee(item.translated)}</div>`
+          :ee(item.translated);
+        card.innerHTML=`<div class="bcard-num">${item.strong?item.strong+' · ':''}${isReview?'Kontrola':'Definice'} ${idx+1}${item.status==='error'?' ⚠':''}</div>${cardContent}`;
         if(item.status==='done')addToHistory(item.raw,item.translated);
       });
       document.getElementById('btnMistralSave').disabled=false;document.getElementById('btnMistralCopy').disabled=false;
