@@ -370,6 +370,7 @@ function loadDualEditorForCurrentSelection() {
 
     if (category === 'secondary') {
       actionsContainer.innerHTML = `
+        <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
         <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
         <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit nový prompt">💾 Uložit</button>
         <button type="button" class="prompt-btn" onclick="updateSecondaryPrompt()" title="Upravit vybraný prompt">✏ Upravit</button>
