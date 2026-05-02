@@ -1,5 +1,5 @@
 const SYSTEM_MESSAGE = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.
-
+ 
 FORMÁT ODPOVĚDI (Striktně dodržet):
 ###[číslo]###
 V: [česky význam]
@@ -7,25 +7,25 @@ D: [věrný překlad EN definice do češtiny včetně závorek a značek]
 P: [jazyk + původní písmo (český přepis v závorce) + etymologie]
 K: [překlad hlavního KJV významu do češtiny]
 S: [odborný český výklad 3-5 vět]
-
+ 
 PRAVIDLA PRO ČEŠTINU A KVALITU:
-
+ 
 PŘEPISY: U všech cizích slov (řečtina, hebrejština, aramejština) v poli P, D i S vždy doplň český fonetický přepis v závorce.
-
+ 
 PŘEKLAD ODKAZŮ: Biblické zkratky v [ ] uvnitř pole D musí být v češtině (např. [Act] na [Sk], [Mat] na [Mt], [John] na [Jan]).
-
+ 
 DŮSLEDNOST: Přelož vše z EN do CZ (včetně termínů jako properly, figuratively, lit., spec.).
-
+ 
 NORMALIZACE: Nahraď __1. za 1. a __2. za 2.
-
+ 
 K (KJV): Odvoď hlavní význam z kontextu a přelož jej do češtiny.
-
-S (SPECIALISTA): Musí obsahovat teologický a lexikální kontext. Žádná angličtina.
-
+ 
+S (SPECIALISTA): [detailní odstavec 3-5 vět jako biblický specialista]. Odstavec má vysvětlit teologický a biblický význam slova v kontextu. Nepiš body ani seznam, jen souvislý odstavec.
+ 
 OMEZENÍ:
-
+ 
 Pole POUŽITÍ negeneruj (odkazy zůstávají v poli D, uživatel si je extrahuje sám).
-
+ 
 Používej pouze jednopísmenné klíče (V, D, P, K, S) pro úsporu tokenů.`;
 
 const DEFAULT_PROMPT = `Přelož následující hesla z angličtiny a originálních jazyků do češtiny podle pravidel. Doplňuj české přepisy v závorkách i v rámci překladu definice. Vrat pouze data bez komentářů.
@@ -51,18 +51,18 @@ const FINAL_PROMPT = {
 };
 
 const PROMPT_LIBRARY_BASE = {
-  default: [{ name: 'System', desc: 'System default prompt', text: DEFAULT_PROMPT }],
-  detailed: [{ name: 'Detailed', desc: 'Detailed translation', text: DEFAULT_PROMPT }],
-  concise: [{ name: 'Concise', desc: 'Short translation', text: DEFAULT_PROMPT }],
-  literal: [{ name: 'Literal', desc: 'Literal translation', text: DEFAULT_PROMPT }],
-  test: [],
-  custom: [],
-  library: [
-    { name: 'Precision', desc: 'High fidelity', text: DEFAULT_PROMPT },
-    { name: 'Theological', desc: 'Context emphasis', text: DEFAULT_PROMPT },
-    { name: 'Fast', desc: 'Short and fast', text: DEFAULT_PROMPT }
-  ]
-};
+   default: [{ name: 'System', desc: 'System default prompt', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
+   detailed: [{ name: 'Detailed', desc: 'Detailed translation', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
+   concise: [{ name: 'Concise', desc: 'Short translation', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
+   literal: [{ name: 'Literal', desc: 'Literal translation', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
+   test: [],
+   custom: [],
+   library: [
+     { name: 'Precision', desc: 'High fidelity', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT },
+     { name: 'Theological', desc: 'Context emphasis', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT },
+     { name: 'Fast', desc: 'Short and fast', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }
+   ]
+ };
 
 const MODEL_TEST_PROMPT_CATALOG = {
   preset_v1: { label: 'Fallback preset_v1', template: DEFAULT_PROMPT },
