@@ -7,7 +7,9 @@ export function createPromptLibraryApi(deps) {
     getFinalPrompt,
     getPromptLibraryBase,
     enforceSpecialistaFormat,
-    showToast
+    showToast,
+    getActiveSystemMessage,
+    getActiveMainPromptTemplate
   } = deps;
 
   const PROMPT_LIBRARY_CUSTOM_KEY = 'strong_prompt_library_custom';
@@ -167,6 +169,13 @@ export function createPromptLibraryApi(deps) {
     const editor = document.getElementById('promptLibraryEditor');
     const savedPrompt = localStorage.getItem('strong_prompt') || getDefaultPrompt();
     rebuildPromptLibrary(savedPrompt);
+
+    // Initialize dual prompt editors
+    const sysLib = document.getElementById('librarySystemPrompt');
+    const userLib = document.getElementById('libraryUserPrompt');
+    if (sysLib) sysLib.value = getActiveSystemMessage();
+    if (userLib) userLib.value = getActiveMainPromptTemplate('batch');
+
     state.selectedPromptCategory = 'default';
     state.selectedPromptIndex = 0;
     const getPromptTabLabel = (cat) => {

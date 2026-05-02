@@ -1998,7 +1998,9 @@ const promptLibraryApi = createPromptLibraryApi({
   getFinalPrompt: getResolvedFinalPrompt,
   getPromptLibraryBase: getResolvedPromptLibraryBase,
   enforceSpecialistaFormat,
-  showToast
+  showToast,
+  getActiveSystemMessage,
+  getActiveMainPromptTemplate
 });
 
 const {
@@ -3760,7 +3762,56 @@ function saveEditedPrompt() {
   setMainPrompt(userVal, 'custom');
   updatePromptStatusIndicator();
   closeEditPromptModal();
+   showToast('? AI prompt uložen');
+ }
+
+// Library prompt editor functions
+function restoreLibraryPrompts() {
+  const sysEl = document.getElementById('librarySystemPrompt');
+  const userEl = document.getElementById('libraryUserPrompt');
+  const status = document.getElementById('libraryPromptStatus');
+
+  if (sysEl) sysEl.value = getActiveSystemMessage();
+  if (userEl) userEl.value = getActiveMainPromptTemplate('batch');
+
+  if (status) {
+    status.textContent = '? Obnoveno výchozí';
+    status.style.color = 'var(--grn)';
+    setTimeout(() => { if (status) status.textContent = ''; }, 2200);
+  }
+}
+
+function saveLibraryPrompts() {
+  const sysEl = document.getElementById('librarySystemPrompt');
+  const userEl = document.getElementById('libraryUserPrompt');
+  const status = document.getElementById('libraryPromptStatus');
+
+  if (!sysEl || !userEl) return;
+
+  const sysVal = (sysEl.value || '').trim();
+  const userVal = (userEl.value || '').trim();
+
+  if (!sysVal) {
+    if (status) { status.textContent = '? Systémový prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+    return;
+  }
+  if (!userVal) {
+    if (status) { status.textContent = '? Uživatelský prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+    return;
+  }
+
+  // Save
+  localStorage.setItem('strong_custom_system_prompt', sysVal);
+  setMainPrompt(userVal, 'custom');
+  updatePromptStatusIndicator();
+
+  if (status) {
+    status.textContent = '? Uloženo';
+    status.style.color = 'var(--grn)';
+  }
   showToast('? AI prompt uložen');
+
+  setTimeout(() => { if (status) status.textContent = ''; }, 2000);
 }
 
 function onI18nToolEditorLangChange() {
@@ -4348,6 +4399,10 @@ window.showPromptEditModal = showPromptEditModal;
 window.closeEditPromptModal = closeEditPromptModal;
 window.restoreDefaultPrompt = restoreDefaultPrompt;
 window.saveEditedPrompt = saveEditedPrompt;
+
+// Prompt library dual editor
+window.restoreLibraryPrompts = restoreLibraryPrompts;
+window.saveLibraryPrompts = saveLibraryPrompts;
 
 // Z exportDataApi
 window.exportTXT = exportTXT;
