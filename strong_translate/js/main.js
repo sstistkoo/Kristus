@@ -736,11 +736,25 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
        return getActiveMainPromptTemplate('batch');
      }
 
-     function getActiveSystemMessage() {
-       const custom = localStorage.getItem('strong_custom_system_prompt');
-       if (custom && custom.trim()) return custom.trim();
-       return getResolvedSystemMessage();
-     }
+      function getActiveSystemMessage() {
+        const custom = localStorage.getItem('strong_custom_system_prompt');
+        if (custom && custom.trim()) return custom.trim();
+        return getResolvedSystemMessage();
+      }
+
+      function getActiveSecondarySystemMessage() {
+        const secondary = localStorage.getItem('strong_secondary_system_prompt');
+        if (secondary && secondary.trim()) return secondary.trim();
+        // Fallback k hlavnímu systémovému promptu
+        return getActiveSystemMessage();
+      }
+
+      function getActiveSecondaryUserPrompt(context = 'batch') {
+        const secondaryUser = localStorage.getItem('strong_secondary_user_prompt');
+        if (secondaryUser && secondaryUser.trim()) return secondaryUser.trim();
+        // Fallback k hlavnímu uživatelskému promptu
+        return getActiveMainPromptTemplate(context);
+      }
 
       const EN_TOPIC_PROMPT_MAP = {
         preset_topic_vyznam_en: 'vyznam',
@@ -1984,18 +1998,20 @@ const settingsModalsApi = createSettingsModalsApi({
 });
 const { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings } = settingsModalsApi;
 
-const promptLibraryApi = createPromptLibraryApi({
-  state,
-  t,
-  getUiLang,
-  getDefaultPrompt: getResolvedDefaultPrompt,
-  getFinalPrompt: getResolvedFinalPrompt,
-  getPromptLibraryBase: getResolvedPromptLibraryBase,
-  enforceSpecialistaFormat,
-  showToast,
-  getActiveSystemMessage,
-  getActiveMainPromptTemplate
-});
+ const promptLibraryApi = createPromptLibraryApi({
+   state,
+   t,
+   getUiLang,
+   getDefaultPrompt: getResolvedDefaultPrompt,
+   getFinalPrompt: getResolvedFinalPrompt,
+   getPromptLibraryBase: getResolvedPromptLibraryBase,
+   enforceSpecialistaFormat,
+   showToast,
+   getActiveSystemMessage,
+   getActiveMainPromptTemplate,
+   getActiveSecondarySystemMessage,
+   getActiveSecondaryUserPrompt
+ });
 
 const {
   initializePromptLibrary,
@@ -2196,15 +2212,40 @@ async function loadSavedSettings() {
 window.showPromptLibraryModal = promptLibraryApi.showPromptLibraryModal;
 window.closePromptLibraryModal = promptLibraryApi.closePromptLibraryModal;
 window.selectPrompt = promptLibraryApi.selectPrompt;
-window.applySelectedPrompt = promptLibraryApi.applySelectedPrompt;
-window.exportPromptLibraryToTxt = promptLibraryApi.exportPromptLibraryToTxt;
-window.importPromptLibraryFromFile = promptLibraryApi.importPromptLibraryFromFile;
-window.showPromptAIModal = showPromptAIModal;
-window.closePromptAIModal = closePromptAIModal;
-window.saveAISettings = saveAISettings;
-window.showPromptLangModal = showPromptLangModal;
-window.closePromptLangModal = closePromptLangModal;
-window.saveLangSettings = saveLangSettings;
+ window.applySelectedPrompt = promptLibraryApi.applySelectedPrompt;
+ window.exportPromptLibraryToTxt = promptLibraryApi.exportPromptLibraryToTxt;
+ window.importPromptLibraryFromFile = promptLibraryApi.importPromptLibraryFromFile;
+ window.showPromptAIModal = showPromptAIModal;
+ window.closePromptAIModal = closePromptAIModal;
+ window.saveAISettings = saveAISettings;
+ window.showPromptLangModal = showPromptLangModal;
+ window.closePromptLangModal = closePromptLangModal;
+ window.saveLangSettings = saveLangSettings;
+ // Secondary prompts
+ window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
+ window.closeSecondaryPromptsModal = promptLibraryApi.closeSecondaryPromptsModal;
+ window.renderSecondaryPromptList = promptLibraryApi.renderSecondaryPromptList;
+ window.selectSecondaryPrompt = promptLibraryApi.selectSecondaryPrompt;
+ window.addSecondaryPrompt = promptLibraryApi.addSecondaryPrompt;
+ window.saveSecondaryPrompt = promptLibraryApi.saveSecondaryPrompt;
+ window.updateSecondaryPrompt = promptLibraryApi.updateSecondaryPrompt;
+ window.deleteSecondaryPrompt = promptLibraryApi.deleteSecondaryPrompt;
+ window.loadSecondaryEditorForCurrentSelection = promptLibraryApi.loadSecondaryEditorForCurrentSelection;
+ window.applySecondaryPrompt = promptLibraryApi.applySecondaryPrompt;
+ window.getActiveSecondarySystemMessage = getActiveSecondarySystemMessage;
+ window.getActiveSecondaryUserPrompt = getActiveSecondaryUserPrompt;
+
+// Secondary prompts
+window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
+window.closeSecondaryPromptsModal = promptLibraryApi.closeSecondaryPromptsModal;
+window.renderSecondaryPromptList = promptLibraryApi.renderSecondaryPromptList;
+window.selectSecondaryPrompt = promptLibraryApi.selectSecondaryPrompt;
+window.addSecondaryPrompt = promptLibraryApi.addSecondaryPrompt;
+window.saveSecondaryPrompt = promptLibraryApi.saveSecondaryPrompt;
+window.updateSecondaryPrompt = promptLibraryApi.updateSecondaryPrompt;
+window.deleteSecondaryPrompt = promptLibraryApi.deleteSecondaryPrompt;
+window.loadSecondaryEditorForCurrentSelection = promptLibraryApi.loadSecondaryEditorForCurrentSelection;
+window.applySecondaryPrompt = promptLibraryApi.applySecondaryPrompt;
 
 function showI18nToolModal() {
   const m = document.getElementById('i18nToolModal');

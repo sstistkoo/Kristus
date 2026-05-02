@@ -1293,8 +1293,18 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
     justify-content: center;
     z-index: 1003;
   }
-  #promptLibraryModal.show { display: flex; }
-  .prompt-modal-box {
+   #promptLibraryModal.show { display: flex; }
+   #secondaryPromptsModal {
+     position: fixed;
+     top: 0; left: 0; right: 0; bottom: 0;
+     background: rgba(0,0,0,0.85);
+     display: none;
+     align-items: center;
+     justify-content: center;
+     z-index: 1004;
+   }
+   #secondaryPromptsModal.show { display: flex; }
+   .prompt-modal-box {
     background: var(--bg2);
     border: 1px solid var(--brd);
     border-radius: 8px;

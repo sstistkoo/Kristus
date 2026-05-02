@@ -76,6 +76,7 @@ export const state = {
   isProgrammaticPromptSet: false,
   selectedPromptCategory: 'default',
   selectedPromptIndex: 0,
+  selectedSecondaryPromptIndex: -1,
   resizing: false,
   startY: 0,
   startLogHeight: 0,

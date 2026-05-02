@@ -410,17 +410,47 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
   return 0;
 }
 
-async function requestTopicFallbackForProvider(prov, key, topicId, abortVersion) {
-  if (isSideFallbackAborted(abortVersion)) return null;
-  const apiKey = getApiKeyForModelTest(prov);
-  const modelQueue = getSecondaryProviderModelQueue(prov);
-  if (!apiKey || !modelQueue.length) return null;
-  if (getProviderCooldownLeftSec(prov) > 0) return null;
-  const entry = state.entryMap.get(key);
-  if (!entry) return null;
-  const promptType = TOPIC_PROMPT_PRESET_MAP[topicId];
-  if (!promptType) return null;
-  const messages = buildModelTestMessages([entry], 'auto-live', promptType, true);
+ async function requestTopicFallbackForProvider(prov, key, topicId, abortVersion) {
+   if (isSideFallbackAborted(abortVersion)) return null;
+   const apiKey = getApiKeyForModelTest(prov);
+   const modelQueue = getSecondaryProviderModelQueue(prov);
+   if (!apiKey || !modelQueue.length) return null;
+   if (getProviderCooldownLeftSec(prov) > 0) return null;
+   const entry = state.entryMap.get(key);
+   if (!entry) return null;
+
+   // ?? VYTVO?ENÍ MESSAGES ????????????????????????????????????????????????????
+   const secondarySys = localStorage.getItem('strong_secondary_system_prompt');
+   const secondaryUser = localStorage.getItem('strong_secondary_user_prompt');
+
+   let messages;
+   if (secondarySys && secondaryUser) {
+     // Použij secondary prompty
+     log(`? Secondary prompts apply: ${prov} for ${key}.${topicId}`);
+     const currentTopic = (state.translated[key] || {})[topicId] || '';
+     const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toUpperCase();
+     const sourceLang = (localStorage.getItem('strong_source_lang') || 'gr').toUpperCase();
+
+     let userContent = secondaryUser
+       .replace(/{GREEK}/g, entry.greek || '')
+       .replace(/{DEFINITION}/g, entry.definice || entry.def || '')
+       .replace(/{KJV}/g, entry.kjv || '')
+       .replace(/{ORIG}/g, entry.orig || '')
+       .replace(/{TOPIC_ID}/g, topicId)
+       .replace(/{CURRENT_TOPIC}/g, currentTopic)
+       .replace(/{TARGET_LANG}/g, targetLang)
+       .replace(/{SOURCE_LANG}/g, sourceLang);
+
+     messages = [
+       { role: 'system', content: secondarySys },
+       { role: 'user', content: userContent }
+     ];
+   } else {
+     // fallback na p?vodní model-test prompt
+     const promptType = TOPIC_PROMPT_PRESET_MAP[topicId];
+     if (!promptType) return null;
+     messages = buildModelTestMessages([entry], 'auto-live', promptType, true);
+   }
 
   for (let i = 0; i < modelQueue.length; i++) {
     if (isSideFallbackAborted(abortVersion)) return null;

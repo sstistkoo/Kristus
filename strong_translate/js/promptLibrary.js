@@ -9,11 +9,14 @@ export function createPromptLibraryApi(deps) {
     enforceSpecialistaFormat,
     showToast,
     getActiveSystemMessage,
-    getActiveMainPromptTemplate
+    getActiveMainPromptTemplate,
+    getActiveSecondarySystemMessage,
+    getActiveSecondaryUserPrompt
   } = deps;
 
   const PROMPT_LIBRARY_CUSTOM_KEY = 'strong_prompt_library_custom';
   const PROMPT_LIBRARY_IMPORTED_KEY = 'strong_prompt_library_imported';
+  const SECONDARY_PROMPTS_KEY = 'strong_secondary_prompts';
 
   function clonePromptLibraryBase() {
     return JSON.parse(JSON.stringify(getPromptLibraryBase() || {}));
@@ -415,13 +418,238 @@ export function createPromptLibraryApi(deps) {
       nameEl.style.color = 'var(--red)';
     }
     if (!isPromptAutoModeEnabled()) nameEl.textContent += ` · ${t('prompt.status.autoOffSuffix')}`;
-  }
+    }
 
     function initializePromptLibrary() {
       rebuildPromptLibrary(localStorage.getItem('strong_prompt') || getDefaultPrompt());
+      state.selectedSecondaryPromptIndex = -1;
     }
 
-    return {
+  // ===== SECONDARY PROMPTS FUNCTIONS =====
+
+  function getStoredSecondaryPrompts() {
+    try {
+      const raw = localStorage.getItem(SECONDARY_PROMPTS_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(parsed)) return [];
+      // Validate each prompt
+      return parsed.filter((p) => p && typeof p.name === 'string' && typeof p.system === 'string' && typeof p.user === 'string');
+    } catch {
+      return [];
+    }
+  }
+
+  function saveStoredSecondaryPrompts(prompts) {
+    localStorage.setItem(SECONDARY_PROMPTS_KEY, JSON.stringify(prompts || []));
+  }
+
+  function showSecondaryPromptsModal() {
+    const modal = document.getElementById('secondaryPromptsModal');
+    if (!modal) return;
+
+    // Initialize secondary prompt state
+    state.selectedSecondaryPromptIndex = -1;
+
+    // Clear editors and load active secondary prompts
+    const sysEl = document.getElementById('secondarySystemPrompt');
+    const userEl = document.getElementById('secondaryUserPrompt');
+    if (sysEl) sysEl.value = (getActiveSecondarySystemMessage && getActiveSecondarySystemMessage()) || getActiveSystemMessage();
+    if (userEl) userEl.value = (getActiveSecondaryUserPrompt && getActiveSecondaryUserPrompt('batch')) || getActiveMainPromptTemplate('batch');
+
+    renderSecondaryPromptList();
+    modal.classList.add('show');
+    modal.onclick = (e) => { if (e.target === modal) closeSecondaryPromptsModal(); };
+  }
+
+  function closeSecondaryPromptsModal() {
+    const modal = document.getElementById('secondaryPromptsModal');
+    if (modal) modal.classList.remove('show');
+  }
+
+  function renderSecondaryPromptList() {
+    const list = document.getElementById('secondaryPromptList');
+    const prompts = getStoredSecondaryPrompts();
+    if (!list) return;
+
+    if (prompts.length === 0) {
+      list.innerHTML = `<div style="color:var(--txt3);font-size:11px;padding:10px;grid-column:1/-1;">Žádné sekundární prompty. Kliknějte na "Nový" pro vytvoření.</div>`;
+      return;
+    }
+
+    list.innerHTML = prompts.map((p, idx) => `
+      <div class="prompt-item ${idx === state.selectedSecondaryPromptIndex ? 'selected' : ''}" data-index="${idx}" onclick="selectSecondaryPrompt(${idx})">
+        <div class="prompt-item-name">${p.name || t('prompt.library.untitled')}</div>
+        <div class="prompt-item-desc">${(p.desc || '').substring(0, 80)}${((p.desc || '').length > 80) ? '...' : ''}</div>
+      </div>
+    `).join('');
+  }
+
+  function selectSecondaryPrompt(index) {
+    state.selectedSecondaryPromptIndex = index;
+    loadSecondaryEditorForCurrentSelection();
+    renderSecondaryPromptList();
+  }
+
+  function loadSecondaryEditorForCurrentSelection() {
+    const prompts = getStoredSecondaryPrompts();
+    const entry = prompts[state.selectedSecondaryPromptIndex];
+    const sysEl = document.getElementById('secondarySystemPrompt');
+    const userEl = document.getElementById('secondaryUserPrompt');
+    if (!sysEl || !userEl) return;
+
+    if (entry) {
+      sysEl.value = entry.system || getActiveSystemMessage();
+      userEl.value = entry.user || '';
+    } else {
+      sysEl.value = getActiveSystemMessage();
+      userEl.value = '';
+    }
+  }
+
+  function addSecondaryPrompt() {
+    const sysEl = document.getElementById('secondarySystemPrompt');
+    const userEl = document.getElementById('secondaryUserPrompt');
+    const name = prompt(t('prompt.library.namePrompt') || 'Zadej název nového promptu:', '');
+    if (!name) return;
+
+    const desc = prompt(t('prompt.library.descPrompt') || 'Zadej popis promptu (volitelné):', '') || '';
+
+    const newPrompt = {
+      name: name,
+      desc: desc,
+      system: sysEl ? sysEl.value : getActiveSystemMessage(),
+      user: userEl ? userEl.value : ''
+    };
+
+    const prompts = getStoredSecondaryPrompts();
+    prompts.push(newPrompt);
+    saveStoredSecondaryPrompts(prompts);
+
+    state.selectedSecondaryPromptIndex = prompts.length - 1;
+    renderSecondaryPromptList();
+    loadSecondaryEditorForCurrentSelection();
+    showToast(t('toast.prompt.saved') || 'Prompt uložen');
+  }
+
+  function saveSecondaryPrompt() {
+    const sysEl = document.getElementById('secondarySystemPrompt');
+    const userEl = document.getElementById('secondaryUserPrompt');
+    const sysVal = sysEl ? sysEl.value.trim() : '';
+    const userVal = userEl ? userEl.value.trim() : '';
+
+    if (!sysVal) {
+      showToast(t('toast.prompt.systemEmpty') || 'Systémový prompt nesmí být prázdný');
+      return;
+    }
+    if (!userVal) {
+      showToast(t('toast.prompt.empty') || 'Uživatelský prompt nesmí být prázdný');
+      return;
+    }
+
+    const name = prompt(t('prompt.library.namePrompt') || 'Zadej název promptu:', 'Sekundární prompt');
+    if (!name) return;
+
+    const desc = prompt(t('prompt.library.descPrompt') || 'Zadej popis (volitelné):', '') || '';
+
+    const newPrompt = {
+      name: name,
+      desc: desc,
+      system: sysVal,
+      user: userVal
+    };
+
+    const prompts = getStoredSecondaryPrompts();
+    prompts.push(newPrompt);
+    saveStoredSecondaryPrompts(prompts);
+
+    state.selectedSecondaryPromptIndex = prompts.length - 1;
+    renderSecondaryPromptList();
+    showToast(t('toast.prompt.saved') || 'Prompt uložen');
+  }
+
+  function updateSecondaryPrompt() {
+    const index = state.selectedSecondaryPromptIndex;
+    if (index < 0) {
+      showToast(t('toast.prompt.selectFirst') || 'Nejprve vyber prompt k úpravě');
+      return;
+    }
+
+    const sysEl = document.getElementById('secondarySystemPrompt');
+    const userEl = document.getElementById('secondaryUserPrompt');
+    const sysVal = sysEl ? sysEl.value.trim() : '';
+    const userVal = userEl ? userEl.value.trim() : '';
+
+    if (!sysVal) {
+      showToast(t('toast.prompt.systemEmpty') || 'Systémový prompt nesmí být prázdný');
+      return;
+    }
+    if (!userVal) {
+      showToast(t('toast.prompt.empty') || 'Uživatelský prompt nesmí být prázdný');
+      return;
+    }
+
+    const prompts = getStoredSecondaryPrompts();
+    if (index >= prompts.length) return;
+
+    // Keep existing name/desc or allow editing them
+    const existing = prompts[index];
+    const name = prompt(t('prompt.library.namePrompt') || 'Zadej název:', existing.name);
+    if (!name) return;
+
+    const desc = prompt(t('prompt.library.descPrompt') || 'Zadej popis (volitelné):', existing.desc) || '';
+
+    prompts[index] = {
+      name: name,
+      desc: desc,
+      system: sysVal,
+      user: userVal
+    };
+
+    saveStoredSecondaryPrompts(prompts);
+    renderSecondaryPromptList();
+    showToast(t('toast.prompt.saved') || 'Prompt upraven');
+  }
+
+  function deleteSecondaryPrompt() {
+    const index = state.selectedSecondaryPromptIndex;
+    if (index < 0) {
+      showToast(t('toast.prompt.selectFirst') || 'Nejprve vyber prompt k smazání');
+      return;
+    }
+
+    if (!confirm(t('toast.prompt.confirmDelete') || 'Opravdu smazat tento prompt?')) return;
+
+    const prompts = getStoredSecondaryPrompts();
+    if (index >= prompts.length) return;
+
+    prompts.splice(index, 1);
+    saveStoredSecondaryPrompts(prompts);
+
+    state.selectedSecondaryPromptIndex = -1;
+    loadSecondaryEditorForCurrentSelection();
+    renderSecondaryPromptList();
+    showToast(t('toast.prompt.deleted') || 'Prompt smazán');
+  }
+
+  function applySecondaryPrompt() {
+    const index = state.selectedSecondaryPromptIndex;
+    if (index < 0) {
+      showToast(t('toast.prompt.selectFirst') || 'Nejprve vyber prompt k aplikaci');
+      return;
+    }
+
+    const prompts = getStoredSecondaryPrompts();
+    const prompt = prompts[index];
+    if (!prompt) return;
+
+    // Store as secondary prompt to be used by translation pipeline
+    localStorage.setItem('strong_secondary_system_prompt', prompt.system);
+    localStorage.setItem('strong_secondary_user_prompt', prompt.user);
+    showToast(t('toast.prompt.applied') || 'Sekundární prompt aplikován');
+    closeSecondaryPromptsModal();
+  }
+
+  return {
       initializePromptLibrary,
       getStoredCustomPromptLibrary,
       saveStoredCustomPromptLibrary,
@@ -443,6 +671,19 @@ export function createPromptLibraryApi(deps) {
       applySelectedPrompt,
       exportPromptLibraryToTxt,
       importPromptLibraryFromFile,
-      updatePromptStatusIndicator
+      updatePromptStatusIndicator,
+      // Secondary prompts
+      getStoredSecondaryPrompts,
+      saveStoredSecondaryPrompts,
+      showSecondaryPromptsModal,
+      closeSecondaryPromptsModal,
+      renderSecondaryPromptList,
+      selectSecondaryPrompt,
+      addSecondaryPrompt,
+      saveSecondaryPrompt,
+      updateSecondaryPrompt,
+      deleteSecondaryPrompt,
+      loadSecondaryEditorForCurrentSelection,
+      applySecondaryPrompt
     };
   }

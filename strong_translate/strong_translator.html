@@ -648,19 +648,51 @@
         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
       </div>
 
+      <div class="prompt-actions">
+        <button class="prompt-btn" id="btnPromptSystem" onclick="applySystemPromptForCurrentTask()" title="Nastavit systémový prompt dle aktuálního režimu">🛠 System</button>
+        <button class="prompt-btn" id="btnPromptSecondary" onclick="showSecondaryPromptsModal()" title="Spravovat sekundární prompty pro follow-up překlady">🔄 Secondary</button>
+        <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secondary Prompts Modal -->
+  <div id="secondaryPromptsModal">
+    <div class="prompt-modal-box">
+      <div class="prompt-modal-title" id="secondaryPromptsTitle">🔄 Sekundární prompty</div>
+
+      <div class="prompt-list" id="secondaryPromptList" style="max-height: 300px; overflow-y: auto; margin-bottom: 12px;">
+        <!-- Secondary prompts will be populated by JavaScript -->
+      </div>
+
+      <!-- Dual prompt editor for system + user prompts -->
+      <div class="prompt-library-editor-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+        <div>
+          <label for="secondarySystemPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Systémový prompt (role: system)</label>
+          <textarea id="secondarySystemPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <label for="secondaryUserPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Uživatelský prompt (role: user)</label>
+          <textarea id="secondaryUserPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
+        </div>
+      </div>
+
+       <div class="prompt-actions" style="margin-top: 8px; gap: 8px;">
+         <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
+         <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit nový prompt">💾 Uložit</button>
+         <button type="button" class="prompt-btn" onclick="updateSecondaryPrompt()" title="Aktualizovat vybraný prompt">✏ Upravit</button>
+         <button type="button" class="prompt-btn red" onclick="deleteSecondaryPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
+         <span id="secondaryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+       </div>
+
        <div class="prompt-actions">
-         <button class="prompt-btn" id="btnPromptSystem" onclick="applySystemPromptForCurrentTask()" title="Nastavit systémový prompt dle aktuálního režimu">🛠 System</button>
-         <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
-         <button class="prompt-btn" id="btnPromptExportTxt" onclick="exportPromptLibraryToTxt()" title="Stáhnout prompty do TXT">⬇ TXT</button>
-         <button class="prompt-btn" id="btnPromptLoadTxt" type="button" onclick="document.getElementById('promptLibraryFileInput').click()" title="Načíst prompty ze souboru TXT">⬆ Načíst</button>
-         <input type="file" id="promptLibraryFileInput" class="is-hidden" accept=".txt,text/plain" onchange="importPromptLibraryFromFile(this)" aria-label="Načíst prompty ze souboru TXT" title="Načíst prompty ze souboru TXT">
-         <button class="prompt-btn cancel" id="btnPromptLibraryClose" onclick="closePromptLibraryModal()">✕ Zavřít</button>
-         <button class="prompt-btn ok" id="btnPromptLibrarySaveApply" onclick="applySelectedPrompt()">✓ Uložit a použít</button>
+         <button class="prompt-btn ok" onclick="applySecondaryPrompt()" title="Aplikovat vybraný sekundární prompt a použít v překladu">✓ Použít vybraný</button>
+         <button class="prompt-btn cancel" id="btnSecondaryClose" onclick="closeSecondaryPromptsModal()">✕ Zavřít</button>
        </div>
     </div>
   </div>
 
-   <!-- AI Settings Sub-modal -->
+    <!-- AI Settings Sub-modal -->
    <div id="promptAIModal" class="prompt-ai-modal">
      <div class="prompt-modal-box prompt-ai-modal-box">
       <div class="prompt-modal-title" id="promptAiModalTitle">🤖 AI nastavení</div>
