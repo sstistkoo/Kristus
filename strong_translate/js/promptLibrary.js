@@ -193,6 +193,14 @@ export function createPromptLibraryApi(deps) {
       };
     });
     matchPromptToPreset(savedPrompt);
+    const activeTab = tabs.querySelector('.prompt-tab.active');
+    if (activeTab && activeTab.dataset.category !== state.selectedPromptCategory) {
+      activeTab.classList.remove('active');
+      const newActiveTab = tabs.querySelector(`.prompt-tab[data-category="${state.selectedPromptCategory}"]`);
+      if (newActiveTab) newActiveTab.classList.add('active');
+      loadDualEditorForCurrentSelection();
+      renderPromptList();
+    }
     loadDualEditorForCurrentSelection();
     renderPromptList();
     modal.classList.add('show');
@@ -200,8 +208,11 @@ export function createPromptLibraryApi(deps) {
   }
 
   function matchPromptToPreset(promptText) {
+    const baseCategories = ['default', 'detailed', 'concise', 'literal', 'test', 'library'];
     let foundMatch = false;
-    for (const [category, prompts] of Object.entries(state.PROMPT_LIBRARY)) {
+    for (const category of baseCategories) {
+      const prompts = state.PROMPT_LIBRARY[category];
+      if (!Array.isArray(prompts)) continue;
       for (let i = 0; i < prompts.length; i++) {
         if (prompts[i].text === promptText) {
           state.selectedPromptCategory = category;
@@ -211,6 +222,15 @@ export function createPromptLibraryApi(deps) {
         }
       }
       if (foundMatch) break;
+    }
+    if (!foundMatch && Array.isArray(state.PROMPT_LIBRARY.custom)) {
+      for (let i = 0; i < state.PROMPT_LIBRARY.custom.length; i++) {
+        if (state.PROMPT_LIBRARY.custom[i].text === promptText) {
+          state.selectedPromptCategory = 'custom';
+          state.selectedPromptIndex = i;
+          return;
+        }
+      }
     }
     if (!foundMatch) {
       state.selectedPromptCategory = 'custom';
