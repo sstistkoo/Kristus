@@ -163,43 +163,41 @@ export function createPromptLibraryApi(deps) {
     showToast(t('toast.autoPrompt.toggled', { state: on ? t('common.offLower') : t('common.onLower') }));
   }
 
-function showPromptLibraryModal() {
-   const modal = document.getElementById('promptLibraryModal');
-   const tabs = document.getElementById('promptTabs');
-   const savedPrompt = localStorage.getItem('strong_prompt') || getDefaultPrompt();
-   rebuildPromptLibrary(savedPrompt);
+  function showPromptLibraryModal() {
+    const modal = document.getElementById('promptLibraryModal');
+    const tabs = document.getElementById('promptTabs');
+    const savedPrompt = localStorage.getItem('strong_prompt') || getDefaultPrompt();
+    rebuildPromptLibrary(savedPrompt);
 
-   // Initialize dual prompt editors
-   const sysLib = document.getElementById('librarySystemPrompt');
-   const userLib = document.getElementById('libraryUserPrompt');
-   if (sysLib) sysLib.value = getActiveSystemMessage();
-   if (userLib) userLib.value = getActiveMainPromptTemplate('batch');
+    // Initialize dual prompt editors
+    const sysLib = document.getElementById('librarySystemPrompt');
+    const userLib = document.getElementById('libraryUserPrompt');
+    if (sysLib) sysLib.value = getActiveSystemMessage();
+    if (userLib) userLib.value = getActiveMainPromptTemplate('batch');
 
-   state.selectedPromptCategory = 'default';
-   state.selectedPromptIndex = 0;
-   const getPromptTabLabel = (cat) => {
-     const map = { default: 'prompt.tab.default', detailed: 'prompt.tab.detailed', concise: 'prompt.tab.concise', literal: 'prompt.tab.literal', test: 'prompt.tab.test', custom: 'prompt.tab.custom' };
-     return t(map[cat] || cat);
-   };
-   tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).map((cat) => `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`).join('');
-   tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
-     tab.onclick = () => {
-       tabs.querySelectorAll('.prompt-tab').forEach((x) => x.classList.remove('active'));
-       tab.classList.add('active');
-       state.selectedPromptCategory = tab.dataset.category;
-       state.selectedPromptIndex = 0;
-       loadDualEditorForCurrentSelection();
-       renderPromptList();
-       renderPromptPreview();
-     };
-   });
-   matchPromptToPreset(savedPrompt);
-   loadDualEditorForCurrentSelection();
-   renderPromptList();
-   renderPromptPreview();
-   modal.classList.add('show');
-   modal.onclick = (e) => { if (e.target === modal) closePromptLibraryModal(); };
- }
+    state.selectedPromptCategory = 'default';
+    state.selectedPromptIndex = 0;
+    const getPromptTabLabel = (cat) => {
+      const map = { default: 'prompt.tab.default', detailed: 'prompt.tab.detailed', concise: 'prompt.tab.concise', literal: 'prompt.tab.literal', test: 'prompt.tab.test', custom: 'prompt.tab.custom' };
+      return t(map[cat] || cat);
+    };
+    tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).map((cat) => `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`).join('');
+    tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
+      tab.onclick = () => {
+        tabs.querySelectorAll('.prompt-tab').forEach((x) => x.classList.remove('active'));
+        tab.classList.add('active');
+        state.selectedPromptCategory = tab.dataset.category;
+        state.selectedPromptIndex = 0;
+        loadDualEditorForCurrentSelection();
+        renderPromptList();
+      };
+    });
+    matchPromptToPreset(savedPrompt);
+    loadDualEditorForCurrentSelection();
+    renderPromptList();
+    modal.classList.add('show');
+    modal.onclick = (e) => { if (e.target === modal) closePromptLibraryModal(); };
+  }
 
   function matchPromptToPreset(promptText) {
     let foundMatch = false;
@@ -225,72 +223,73 @@ function showPromptLibraryModal() {
     document.getElementById('promptLibraryModal').classList.remove('show');
   }
 
-  function renderPromptList() {
-    const list = document.getElementById('promptList');
-    const prompts = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
-    if (prompts.length === 0) {
-      list.innerHTML = `<div style="color:var(--txt3);font-size:11px;padding:10px">${t('prompt.library.emptyCategory')}</div>`;
-      return;
+    function renderPromptList() {
+      const list = document.getElementById('promptList');
+      const prompts = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
+      if (prompts.length === 0) {
+        list.innerHTML = `<div style="color:var(--txt3);font-size:11px;padding:10px">${t('prompt.library.emptyCategory')}</div>`;
+        return;
+      }
+      list.innerHTML = prompts.map((p, idx) => `
+      <div class="prompt-item ${idx === state.selectedPromptIndex ? 'selected' : ''}" data-index="${idx}" onclick="selectPrompt(${idx})">
+        <div class="prompt-item-name">${p.name}</div>
+        <div class="prompt-item-desc">${p.desc}</div>
+      </div>
+    `).join('');
     }
-    list.innerHTML = prompts.map((p, idx) => `
-    <div class="prompt-item ${idx === state.selectedPromptIndex ? 'selected' : ''}" data-index="${idx}" onclick="selectPrompt(${idx})">
-      <div class="prompt-item-name">${p.name}</div>
-      <div class="prompt-item-desc">${p.desc}</div>
-    </div>
-  `).join('');
-  }
 
-   function renderPromptPreview() {
-     const preview = document.getElementById('promptPreview');
-     const prompts = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
-     const prompt = prompts[state.selectedPromptIndex];
-     if (prompt) {
-       preview.textContent = prompt.text;
-     } else {
-       preview.textContent = t('prompt.library.preview.empty');
-     }
-   }
+    function selectPrompt(index) {
+      state.selectedPromptIndex = index;
+      loadDualEditorForCurrentSelection();
+      renderPromptList();
+    }
 
-function selectPrompt(index) {
-   state.selectedPromptIndex = index;
-   const prompts = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
-   const prompt = prompts[index];
-   loadDualEditorForCurrentSelection();
-   renderPromptList();
-   renderPromptPreview();
-  }
+    function applySelectedPrompt() {
+      const sysEl = document.getElementById('librarySystemPrompt');
+      const userEl = document.getElementById('libraryUserPrompt');
+      const sysVal = sysEl ? sysEl.value.trim() : '';
+      const userVal = userEl ? userEl.value.trim() : '';
 
-// Helper function to load dual editor for current selection
-function loadDualEditorForCurrentSelection() {
-   const category = state.selectedPromptCategory;
-   const index = state.selectedPromptIndex;
-   const entry = (state.PROMPT_LIBRARY[category] || [])[index];
-   if (!entry) return;
-   const sysEl = document.getElementById('librarySystemPrompt');
-   const userEl = document.getElementById('libraryUserPrompt');
-   if (sysEl) sysEl.value = entry.system || getActiveSystemMessage();
-   if (userEl) userEl.value = entry.text;
-}
+      if (!sysVal) {
+        showToast(t('toast.prompt.systemEmpty') || 'Systémový prompt nesmí být prázdný');
+        return;
+      }
+      if (!userVal) {
+        showToast(t('toast.prompt.empty') || 'Uživatelský prompt nesmí být prázdný');
+        return;
+      }
 
-   function applySelectedPrompt() {
-     const userEl = document.getElementById('libraryUserPrompt');
-     const promptText = userEl ? userEl.value.trim() : '';
-     if (!promptText) {
-       showToast(t('toast.prompt.empty'));
-       return;
-     }
-     setMainPrompt(promptText, 'custom');
-     if (state.selectedPromptCategory === 'custom') {
-       localStorage.setItem('strong_custom_prompt', promptText);
-       const imported = getStoredCustomPromptLibrary().filter((item) => item.text !== promptText);
-       saveStoredCustomPromptLibrary(imported);
-       rebuildPromptLibrary(promptText);
-     }
-     closePromptLibraryModal();
-     showToast(t('toast.prompt.savedApplied'));
-   }
+      localStorage.setItem('strong_custom_system_prompt', sysVal);
+      setMainPrompt(userVal, 'custom');
 
-  function exportPromptLibraryToTxt() {
+      if (state.selectedPromptCategory === 'custom') {
+        const imported = getStoredCustomPromptLibrary().filter((item) => item.text !== userVal);
+        saveStoredCustomPromptLibrary(imported);
+        rebuildPromptLibrary(userVal);
+        const index = state.selectedPromptIndex;
+        const customEntries = state.PROMPT_LIBRARY.custom || [];
+        if (customEntries[index]) {
+          customEntries[index] = { ...customEntries[index], system: sysVal, text: userVal };
+          state.PROMPT_LIBRARY.custom = customEntries;
+        }
+      }
+
+      closePromptLibraryModal();
+      showToast(t('toast.prompt.savedApplied'));
+    }
+
+    function loadDualEditorForCurrentSelection() {
+      const category = state.selectedPromptCategory;
+      const index = state.selectedPromptIndex;
+      const entry = (state.PROMPT_LIBRARY[category] || [])[index];
+      if (!entry) return;
+      const sysEl = document.getElementById('librarySystemPrompt');
+      const userEl = document.getElementById('libraryUserPrompt');
+      if (sysEl) sysEl.value = entry.system || getActiveSystemMessage();
+      if (userEl) userEl.value = entry.text;
+    }
+
+    function exportPromptLibraryToTxt() {
     rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
     const lines = ['# Strong Prompt Library Export v1', `# Generated: ${new Date().toISOString()}`];
     for (const [category, prompts] of Object.entries(state.PROMPT_LIBRARY)) {
@@ -350,7 +349,6 @@ function loadDualEditorForCurrentSelection() {
         saveStoredImportedPromptLibrary(importedByCategory);
         rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
         renderPromptList();
-        renderPromptPreview();
         showToast(t('toast.prompts.loaded.count', { count: totalImported }));
       } catch (err) {
         showToast(t('toast.prompt.importFailed'));
@@ -403,9 +401,6 @@ function loadDualEditorForCurrentSelection() {
       rebuildPromptLibrary(localStorage.getItem('strong_prompt') || getDefaultPrompt());
     }
 
-    // Expose helper for external use
-    window.loadDualEditorForCurrentSelection = loadDualEditorForCurrentSelection;
-
     return {
       initializePromptLibrary,
       getStoredCustomPromptLibrary,
@@ -424,7 +419,6 @@ function loadDualEditorForCurrentSelection() {
       matchPromptToPreset,
       closePromptLibraryModal,
       renderPromptList,
-      renderPromptPreview,
       selectPrompt,
       applySelectedPrompt,
       exportPromptLibraryToTxt,

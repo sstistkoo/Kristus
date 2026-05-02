@@ -342,12 +342,6 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     setAttr('btnOpenPromptPreview', 'title', t('prompt.preview.open.title'));
     setAttr('btnResetPromptPreview', 'title', t('prompt.preview.reset.title'));
     setText('promptLibraryTitle', t('prompt.library.title'));
-    const promptPreview = document.getElementById('promptPreview');
-    const promptPreviewText = (promptPreview?.textContent || '').trim();
-    if (promptPreview && (promptPreviewText === 'Vyberte prompt z knihovny pro náhled...' || promptPreviewText === 'Select a prompt from the library for preview...' || promptPreviewText === '—')) {
-      promptPreview.textContent = t('prompt.library.preview.empty');
-    }
-    setAttr('promptLibraryEditor', 'placeholder', t('prompt.library.editor.placeholder'));
     setText('btnPromptSystem', t('prompt.library.system.button'));
     setText('btnPromptExportTxt', t('prompt.library.export.button'));
     setAttr('btnPromptSystem', 'title', t('prompt.library.system.title'));
@@ -2017,15 +2011,14 @@ const {
   togglePromptModeQuick,
   updatePromptAutoButton,
   togglePromptAutoMode,
-  showPromptLibraryModal,
-  closePromptLibraryModal,
-  renderPromptList,
-  renderPromptPreview,
-  selectPrompt,
-  applySelectedPrompt,
-  exportPromptLibraryToTxt,
-  importPromptLibraryFromFile,
-  updatePromptStatusIndicator
+   showPromptLibraryModal,
+   closePromptLibraryModal,
+   renderPromptList,
+   selectPrompt,
+   applySelectedPrompt,
+   exportPromptLibraryToTxt,
+   importPromptLibraryFromFile,
+   updatePromptStatusIndicator
 } = promptLibraryApi;
 initializePromptLibrary();
 
@@ -2200,12 +2193,12 @@ async function loadSavedSettings() {
 }
 
 // Expose functions to window
-window.showPromptLibraryModal = showPromptLibraryModal;
-window.closePromptLibraryModal = closePromptLibraryModal;
-window.selectPrompt = selectPrompt;
-window.applySelectedPrompt = applySelectedPrompt;
-window.exportPromptLibraryToTxt = exportPromptLibraryToTxt;
-window.importPromptLibraryFromFile = importPromptLibraryFromFile;
+window.showPromptLibraryModal = promptLibraryApi.showPromptLibraryModal;
+window.closePromptLibraryModal = promptLibraryApi.closePromptLibraryModal;
+window.selectPrompt = promptLibraryApi.selectPrompt;
+window.applySelectedPrompt = promptLibraryApi.applySelectedPrompt;
+window.exportPromptLibraryToTxt = promptLibraryApi.exportPromptLibraryToTxt;
+window.importPromptLibraryFromFile = promptLibraryApi.importPromptLibraryFromFile;
 window.showPromptAIModal = showPromptAIModal;
 window.closePromptAIModal = closePromptAIModal;
 window.saveAISettings = saveAISettings;
@@ -3861,12 +3854,11 @@ function saveLibraryPrompts() {
      }
    }
 
-   // Update UI
-   updatePromptStatusIndicator();
-   renderPromptList();
-   renderPromptPreview();
+    // Update UI
+    updatePromptStatusIndicator();
+    renderPromptList();
 
-   if (status) {
+    if (status) {
      status.textContent = '? Uloženo';
      status.style.color = 'var(--grn)';
    }
