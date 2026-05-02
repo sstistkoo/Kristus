@@ -372,10 +372,9 @@ function loadDualEditorForCurrentSelection() {
       actionsContainer.innerHTML = `
         <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
         <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
-        <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit nový prompt">💾 Uložit</button>
-        <button type="button" class="prompt-btn" onclick="updateSecondaryPrompt()" title="Upravit vybraný prompt">✏ Upravit</button>
-        <button type="button" class="prompt-btn red" onclick="deleteSecondaryPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
+        <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit prompt">💾 Uložit prompt</button>
         <button class="prompt-btn ok" onclick="applySecondaryPrompt()" title="Aplikovat vybraný sekundární prompt a použít v překladu">✓ Použít vybraný</button>
+        <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
       `;
     } else {
@@ -383,7 +382,7 @@ function loadDualEditorForCurrentSelection() {
         <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
         <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
         <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
-        <button type="button" class="prompt-btn red" onclick="confirmClearLibraryPrompts()" title="Vymazat uložené prompty">🗑 Vymazat</button>
+        <button class="prompt-btn ok" onclick="applySelectedPrompt()" title="Aplikovat vybraný prompt">✓ Použít vybraný</button>
         <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
       `;
