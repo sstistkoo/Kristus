@@ -631,17 +631,17 @@
          <!-- Prompts will be populated by JavaScript -->
        </div>
 
-       <!-- Dual prompt editor for system + user prompts -->
-      <div class="prompt-library-editor-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
-        <div>
-          <label for="librarySystemPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Systémový prompt (role: system)</label>
-          <textarea id="librarySystemPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
-        </div>
-        <div>
-          <label for="libraryUserPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Uživatelský prompt (role: user)</label>
-          <textarea id="libraryUserPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
-        </div>
-      </div>
+        <!-- Dual prompt editor for system + user prompts -->
+       <div class="prompt-library-editor-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+         <div style="display: flex; flex-direction: column; min-height: 0;">
+           <label for="librarySystemPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Systémový prompt (role: system)</label>
+           <textarea id="librarySystemPrompt" class="prompt-library-editor" style="font-size: 12px;" spellcheck="false"></textarea>
+         </div>
+         <div style="display: flex; flex-direction: column; min-height: 0;">
+           <label for="libraryUserPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Uživatelský prompt (role: user)</label>
+           <textarea id="libraryUserPrompt" class="prompt-library-editor" style="font-size: 12px;" spellcheck="false"></textarea>
+         </div>
+       </div>
         <div class="prompt-actions" style="margin-top: 8px; gap: 8px;">
           <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
           <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
@@ -691,8 +691,8 @@
 
     <!-- AI Settings Sub-modal -->
    <div id="promptAIModal" class="prompt-ai-modal">
-     <div class="prompt-modal-box prompt-ai-modal-box">
-      <div class="prompt-modal-title" id="promptAiModalTitle">🤖 AI nastavení</div>
+      <div class="prompt-modal-box prompt-ai-modal-box" style="max-height: calc(100vh - 32px);">
+       <div class="prompt-modal-title" id="promptAiModalTitle">🤖 AI nastavení</div>
        <div class="mobl-set-row">
         <label id="promptAiGroqTempLabel">Groq (hlavní) · Temperature</label>
         <select id="aiTemperature_groq" class="prompt-ai-select" aria-label="Groq temperature" title="Groq temperature">
@@ -760,11 +760,11 @@
      </div>
    </div>
 
-   <!-- Language Settings Sub-modal -->
-  <div id="promptLangModal" class="prompt-lang-modal">
-    <div class="prompt-modal-box prompt-lang-modal-box">
-      <div class="prompt-modal-title" id="promptLangModalTitle">🌐 Nastavení jazyků</div>
-<div class="mobl-set-row">
+    <!-- Language Settings Sub-modal -->
+   <div id="promptLangModal" class="prompt-lang-modal">
+     <div class="prompt-modal-box prompt-lang-modal-box" style="max-height: calc(100vh - 32px);">
+       <div class="prompt-modal-title" id="promptLangModalTitle">🌐 Nastavení jazyků</div>
+ <div class="mobl-set-row">
   <label id="uiLanguageLabel">Jazyk rozhraní</label>
   <select id="uiLanguage" class="prompt-ai-select" aria-label="Jazyk rozhraní" title="Jazyk rozhraní">
     <option value="cs">Čeština</option>
@@ -997,15 +997,15 @@
     </div>
   </div>
 
-   <div id="editPromptModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeEditPromptModal()">
-     <div class="prompt-modal-box i18n-tool-modal-box" style="max-width: 900px; max-height: 92vh;" onclick="event.stopPropagation()">
+    <div id="editPromptModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeEditPromptModal()">
+      <div class="prompt-modal-box i18n-tool-modal-box" style="max-width: 900px; max-height: calc(100vh - 32px);" onclick="event.stopPropagation()">
        <div class="prompt-modal-title">📝 Upravit AI prompt (systém + uživatelský)</div>
        <div class="prompt-actions prompt-actions-gap-0">
          <button type="button" class="prompt-btn" onclick="restoreDefaultPrompt()">🔄 Obnovit výchozí</button>
          <button type="button" class="prompt-btn ok" onclick="saveEditedPrompt()">💾 Uložit prompt</button>
          <button type="button" class="prompt-btn cancel" onclick="closeEditPromptModal()">✕ Zavřít</button>
        </div>
-       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 70vh; overflow: auto;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: calc(100vh - 200px); overflow: auto;">
          <div>
            <label for="editSystemPrompt" class="i18n-tool-label">Systémový prompt (role: system)</label>
            <textarea id="editSystemPrompt" class="i18n-tool-cmd i18n-tool-ai-prompt" style="height: 32vh; font-size: 12px;" spellcheck="false"></textarea>
