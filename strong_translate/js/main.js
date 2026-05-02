@@ -246,7 +246,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     setAttr('btnAutoStop', 'aria-label', t('auto.stop.aria'));
     const autoLog = document.getElementById('autoLog');
     const autoLogText = (autoLog?.textContent || '').trim();
-    if (autoLog && (autoLogText === 'Ceká na start...' || autoLogText === 'Waiting to start...')) {
+    if (autoLog && (autoLogText === 'Cekï¿½ na start...' || autoLogText === 'Waiting to start...')) {
       autoLog.textContent = t('auto.log.waiting');
     }
     refreshLanguageAwarePromptOptionLabels();
@@ -548,7 +548,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
          pl: t('lang.option.pl'),
          es: t('lang.option.sp'),
          it: 'Italiano',
-         pt: 'Português'
+         pt: 'Portuguï¿½s'
        };
        uiLanguageEl.querySelectorAll('option').forEach(opt => {
          if (opt.dataset.dynamicUiLang === '1') return;
@@ -638,7 +638,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     setText('btnPromptLangSave', t('lang.modal.save'));
     const status = document.getElementById('statusTXT');
     const rawStatus = String(status?.textContent || '').trim();
-    if (status && !status.classList.contains('ok') && (rawStatus === '— nevybráno' || rawStatus === '— none selected' || rawStatus === '—')) {
+    if (status && !status.classList.contains('ok') && (rawStatus === 'ï¿½ nevybrï¿½no' || rawStatus === 'ï¿½ none selected' || rawStatus === 'ï¿½')) {
       status.textContent = t('setup.file.none');
     }
     refreshTokenStatsDisplay();
@@ -693,13 +693,13 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
           ? processedPrompt.replace(/{HESLA}/g, items)
           : processedPrompt + '\n\n' + items;
 
-        // ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-        // ¦-? DEBUG LOG: Kompletní prompt odeslaný AI (kontrola formátu, tokeny)
-        // ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        // ï¿½-? DEBUG LOG: Kompletnï¿½ prompt odeslanï¿½ AI (kontrola formï¿½tu, tokeny)
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         batch.forEach(e => {
            const def = (e.definice || e.def || '');
         });
-        // ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
         return [
           { role: 'system', content: getActiveSystemMessage() },
@@ -913,7 +913,7 @@ async function copyModelTestPromptPreview() {
 }
     function getModelTestPromptTopicLabel(promptType) {
       if (isEnTopicPromptType(promptType)) {
-        const base = String(EN_TOPIC_PROMPT_LABEL_BASE[promptType] || '').replace(/^Téma:\s*/i, '');
+        const base = String(EN_TOPIC_PROMPT_LABEL_BASE[promptType] || '').replace(/^Tï¿½ma:\s*/i, '');
         return `${base} (EN -> ${getCurrentTargetLangCode()})`;
       }
       return getModelTestPromptCatalog()?.[promptType]?.topicLabel || '';
@@ -1037,7 +1037,7 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
     }).filter(Boolean).filter(o => o.value);
   }
 
-  // Try cache first (rychlý start), ale vždy následne zkus aktualizaci z API
+  // Try cache first (rychlï¿½ start), ale vï¿½dy nï¿½sledne zkus aktualizaci z API
   let hadFreshCache = false;
   const preferredModel = selectElement.value || savedModel || '';
   const cached = localStorage.getItem(CACHE_KEY);
@@ -1070,8 +1070,8 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
     })
     .then(data => {
       const modelsRaw = (data.data || []).filter(m => m.id && m.id.endsWith(':free'));
-      // Nekteré položky API mohou být metadata bez reálne routovatelného endpointu
-      // (pak pri testu vrací 404 "No endpoints found"). Zkusíme je vyradit.
+      // Nekterï¿½ poloï¿½ky API mohou bï¿½t metadata bez reï¿½lne routovatelnï¿½ho endpointu
+      // (pak pri testu vracï¿½ 404 "No endpoints found"). Zkusï¿½me je vyradit.
       const models = modelsRaw.filter(m => {
         if (Array.isArray(m.endpoints) && m.endpoints.length === 0) return false;
         if (m?.top_provider && m.top_provider.is_disabled === true) return false;
@@ -1128,7 +1128,7 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
     .catch(err => {
       if (hadFreshCache) return;
 
-      // Fallback na jakoukoli dostupnou cache (i starou), aby app zustala provozní
+      // Fallback na jakoukoli dostupnou cache (i starou), aby app zustala provoznï¿½
       try {
         const fallbackRaw = localStorage.getItem(CACHE_KEY);
         if (fallbackRaw) {
@@ -1257,7 +1257,7 @@ function loadTXT(input) {
       state.entries = parseTXT(ev.target.result);
       state.currentFileId = computeFileId(state.entries);
       const el = document.getElementById('statusTXT');
-      el.textContent = `? ${file.name} — ${t('entries.count', { count: state.entries.length })}`;
+      el.textContent = `? ${file.name} ï¿½ ${t('entries.count', { count: state.entries.length })}`;
       el.className = 'file-status ok';
       document.getElementById('fileReady').style.display = 'block';
       document.getElementById('startBtn').disabled = false;
@@ -1296,7 +1296,7 @@ function loadDefaultFile() {
       state.entries = parseTXT(text);
       state.currentFileId = computeFileId(state.entries);
       localStorage.setItem(LAST_FILE_KEY, lastFile);
-      document.getElementById('statusTXT').textContent = `? ${lastFile} — ${t('entries.count', { count: state.entries.length })}`;
+      document.getElementById('statusTXT').textContent = `? ${lastFile} ï¿½ ${t('entries.count', { count: state.entries.length })}`;
       document.getElementById('statusTXT').className = 'file-status ok';
       document.getElementById('fileReady').style.display = 'block';
       document.getElementById('startBtn').disabled = false;
@@ -1319,7 +1319,7 @@ function checkDefaultFile() {
     document.getElementById('btnLoadDefault').style.display = 'inline-block';
     return;
   }
-  // Neprovádíme testovací fetch, aby se v konzoli neobjevoval zbytecný 404.
+  // Neprovï¿½dï¿½me testovacï¿½ fetch, aby se v konzoli neobjevoval zbytecnï¿½ 404.
   document.getElementById('btnLoadDefault').style.display = 'inline-block';
 }
 
@@ -1347,7 +1347,7 @@ function checkResume() {
     if (box) box.style.display = 'none';
     let saved = localStorage.getItem(storeKey());
     let source = t('resume.source.currentSlot');
-    // Pokud nemáme nic pod aktuálním fileId, ale máme legacy data, nabídneme je
+    // Pokud nemï¿½me nic pod aktuï¿½lnï¿½m fileId, ale mï¿½me legacy data, nabï¿½dneme je
     if (!saved && state.currentFileId) {
       const legacy = localStorage.getItem(LEGACY_STORE_KEY);
       if (legacy) { saved = legacy; source = t('resume.source.legacySlot'); }
@@ -1356,7 +1356,7 @@ function checkResume() {
     const data = JSON.parse(saved);
     const count = Object.keys(data.translated || {}).filter(k => {
       const t = data.translated[k];
-      return t && t.vyznam && t.vyznam !== '—' && !t.skipped;
+      return t && t.vyznam && t.vyznam !== 'ï¿½' && !t.skipped;
     }).length;
     if (count > 0 && box) {
       box.style.display = 'block';
@@ -1407,7 +1407,7 @@ function toggleListPane() {
 
 // -- START --------------------------------------------------------
 function startApp() {
-  // Ukaž loading hned
+  // Ukaï¿½ loading hned
   document.getElementById('setup').style.display = 'none';
   const app = document.getElementById('app');
   app.style.display = 'flex';
@@ -1429,7 +1429,7 @@ function initApp(loadingEl) {
   state.currentBatchSize = parseInt(document.getElementById('batchSize').value);
   state.currentInterval  = parseInt(document.getElementById('interval').value);
 
-  // Obnov uložený preklad – pro aktuálne nactený soubor
+  // Obnov uloï¿½enï¿½ preklad ï¿½ pro aktuï¿½lne nactenï¿½ soubor
   try {
     const saved = localStorage.getItem(storeKey());
     if (saved) {
@@ -1437,16 +1437,16 @@ function initApp(loadingEl) {
       state.translated = data.translated || {};
       state.sourceEntryEdits = data.sourceEntryEdits || {};
     } else if (state.currentFileId) {
-      // Pokus o migraci ze starého (legacy) slotu pri prvním použití nového prefixu
+      // Pokus o migraci ze starï¿½ho (legacy) slotu pri prvnï¿½m pouï¿½itï¿½ novï¿½ho prefixu
       const legacy = localStorage.getItem(LEGACY_STORE_KEY);
       if (legacy) {
         const data = JSON.parse(legacy);
         if (data && data.translated && Object.keys(data.translated).length > 0) {
           state.translated = data.translated;
           state.sourceEntryEdits = data.sourceEntryEdits || {};
-          // Ulož pod novým klícem, legacy zachováme – uživatel muže mít víc souboru
+          // Uloï¿½ pod novï¿½m klï¿½cem, legacy zachovï¿½me ï¿½ uï¿½ivatel muï¿½e mï¿½t vï¿½c souboru
           localStorage.setItem(storeKey(), JSON.stringify({ translated: state.translated, sourceEntryEdits: state.sourceEntryEdits, ts: Date.now(), fileId: state.currentFileId, migrated: true }));
-          logInfo('migrate', `Migrováno ${Object.keys(state.translated).length} hesel z legacy slotu`);
+          logInfo('migrate', `Migrovï¿½no ${Object.keys(state.translated).length} hesel z legacy slotu`);
         }
       }
     }
@@ -1461,7 +1461,7 @@ function initApp(loadingEl) {
 
   document.getElementById('app').style.display = 'flex';
   
-  // Dedup state.entries - pokud jsou duplicitní klíce, bereme jen první výskyt
+  // Dedup state.entries - pokud jsou duplicitnï¿½ klï¿½ce, bereme jen prvnï¿½ vï¿½skyt
   const uniqueEntries = [];
   const seenKeys = new Set();
   for (const e of state.entries) {
@@ -1477,14 +1477,14 @@ function initApp(loadingEl) {
   state.entryMap = new Map(state.entries.map(e => [e.key, e]));
   applySourceEntryEditsToEntries();
   
-  // Vytvor index pro rychlé razení podle puvodního poradí
+  // Vytvor index pro rychlï¿½ razenï¿½ podle puvodnï¿½ho poradï¿½
   window._entryIndexMap = new Map(state.entries.map((e, i) => [e.key, i]));
 
   state.filteredKeys = state.entries.map(e => e.key);
   initVirtualScroll();
   renderList();
   
-  // Scroll na zacátek po nactení a znovu vykresli
+  // Scroll na zacï¿½tek po nactenï¿½ a znovu vykresli
   const listScroll = document.getElementById('listScroll');
   if (listScroll) listScroll.scrollTop = 0;
   state.lastRenderRange = { start: -1, end: -1, doneStates: {} };
@@ -1509,7 +1509,7 @@ function initApp(loadingEl) {
   }
 }
 
-// -- LIST — presunuto do js/ui/list.js (viz wiring níže) ----------
+// -- LIST ï¿½ presunuto do js/ui/list.js (viz wiring nï¿½e) ----------
 
 
 function resolveProviderForInteractiveAction(preferredProv = '') {
@@ -1536,12 +1536,12 @@ function filterList() {
   }
 }
 
-// Debounced varianta pro oninput (zabráni prekreslení celého listu na každý znak)
+// Debounced varianta pro oninput (zabrï¿½ni prekreslenï¿½ celï¿½ho listu na kaï¿½dï¿½ znak)
 const filterListDebounced = debounce(filterList, 180);
 
 // -- getFilteredEntries, virtual scroll, showDetail, renderDetail ? js/ui/list.js + js/ui/detail.js
 
-// renderDetail, renderTranslation, editace polí ? js/ui/detail.js
+// renderDetail, renderTranslation, editace polï¿½ ? js/ui/detail.js
 
 function applySourceEntryEditsToEntries() {
   if (!state.sourceEntryEdits || typeof state.sourceEntryEdits !== 'object') return;
@@ -1607,7 +1607,7 @@ const {
 } = headerApi;
 
 // -- TRANSLATION BATCH API --------------------------------------
-// Late-binding pro isAutoProviderEnabled (autoApi prijde až po listApi) a translateSelected (listApi prijde za batchApi)
+// Late-binding pro isAutoProviderEnabled (autoApi prijde aï¿½ po listApi) a translateSelected (listApi prijde za batchApi)
 const batchApi = createBatchApi({
   state, t, escHtml,
   log, logError, logWarn,
@@ -2260,30 +2260,30 @@ function closeI18nToolHelpModal() {
 }
 const I18N_TOOL_LANGUAGES = [
   { code: 'en', tag: 'EN', name: 'Anglictina', flag: '????' },
-  { code: 'sk', tag: 'SK', name: 'Slovenština', flag: '????' },
-  { code: 'pl', tag: 'PL', name: 'Polština', flag: '????' },
+  { code: 'sk', tag: 'SK', name: 'Slovenï¿½tina', flag: '????' },
+  { code: 'pl', tag: 'PL', name: 'Polï¿½tina', flag: '????' },
   { code: 'de', tag: 'DE', name: 'Nemcina', flag: '????' },
-  { code: 'fr', tag: 'FR', name: 'Francouzština', flag: '????' },
-  { code: 'es', tag: 'ES', name: 'Španelština', flag: '????' },
-  { code: 'it', tag: 'IT', name: 'Italština', flag: '????' },
-  { code: 'pt', tag: 'PT', name: 'Portugalština', flag: '????' },
-  { code: 'ru', tag: 'RU', name: 'Ruština', flag: '????' },
-  { code: 'uk', tag: 'UK', name: 'Ukrajinština', flag: '????' },
-  { code: 'bg', tag: 'BG', name: 'Bulharština', flag: '????' },
-  { code: 'ro', tag: 'RO', name: 'Rumunština', flag: '????' },
-  { code: 'hu', tag: 'HU', name: 'Madarština', flag: '????' },
-  { code: 'nl', tag: 'NL', name: 'Holandština', flag: '????' },
-  { code: 'sv', tag: 'SV', name: 'Švédština', flag: '????' },
-  { code: 'da', tag: 'DA', name: 'Dánština', flag: '????' },
-  { code: 'no', tag: 'NO', name: 'Norština', flag: '????' },
-  { code: 'fi', tag: 'FI', name: 'Finština', flag: '????' },
+  { code: 'fr', tag: 'FR', name: 'Francouzï¿½tina', flag: '????' },
+  { code: 'es', tag: 'ES', name: 'ï¿½panelï¿½tina', flag: '????' },
+  { code: 'it', tag: 'IT', name: 'Italï¿½tina', flag: '????' },
+  { code: 'pt', tag: 'PT', name: 'Portugalï¿½tina', flag: '????' },
+  { code: 'ru', tag: 'RU', name: 'Ruï¿½tina', flag: '????' },
+  { code: 'uk', tag: 'UK', name: 'Ukrajinï¿½tina', flag: '????' },
+  { code: 'bg', tag: 'BG', name: 'Bulharï¿½tina', flag: '????' },
+  { code: 'ro', tag: 'RO', name: 'Rumunï¿½tina', flag: '????' },
+  { code: 'hu', tag: 'HU', name: 'Madarï¿½tina', flag: '????' },
+  { code: 'nl', tag: 'NL', name: 'Holandï¿½tina', flag: '????' },
+  { code: 'sv', tag: 'SV', name: 'ï¿½vï¿½dï¿½tina', flag: '????' },
+  { code: 'da', tag: 'DA', name: 'Dï¿½nï¿½tina', flag: '????' },
+  { code: 'no', tag: 'NO', name: 'Norï¿½tina', flag: '????' },
+  { code: 'fi', tag: 'FI', name: 'Finï¿½tina', flag: '????' },
   { code: 'el', tag: 'EL', name: 'Rectina', flag: '????' },
   { code: 'tr', tag: 'TR', name: 'Turectina', flag: '????' },
-  { code: 'ar', tag: 'AR', name: 'Arabština', flag: '????' },
-  { code: 'zh-CN', tag: 'zh-CN', name: 'Cínština', flag: '????' },
-  { code: 'ja', tag: 'JA', name: 'Japonština', flag: '????' },
-  { code: 'ko', tag: 'KO', name: 'Korejština', flag: '????' },
-  { code: 'he', tag: 'HE', name: 'Hebrejština', flag: '????' }
+  { code: 'ar', tag: 'AR', name: 'Arabï¿½tina', flag: '????' },
+  { code: 'zh-CN', tag: 'zh-CN', name: 'Cï¿½nï¿½tina', flag: '????' },
+  { code: 'ja', tag: 'JA', name: 'Japonï¿½tina', flag: '????' },
+  { code: 'ko', tag: 'KO', name: 'Korejï¿½tina', flag: '????' },
+  { code: 'he', tag: 'HE', name: 'Hebrejï¿½tina', flag: '????' }
 ];
 const I18N_TOOL_LANG_DISPLAY_CODE = {
   en: 'GB',
@@ -2321,12 +2321,12 @@ const I18N_TOOL_TRANSLATOR_TARGET_CODES = new Set([
 function sanitizeI18nToolLanguages() {
   for (let i = I18N_TOOL_LANGUAGES.length - 1; i >= 0; i--) {
     const code = String(I18N_TOOL_LANGUAGES[i]?.code || '');
-    // "cz"/"cs" je zdroj a nechceme ho v cílovém seznamu.
+    // "cz"/"cs" je zdroj a nechceme ho v cï¿½lovï¿½m seznamu.
     if (code === 'cz' || code === 'cs' || !I18N_TOOL_TRANSLATOR_TARGET_CODES.has(code)) {
       I18N_TOOL_LANGUAGES.splice(i, 1);
     }
   }
-  // Bezpecnostní pojistka: EN musí být vždy dostupné jako cílový jazyk.
+  // Bezpecnostnï¿½ pojistka: EN musï¿½ bï¿½t vï¿½dy dostupnï¿½ jako cï¿½lovï¿½ jazyk.
   if (!I18N_TOOL_LANGUAGES.some((lang) => String(lang?.code || '').toLowerCase() === 'en')) {
     I18N_TOOL_LANGUAGES.unshift({ code: 'en', tag: 'EN', name: 'Anglictina', flag: '????' });
   }
@@ -2435,7 +2435,7 @@ function i18nToolSetAiSendButtonState() {
   if (!btn) return;
   btn.disabled = false;
   btn.textContent = i18nToolAiSending ? t('i18nTool.ai.send.stop') : t('i18nTool.ai.send.start');
-  if (i18nToolAiResumeState) i18nToolSetAiResumeButtonState(true, '? Pokracovat od poslední dávky');
+  if (i18nToolAiResumeState) i18nToolSetAiResumeButtonState(true, '? Pokracovat od poslednï¿½ dï¿½vky');
 }
 
 function i18nToolSetAiResumeButtonState(enabled, label = '? Pokracovat') {
@@ -2883,7 +2883,7 @@ async function sendI18nToolAiPrompt(options = {}) {
     i18nToolSetAiSendButtonState();
     i18nToolSetAiResumeButtonState(false);
     startI18nToolAiBusyAnimation();
-    i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || '—');
+    i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || 'ï¿½');
 
     for (let idx = startIdx; idx < chunks.length; idx++) {
       currentIdx = idx;
@@ -2951,7 +2951,7 @@ async function sendI18nToolAiPrompt(options = {}) {
             || msg.includes('service unavailable')
             || msg.includes('timeout')
             || msg.includes('request canceled')
-            || msg.includes('blokovaný úcet')
+            || msg.includes('blokovanï¿½ ï¿½cet')
             || msg.includes('restricted')
             || msg.includes('organization');
           if ((msg.includes('413') || msg.includes('too large') || msg.includes('content too large')) && localBatchSize > 20) {
@@ -3305,7 +3305,7 @@ async function copyI18nToolCmd() {
 async function loadI18nToolSourceCsData() {
   if (i18nToolSourceCsData) return i18nToolSourceCsData;
   const res = await fetch('./i18n/cs.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Nepodarilo se nacíst i18n/cs.json (HTTP ${res.status})`);
+  if (!res.ok) throw new Error(`Nepodarilo se nacï¿½st i18n/cs.json (HTTP ${res.status})`);
   i18nToolSourceCsData = await res.json();
   return i18nToolSourceCsData;
 }
@@ -3481,7 +3481,7 @@ async function i18nToolTranslateValue(value, targetLang, targetTag, targetLangua
     if (typeof onProgress === 'function') onProgress(path);
     let withRestoredTags = i18nToolRestoreTagsAndWords(translated, targetTag, targetLanguageName);
     let restored = i18nToolRestoreImmutableSegments(withRestoredTags, protectedValue.immutableSegments);
-    // Když engine vrátí useknutý text a ztratí placeholdery, zkusíme preklad ješte 2x.
+    // Kdyï¿½ engine vrï¿½tï¿½ useknutï¿½ text a ztratï¿½ placeholdery, zkusï¿½me preklad jeï¿½te 2x.
     for (let retry = 0; retry < 2 && !i18nToolHasSamePlaceholderSet(value, restored); retry++) {
       translated = await i18nToolTranslateText(textToTranslate, targetLang);
       await new Promise((resolve) => setTimeout(resolve, 25));
@@ -3579,30 +3579,30 @@ function openI18nToolOutputEditor() {
 
 function buildI18nToolEditorHelpText() {
   return [
-    'Nápoveda: Editor výstupního JSON',
+    'Nï¿½poveda: Editor vï¿½stupnï¿½ho JSON',
     '',
-    'K cemu slouží:',
-    '- Upravuje už preložený soubor po jednotlivých klících.',
-    '- Prehled je ve formátu: key.path<TAB>"hodnota".',
-    '- Ukládá zmeny jen do aktuálne vybraného jazyka.',
+    'K cemu slouï¿½ï¿½:',
+    '- Upravuje uï¿½ preloï¿½enï¿½ soubor po jednotlivï¿½ch klï¿½cï¿½ch.',
+    '- Prehled je ve formï¿½tu: key.path<TAB>"hodnota".',
+    '- Uklï¿½dï¿½ zmeny jen do aktuï¿½lne vybranï¿½ho jazyka.',
     '',
     'Postup:',
-    '1) Vyber jazyk v poli „Jazyk výstupu“.',
-    '2) Najdi rádek, který chceš opravit.',
-    '3) Uprav jen text vpravo za tabulátorem.',
-    '4) Klikni na „?? Uložit JSON“.',
-    '5) Stáhne se nový soubor <lang>.json s úpravami.',
+    '1) Vyber jazyk v poli ï¿½Jazyk vï¿½stupuï¿½.',
+    '2) Najdi rï¿½dek, kterï¿½ chceï¿½ opravit.',
+    '3) Uprav jen text vpravo za tabulï¿½torem.',
+    '4) Klikni na ï¿½?? Uloï¿½it JSONï¿½.',
+    '5) Stï¿½hne se novï¿½ soubor <lang>.json s ï¿½pravami.',
     '',
-    'Duležitá pravidla:',
-    '- Levou cást (key.path) nemen.',
-    '- Každý rádek musí obsahovat tabulátor mezi klícem a hodnotou.',
-    '- Hodnota má být JSON string, typicky v uvozovkách.',
-    '- Neplatné/rozbité rádky se ignorují.',
+    'Duleï¿½itï¿½ pravidla:',
+    '- Levou cï¿½st (key.path) nemen.',
+    '- Kaï¿½dï¿½ rï¿½dek musï¿½ obsahovat tabulï¿½tor mezi klï¿½cem a hodnotou.',
+    '- Hodnota mï¿½ bï¿½t JSON string, typicky v uvozovkï¿½ch.',
+    '- Neplatnï¿½/rozbitï¿½ rï¿½dky se ignorujï¿½.',
     '',
-    'Na co si dát pozor:',
-    '- Placeholdery jako {name}, {count}, {lang} musí zustat presne stejné.',
-    '- Nemaž technické znacky a promenné.',
-    '- Po uložení doporucuji rychlou kontrolu ve UI.'
+    'Na co si dï¿½t pozor:',
+    '- Placeholdery jako {name}, {count}, {lang} musï¿½ zustat presne stejnï¿½.',
+    '- Nemaï¿½ technickï¿½ znacky a promennï¿½.',
+    '- Po uloï¿½enï¿½ doporucuji rychlou kontrolu ve UI.'
   ].join('\n');
 }
 
@@ -3691,7 +3691,7 @@ function openI18nToolAiModal() {
   const m = document.getElementById('i18nToolAiModal');
   syncI18nToolAiModalDefaults();
   i18nToolRenderAiTokenStats();
-  i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || '—');
+  i18nToolSetAiLoadedFileLabel(i18nToolAiSourceFileName || 'ï¿½');
   const previewEl = document.getElementById('i18nToolAiPreview');
   if (previewEl && !String(previewEl.value || '').trim()) {
     previewEl.value = t('i18nTool.ai.preview.waitingForResponse');
@@ -3731,7 +3731,7 @@ function restoreDefaultPrompt() {
   if (sysTextarea) sysTextarea.value = getActiveSystemMessage();
   if (userTextarea) userTextarea.value = getActiveMainPromptTemplate('batch');
   if (status) {
-    status.textContent = '? Obnoveno výchozí';
+    status.textContent = '? Obnoveno vï¿½chozï¿½';
     setTimeout(() => { if (status) status.textContent = ''; }, 2000);
   }
 }
@@ -3744,18 +3744,18 @@ function saveEditedPrompt() {
   const sysVal = (sysTextarea.value || '').trim();
   const userVal = (userTextarea.value || '').trim();
   if (!sysVal) {
-    if (status) status.textContent = '? Systémový prompt nesmí být prázdný';
+    if (status) status.textContent = '? Systï¿½movï¿½ prompt nesmï¿½ bï¿½t prï¿½zdnï¿½';
     return;
   }
   if (!userVal) {
-    if (status) status.textContent = '? Uživatelský prompt nesmí být prázdný';
+    if (status) status.textContent = '? Uï¿½ivatelskï¿½ prompt nesmï¿½ bï¿½t prï¿½zdnï¿½';
     return;
   }
   localStorage.setItem('strong_custom_system_prompt', sysVal);
   setMainPrompt(userVal, 'custom');
   updatePromptStatusIndicator();
   closeEditPromptModal();
-   showToast('? AI prompt uložen');
+   showToast('? AI prompt uloï¿½en');
  }
 
 // Library prompt editor functions
@@ -3798,7 +3798,7 @@ function restoreLibraryPrompts() {
     }
 
    if (status) {
-     status.textContent = '? Obnoveno výchozí';
+     status.textContent = '? Obnoveno vï¿½chozï¿½';
      status.style.color = 'var(--grn)';
    }
    setTimeout(() => { if (status) status.textContent = ''; }, 2200);
@@ -3815,11 +3815,11 @@ function saveLibraryPrompts() {
    const userVal = (userEl.value || '').trim();
 
    if (!sysVal) {
-     if (status) { status.textContent = '? Systémový prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+     if (status) { status.textContent = '? Systï¿½movï¿½ prompt nesmï¿½ bï¿½t prï¿½zdnï¿½'; status.style.color = 'var(--red)'; }
      return;
    }
    if (!userVal) {
-     if (status) { status.textContent = '? Uživatelský prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+     if (status) { status.textContent = '? Uï¿½ivatelskï¿½ prompt nesmï¿½ bï¿½t prï¿½zdnï¿½'; status.style.color = 'var(--red)'; }
      return;
    }
 
@@ -3859,22 +3859,22 @@ function saveLibraryPrompts() {
     renderPromptList();
 
     if (status) {
-     status.textContent = '? Uloženo';
+     status.textContent = '? Uloï¿½eno';
      status.style.color = 'var(--grn)';
    }
-   showToast('? AI prompt uložen');
+   showToast('? AI prompt uloï¿½en');
 
     setTimeout(() => { if (status) status.textContent = ''; }, 2000);
  }
 
 // Delete custom prompts with confirmation
 function confirmClearLibraryPrompts() {
-  if (!confirm('Opravdu chcete vymazat uložené uživatelské prompty? Tato akce je nevratná.')) return;
+  if (!confirm('Opravdu chcete vymazat uloÅ¾enÃ© uÅ¾ivatelskÃ© prompty? Tato akce je nevratnÃ¡.')) return;
   clearLibraryPrompts();
 }
 
 function clearLibraryPrompts() {
-   // Reset to defaults – clears custom system prompt, restores main prompt to system default
+   // Reset to defaults ï¿½ clears custom system prompt, restores main prompt to system default
    restoreDefaultPrompt();
    
    // Clear storage keys as per plan
@@ -3894,7 +3894,7 @@ function clearLibraryPrompts() {
      state.PROMPT_LIBRARY.custom = [];
    }
    
-   showToast('? Uživatelské prompty byly vymazány');
+   showToast('âœ“ UÅ¾ivatelskÃ© prompty byly vymazÃ¡ny');
  }
 
 function onI18nToolEditorLangChange() {
@@ -4160,7 +4160,7 @@ window.downloadI18nToolAiResult = downloadI18nToolAiResult;
 // -- RESIZE PANELS (logika v ./ui/resize.js) ---------------------
 
 
-// Toast s akcním tlacítkem (napr. Undo). Vydrží 2× déle.
+// Toast s akcnï¿½m tlacï¿½tkem (napr. Undo). Vydrï¿½ï¿½ 2ï¿½ dï¿½le.
 
 
 const { download, exportTXT, exportJSON, exportRange } = createExportApi({
@@ -4282,7 +4282,7 @@ function showModelTestLibrary() {
         const total = Math.max(1, (r.okKeys||0)+(r.failedKeys||0));
         const rate = (((r.okKeys||0)/total)*100).toFixed(1);
         const avgMs = r.latencySamples ? (r.latencyMsTotal/r.latencySamples) : 0;
-        lines.push(`- ${r.model} | ${r.calls||0} volání | ${r.totalKeys||0} hesel | OK ${r.okKeys||0} | ERR ${r.failedKeys||0} | ${rate}% | ${formatAiResponseTime(avgMs)}`);
+        lines.push(`- ${r.model} | ${r.calls||0} volï¿½nï¿½ | ${r.totalKeys||0} hesel | OK ${r.okKeys||0} | ERR ${r.failedKeys||0} | ${rate}% | ${formatAiResponseTime(avgMs)}`);
       }
       lines.push('');
     }
@@ -4334,7 +4334,7 @@ window.exportModelTestTranslationsTxt = exportModelTestTranslationsTxt;
 window.clearLog = clearLog;
 window.logEntry = logEntry;
 
-// Funkce pro vymazání všech p?eklad? z localStorage (všechny sloty)
+// Funkce pro vymazï¿½nï¿½ vï¿½ech p?eklad? z localStorage (vï¿½echny sloty)
 function clearTranslations() {
   if (!confirm(t('confirm.clearTranslations'))) return;
   Object.keys(localStorage)
@@ -4510,7 +4510,7 @@ function printRecentAICalls() {
   }
   console.groupCollapsed(`?? Recent AI Calls: ${calls.length}`);
   calls.forEach((call, i) => {
-    console.groupCollapsed(`#${calls.length - i}: ${call.type} — ${call.provider} | ${call.model} — ${call.durationMs}ms`);
+    console.groupCollapsed(`#${calls.length - i}: ${call.type} ï¿½ ${call.provider} | ${call.model} ï¿½ ${call.durationMs}ms`);
     if (call.error) {
       console.log('%c? Error:', 'color: #ff0000; font-weight: bold;', call.error);
     } else {
@@ -4553,10 +4553,10 @@ window.addEventListener('beforeunload', () => {
   stopTopicRepairTicker();
   if (state.elapsedTimer) clearInterval(state.elapsedTimer);
   stopResize();
-  // Debounced save musí být proveden synchronne pred zavrením
+  // Debounced save musï¿½ bï¿½t proveden synchronne pred zavrenï¿½m
   saveProgress.flush();
 });
-// Pri skrytí tabu také flushni, aby se nic neztratilo
+// Pri skrytï¿½ tabu takï¿½ flushni, aby se nic neztratilo
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveProgress.flush();
 });
