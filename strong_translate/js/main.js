@@ -3773,36 +3773,36 @@ function restoreLibraryPrompts() {
 
    if (!sysEl || !userEl) return;
 
-   // Get current category and index from state
-   const category = state.selectedPromptCategory;
-   const index = state.selectedPromptIndex;
-
-   // Restore based on category
-   if (category === 'custom') {
-     // For custom category, restore global values (current behavior)
-     sysEl.value = getActiveSystemMessage();
-     userEl.value = getActiveMainPromptTemplate('batch');
-   } else {
-     // For built-in categories, restore entry from PROMPT_LIBRARY_BASE
-     const baseEntry = getPromptLibraryBase()[category]?.[index];
-     if (baseEntry) {
-       sysEl.value = baseEntry.system || getActiveSystemMessage();
-       userEl.value = baseEntry.text || '';
-       
-       // Also update the state entry
-       if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
-         state.PROMPT_LIBRARY[category][index] = {
-           ...state.PROMPT_LIBRARY[category][index],
-           system: baseEntry.system || getActiveSystemMessage(),
-           text: baseEntry.text || ''
-         };
-       }
-     } else {
-       // Fallback to active values
-       sysEl.value = getActiveSystemMessage();
-       userEl.value = getActiveMainPromptTemplate('batch');
-     }
-   }
+    // Get current category and index from state
+    const category = state.selectedPromptCategory;
+    const index = state.selectedPromptIndex;
+    
+    // Restore based on category
+    if (category === 'custom') {
+      // For custom category, restore global values (current behavior)
+      sysEl.value = getActiveSystemMessage();
+      userEl.value = getActiveMainPromptTemplate('batch');
+    } else {
+      // For built-in categories, restore entry from PROMPT_LIBRARY_BASE
+      const baseEntry = promptLibraryApi.getPromptLibraryBase()[category]?.[index];
+      if (baseEntry) {
+        sysEl.value = baseEntry.system || getActiveSystemMessage();
+        userEl.value = baseEntry.text || '';
+        
+        // Also update the state entry
+        if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
+          state.PROMPT_LIBRARY[category][index] = {
+            ...state.PROMPT_LIBRARY[category][index],
+            system: baseEntry.system || getActiveSystemMessage(),
+            text: baseEntry.text || ''
+          };
+        }
+      } else {
+        // Fallback to active values
+        sysEl.value = getActiveSystemMessage();
+        userEl.value = getActiveMainPromptTemplate('batch');
+      }
+    }
 
    if (status) {
      status.textContent = '? Obnoveno výchozí';
