@@ -1322,25 +1322,28 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
     margin-bottom: 16px;
     letter-spacing: .1em;
   }
-  .prompt-tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .prompt-tab {
-    padding: 6px 12px;
-    background: var(--bg3);
-    border: 1px solid var(--brd);
-    border-radius: 4px;
-    color: var(--txt2);
-    cursor: pointer;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    transition: all .2s;
-  }
-  .prompt-tab:hover { border-color: var(--acc); color: var(--acc); }
-  .prompt-tab.active { background: var(--acc2); border-color: var(--acc); color: var(--acc3); }
+.prompt-tabs {
+     display: flex;
+     gap: 6px;
+     margin-bottom: 12px;
+     flex-wrap: wrap;
+   }
+   .prompt-tab {
+     padding: 6px 12px;
+     background: var(--bg3);
+     border: 1px solid var(--brd);
+     border-radius: 4px;
+     color: var(--txt2);
+     cursor: pointer;
+     font-family: 'JetBrains Mono', monospace;
+     font-size: 10px;
+     transition: all .2s;
+   }
+   .prompt-tab:hover { border-color: var(--acc); color: var(--acc); }
+   .prompt-tab.active { background: var(--acc2); border-color: var(--acc); color: var(--acc3); }
+   .prompt-tab-spacer {
+     flex: 1;
+   }
   .prompt-list {
     flex: 1;
     overflow-y: auto;

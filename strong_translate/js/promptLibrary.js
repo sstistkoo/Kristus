@@ -184,7 +184,7 @@ export function createPromptLibraryApi(deps) {
       const map = { default: 'prompt.tab.default', detailed: 'prompt.tab.detailed', concise: 'prompt.tab.concise', literal: 'prompt.tab.literal', test: 'prompt.tab.test', custom: 'prompt.tab.custom' };
       return t(map[cat] || cat);
     };
-    tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).map((cat) => `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`).join('');
+    tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).map((cat) => `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`).join('') + '<span class="prompt-tab-spacer"></span><button type="button" class="prompt-tab" id="btnPromptSecondary" onclick="window.promptLibraryApi.showSecondaryPromptsModal()" title="Spravovat sekundární prompty pro follow-up překlady">🔄 Secondary</button>';
     tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
       tab.onclick = () => {
         tabs.querySelectorAll('.prompt-tab').forEach((x) => x.classList.remove('active'));
