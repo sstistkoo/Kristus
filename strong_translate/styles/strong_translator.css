@@ -1522,6 +1522,7 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   border-radius: 3px;
   padding: 10px 12px;
   color: var(--txt2);
+  background: var(--bg);
   outline: none;
   line-height: 1.6;
 }
