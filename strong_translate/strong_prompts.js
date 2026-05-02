@@ -51,18 +51,19 @@ const FINAL_PROMPT = {
 };
 
 const PROMPT_LIBRARY_BASE = {
-   default: [{ name: 'System', desc: 'System default prompt', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
-   detailed: [{ name: 'Detailed', desc: 'Detailed translation', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
-   concise: [{ name: 'Concise', desc: 'Short translation', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
-   literal: [{ name: 'Literal', desc: 'Literal translation', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }],
-   test: [],
-   custom: [],
-   library: [
-     { name: 'Precision', desc: 'High fidelity', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT },
-     { name: 'Theological', desc: 'Context emphasis', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT },
-     { name: 'Fast', desc: 'Short and fast', text: SYSTEM_MESSAGE + '\n\n' + DEFAULT_PROMPT }
-   ]
- };
+const PROMPT_LIBRARY_BASE = {
+    default: [{ name: 'System', desc: 'System default prompt', text: DEFAULT_PROMPT, system: '' }],
+    detailed: [{ name: 'Detailed', desc: 'Detailed translation', text: DEFAULT_PROMPT, system: '' }],
+    concise: [{ name: 'Concise', desc: 'Short translation', text: DEFAULT_PROMPT, system: '' }],
+    literal: [{ name: 'Literal', desc: 'Literal translation', text: DEFAULT_PROMPT, system: '' }],
+    test: [],
+    custom: [],
+    library: [
+        { name: 'Precision', desc: 'High fidelity', text: DEFAULT_PROMPT, system: '' },
+        { name: 'Theological', desc: 'Context emphasis', text: DEFAULT_PROMPT, system: '' },
+        { name: 'Fast', desc: 'Short and fast', text: DEFAULT_PROMPT, system: '' }
+    ]
+};
 
 const MODEL_TEST_PROMPT_CATALOG = {
   preset_v1: { label: 'Fallback preset_v1', template: DEFAULT_PROMPT },

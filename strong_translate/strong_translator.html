@@ -638,6 +638,24 @@
         <textarea id="promptLibraryEditor" class="prompt-library-editor" rows="6" placeholder="Uprav prompt..."></textarea>
       </div>
 
+      <!-- Dual prompt editor for system + user prompts -->
+      <div class="prompt-library-editor-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+        <div>
+          <label for="librarySystemPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Systémový prompt (role: system)</label>
+          <textarea id="librarySystemPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <label for="libraryUserPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Uživatelský prompt (role: user)</label>
+          <textarea id="libraryUserPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
+        </div>
+      </div>
+      <div class="prompt-actions" style="margin-top: 8px; gap: 8px;">
+        <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
+        <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
+        <button type="button" class="prompt-btn red" onclick="confirmClearLibraryPrompts()" title="Vymazat uložené prompty">🗑 Vymazat</button>
+        <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+      </div>
+
        <div class="prompt-actions">
          <button class="prompt-btn" id="btnPromptSystem" onclick="applySystemPromptForCurrentTask()" title="Nastavit systémový prompt dle aktuálního režimu">🛠 System</button>
          <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
