@@ -33,7 +33,6 @@ export function createDetailApi({
       { id: 'definice',    label: TOPIC_LABELS.definice,    field: definitionDisplay },
       { id: 'vyznam',      label: TOPIC_LABELS.vyznam,      field: tr?.vyznam },
       { id: 'kjv',         label: TOPIC_LABELS.kjv,         field: tr?.kjv },
-      { id: 'pouziti',     label: TOPIC_LABELS.pouziti,     field: tr?.pouziti },
       { id: 'puvod',       label: TOPIC_LABELS.puvod,       field: tr?.puvod },
       { id: 'specialista', label: TOPIC_LABELS.specialista, field: tr?.specialista }
     ];

@@ -35,7 +35,6 @@ export function createExportApi({ state, t, showToast }) {
         `${t('export.field.definitionEn')}: ${e.definice || e.def || '—'}`,
         `${t('export.field.definition', { lang: langTag })}: ${tr.definice || '—'}`,
         `${t('export.field.kjv', { lang: langTag })}: ${tr.kjv || e.kjv || '—'}`,
-        `${t('export.field.usage')}: ${tr.pouziti || e.vyskyt || '—'}`,
         `${t('export.field.origin')}: ${tr.puvod || '—'}`,
         `${t('export.field.specialist')}: ${tr.specialista || '—'}`,
         ''
@@ -78,7 +77,6 @@ export function createExportApi({ state, t, showToast }) {
         `${e.key} | ${e.greek}`,
         `${t('export.field.meaning', { lang: langTag })}: ${tr.vyznam || '—'}`,
         `${t('export.field.definition', { lang: langTag })}: ${tr.definice || '—'}`,
-        `${t('export.field.usage')}: ${tr.pouziti || '—'}`,
         `${t('export.field.origin')}: ${tr.puvod || '—'}`,
         ''
       ].join('\n');

@@ -69,7 +69,6 @@ function makeApi(state, toasts) {
       if (key === 'export.field.definitionEn') return 'Definition (EN)';
       if (key === 'export.field.definition') return `Definition (${params.lang || ''})`;
       if (key === 'export.field.kjv') return `KJV (${params.lang || ''})`;
-      if (key === 'export.field.usage') return 'Usage';
       if (key === 'export.field.origin') return 'Origin';
       if (key === 'export.field.specialist') return 'Specialist';
       if (key === 'toast.noTranslatedEntry') return 'NO_TRANSLATED';
@@ -115,7 +114,7 @@ test('exportTXT exports only done entries and uses UI language tag', async () =>
         { key: 'G2', greek: 'beta', definice: 'def en 2', vyskyt: 'use src 2' }
       ],
       translated: {
-        G1: { vyznam: 'meaning 1', definice: 'def 1', pouziti: 'usage 1', puvod: 'origin 1', specialista: 'spec 1', kjv: 'kjv 1' },
+        G1: { vyznam: 'meaning 1', definice: 'def 1', puvod: 'origin 1', specialista: 'spec 1', kjv: 'kjv 1' },
         G2: { vyznam: '—', definice: 'def 2' }
       }
     };
@@ -165,8 +164,8 @@ test('exportRange filters by prompt range and exports matching entries', async (
       ],
       translated: {
         G1: { vyznam: 'm1', definice: 'd1' },
-        G2: { vyznam: 'm2', definice: 'd2', pouziti: 'u2', puvod: 'o2' },
-        G3: { vyznam: 'm3', definice: 'd3', pouziti: 'u3', puvod: 'o3' }
+        G2: { vyznam: 'm2', definice: 'd2', puvod: 'o2' },
+        G3: { vyznam: 'm3', definice: 'd3', puvod: 'o3' }
       }
     };
     const api = makeApi(state, toasts);

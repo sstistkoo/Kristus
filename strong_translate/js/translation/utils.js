@@ -6,7 +6,7 @@ import core from '../../strong_translator_core_new.js';
 const { parseTranslations: parseTranslationsCore } = core;
 
 // Lokální kopie pro getTranslationStateForKey (vyhýbá se circular dep s batch.js)
-const _FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'pouziti', 'puvod', 'specialista'];
+const _FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
 function _countFailedTopics(translationEntry) {
   const e = translationEntry || {};
   let count = 0;
@@ -68,13 +68,13 @@ export function isDefinitionLowQuality(text) {
 export function isTranslationComplete(t) {
   if (!t || t.skipped) return false;
   if (isDefinitionLowQuality(t.definice)) return false;
-  const required = ['definice', 'pouziti', 'puvod', 'kjv', 'specialista'];
+  const required = ['definice', 'puvod', 'kjv', 'specialista'];
   return required.every(field => hasMeaningfulValue(t[field]));
 }
 
 export function hasAnyTranslationContent(t) {
   if (!t || t.skipped) return false;
-  const fields = ['vyznam', 'definice', 'pouziti', 'puvod', 'kjv', 'specialista'];
+  const fields = ['vyznam', 'definice', 'puvod', 'kjv', 'specialista'];
   return fields.some(field => hasMeaningfulValue(t[field]));
 }
 
@@ -166,7 +166,6 @@ export function tryNormalizeNumberedOpenRouterResponse(raw, keys) {
     `###${foundKey}###`,
     `VYZNAM:`,
     `DEFINICE: ${defLine ? defLine.replace(/^\d+\.\s*/, '').replace(/^DEF\s*:/i, '').trim() : text.slice(0, 600)}`,
-    `POUZITI:`,
     `PUVOD:`,
     `KJV:`,
     `SPECIALISTA: ${specialistaTail || ''}`

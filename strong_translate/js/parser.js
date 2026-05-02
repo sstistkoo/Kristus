@@ -1,6 +1,6 @@
 // js/parser.js — parsování importovaných souborů (TXT, JSON)
 
-const IMPORT_FIELDS = ['vyznam', 'definice', 'pouziti', 'puvod', 'specialista', 'kjv'];
+const IMPORT_FIELDS = ['vyznam', 'definice', 'puvod', 'specialista', 'kjv'];
 
 /**
  * Centralizované aliasy pro import TXT.
@@ -9,7 +9,6 @@ const IMPORT_FIELDS = ['vyznam', 'definice', 'pouziti', 'puvod', 'specialista', 
 const TXT_LABEL_ALIASES = {
   vyznam: ['Český význam', 'Vyznam', 'VÝZNAM', 'VYZNAM', 'Význam', 'Cz', 'CZ', 'Meaning'],
   definice: ['Definice (CZ)', 'Česká definice', 'Definice', 'DEFINICE', 'CZ definice', 'Definition'],
-  pouziti: ['Biblické užití', 'Biblické užití (KJV)', 'Pouziti', 'POUZITI', 'Použití', 'Usage'],
   puvod: ['Původ', 'Puvod', 'PUVOD', 'Origin'],
   specialista: ['Specialista', 'VÝKLAD', 'VYKLAD', 'Komentář', 'KOMENTAR', 'Exegeze', 'EXEGEZE', 'Specialist'],
   kjv: ['KJV překlady (CZ)', 'KJV překlady', 'KJV', 'KJV_PREKLADY', 'KJV Významy', 'KJV translations']
@@ -42,12 +41,11 @@ export function parseCzTXT(text) {
     const key = m[1];
     const vyznam = getValueByLabels(lines, TXT_LABEL_ALIASES.vyznam);
     const definice = getValueByLabels(lines, TXT_LABEL_ALIASES.definice);
-    const pouziti = getValueByLabels(lines, TXT_LABEL_ALIASES.pouziti);
     const puvod = getValueByLabels(lines, TXT_LABEL_ALIASES.puvod);
     const specialista = getValueByLabels(lines, TXT_LABEL_ALIASES.specialista);
     const kjv = getValueByLabels(lines, TXT_LABEL_ALIASES.kjv);
     if (vyznam || definice) {
-      result[key] = { vyznam, definice, pouziti, puvod, specialista, kjv };
+      result[key] = { vyznam, definice, puvod, specialista, kjv };
     }
   }
   return result;

@@ -21,7 +21,7 @@ test('DEFAULT_PROMPT has expected structure', () => {
   assert.ok(prompts.DEFAULT_PROMPT.includes('###Gx###'));
   assert.ok(prompts.DEFAULT_PROMPT.includes('VYZNAM:'));
   assert.ok(prompts.DEFAULT_PROMPT.includes('DEFINICE:'));
-  assert.ok(prompts.DEFAULT_PROMPT.includes('POUZITI:'));
+  // POUZITI field removed; no longer expected
   assert.ok(prompts.DEFAULT_PROMPT.includes('PUVOD:'));
   assert.ok(prompts.DEFAULT_PROMPT.includes('KJV:'));
   assert.ok(prompts.DEFAULT_PROMPT.includes('SPECIALISTA:'));
@@ -112,7 +112,7 @@ test('DEFAULT_PROMPT template replacement works correctly', () => {
   assert.ok(testPrompt.includes('###Gx###'));
   assert.ok(testPrompt.includes('VYZNAM:'));
   assert.ok(testPrompt.includes('DEFINICE:'));
-  assert.ok(testPrompt.includes('POUZITI:'));
+  // POUZITI removed
   assert.ok(testPrompt.includes('PUVOD:'));
   assert.ok(testPrompt.includes('KJV:'));
   assert.ok(testPrompt.includes('SPECIALISTA:'));

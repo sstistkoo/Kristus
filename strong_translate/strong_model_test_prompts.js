@@ -386,21 +386,7 @@ Pravidla:
 
 Vstup:
 {HESLA}`
-  },
-  preset_topic_pouziti: {
-    label: 'Téma: Biblické užití',
-    topicLabel: 'Biblické užití',
-    template: `Úkol: vytvoř pouze pole POUZITI pro jedno heslo Strong.
-
-Pravidla:
-- Vrať jen finální text biblického užití (bez labelu, bez markdownu, bez dalších polí).
-- Preferuj konkrétní biblické odkazy v hranatých závorkách.
-- Nic nevymýšlej; jen údaje podložené vstupem.
-- Pokud nejsou data, napiš: neuvedeno ve zdroji.
-
-Vstup:
-{HESLA}`
-  },
+   },
   preset_topic_puvod: {
     label: 'Téma: Původ / Etymologie',
     topicLabel: 'Původ / Etymologie',

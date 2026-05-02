@@ -179,13 +179,13 @@ function jumpToStart() {
   const found = state.entryMap.get(key);
   if (!found) { showToast(t('toast.entry.notFoundInFile', { key: `G${num}` })); return; }
 
-  // Oznac všechna hesla PRED tímto císlem jako preskocená (zachováme existující preklady)
-  for (const e of state.entries) {
-    const n = parseInt(e.key.slice(1));
-    if (n < num && !state.translated[e.key]) {
-      state.translated[e.key] = { vyznam: '—', definice: '(preskoceno)', pouziti: '—', puvod: '—', skipped: true };
-    }
-  }
+   // Oznac všechna hesla PRED tímto císlem jako preskocená (zachováme existující preklady)
+   for (const e of state.entries) {
+     const n = parseInt(e.key.slice(1));
+     if (n < num && !state.translated[e.key]) {
+       state.translated[e.key] = { vyznam: '—', definice: '(preskoceno)', puvod: '—', skipped: true };
+     }
+   }
    saveProgress();
    updateStats();
    renderList();
@@ -221,7 +221,7 @@ function getNextBatch(size) {
   return result;
 }
 
-const FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'pouziti', 'puvod', 'specialista'];
+const FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
 
 function getFailedTopicsForFallback(translationEntry) {
   const t = translationEntry || {};
@@ -250,7 +250,6 @@ function cloneTranslationTopicFields(entry) {
     vyznam: String(src.vyznam || ''),
     definice: String(src.definice || ''),
     kjv: String(src.kjv || ''),
-    pouziti: String(src.pouziti || ''),
     puvod: String(src.puvod || ''),
     specialista: String(src.specialista || '')
   };
@@ -280,7 +279,7 @@ function shouldReplaceTopicValue(topicId, previousValue, candidateValue) {
 }
 
 function preserveBetterTopicsAfterBatch(keys, previousMap) {
-  const topics = ['vyznam', 'definice', 'kjv', 'pouziti', 'puvod', 'specialista'];
+  const topics = ['vyznam', 'definice', 'kjv', 'puvod', 'specialista'];
   for (const key of (Array.isArray(keys) ? keys : [])) {
     const current = state.translated[key];
     if (!current) continue;
@@ -731,7 +730,7 @@ async function translateBatch(keys, depth = 0) {
       // Oznac chybná hesla jako neúspešná, aby šla zobrazit v "Neúspešné preklady"
       for (const key of keys) {
         if (!state.translated[key]) {
-          state.translated[key] = { vyznam: '—', definice: '', pouziti: '', puvod: '', specialista: '', raw: `CHYBA: ${e.message}` };
+          state.translated[key] = { vyznam: '—', definice: '', puvod: '', specialista: '', raw: `CHYBA: ${e.message}` };
         }
       }
       saveProgress();

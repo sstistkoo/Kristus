@@ -55,7 +55,6 @@ test('isDefinitionLowQuality marks short and UI-noise text as low quality', () =
 test('isTranslationComplete requires all key fields and quality definition', () => {
   const complete = {
     definice: 'Toto je dostatečně dlouhá a strukturovaná definice, která projde.',
-    pouziti: 'Pouziti text',
     puvod: 'Puvod text',
     kjv: 'KJV text',
     specialista: 'Specialista text'
@@ -71,7 +70,6 @@ test('getTranslationStateForKey returns done, pending and missing_topic states',
   try {
     state.translated.G1 = {
       definice: 'Toto je dostatečně dlouhá a strukturovaná definice, která projde.',
-      pouziti: 'a',
       puvod: 'b',
       kjv: 'c',
       specialista: 'd',
@@ -80,7 +78,6 @@ test('getTranslationStateForKey returns done, pending and missing_topic states',
     state.translated.G2 = { skipped: true };
     state.translated.G3 = {
       definice: 'Toto je dostatečně dlouhá a strukturovaná definice, která projde.',
-      pouziti: 'a',
       puvod: '',
       kjv: 'c',
       specialista: 'd',

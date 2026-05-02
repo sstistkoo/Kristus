@@ -26,13 +26,14 @@ function logEntry(keys, rawResponse) {
         <span class="log-key">${key}</span>
         <span class="log-greek">${escHtml(e.greek)}</span>
       </div>
-      ${tr && !tr.skipped
-        ? `<div class="log-vyznam"><b>${t('log.meaning')}</b> ${escHtml(tr.vyznam || '—')}</div>
-           <div class="log-definice">${escHtml((tr.definice || '').slice(0, 120))}${(tr.definice || '').length > 120 ? '…' : ''}</div>
-           ${tr.kjv ? `<div class="log-orig"><b>KJV:</b> ${escHtml(tr.kjv.slice(0, 80))}${(tr.kjv || '').length > 80 ? '…' : ''}</div>` : ''}
-           <div class="log-orig"><b>${t('log.usage')}</b> ${escHtml((tr.pouziti || '').slice(0, 80))}${(tr.pouziti || '').length > 80 ? '…' : ''}</div>`
-        : `<div class="log-err">${t('log.unparsed')}</div>`
-      }
+       ${tr && !tr.skipped
+         ? `<div class="log-vyznam"><b>${t('log.meaning')}</b> ${escHtml(tr.vyznam || '—')}</div>
+            <div class="log-definice">${escHtml((tr.definice || '').slice(0, 120))}${(tr.definice || '').length > 120 ? '…' : ''}</div>
+            ${tr.kjv ? `<div class="log-orig"><b>KJV:</b> ${escHtml(tr.kjv.slice(0, 80))}${(tr.kjv || '').length > 80 ? '…' : ''}</div>` : ''}
+            ${tr.puvod ? `<div class="log-orig"><b>${t('log.origin')}</b> ${escHtml(tr.puvod.slice(0, 80))}${tr.puvod.length > 80 ? '…' : ''}</div>` : ''}
+            ${tr.specialista ? `<div class="log-specialista"><b>${t('log.specialist')}</b> ${escHtml(tr.specialista.slice(0, 120))}${tr.specialista.length > 120 ? '…' : ''}</div>` : ''}`
+         : `<div class="log-err">${t('log.unparsed')}</div>`
+       }
     `;
     scroll.appendChild(div);
   }
@@ -248,18 +249,17 @@ function formatModelTestParsedBlock(key, t, e) {
   const defDisplay = defEnglish && !new RegExp(`\\[${t('modelTest.note.definitionEnglish')}\\]`).test(defValue)
     ? `${defValue} [${t('modelTest.note.definitionEnglish')}]`
     : defValue;
-  const parts = [
-    `${key} | ${e.greek}`,
-    `${t('export.field.grammar')}: ${e.tvaroslovi || '—'}`,
-    `${t('export.field.meaning', { lang: langTag })}: ${t.vyznam || '—'}`,
-    `${t('export.field.definitionEn')}: ${e.definice || e.def || '—'}`,
-    `${t('export.field.definition', { lang: langTag })}: ${defDisplay}`,
-    `${t('export.field.kjv', { lang: langTag })}: ${t.kjv || e.kjv || '—'}`,
-    `${t('export.field.usage')}: ${t.pouziti || '—'}`,
-    `${t('export.field.origin')}: ${t.puvod || '—'}`,
-    `${t('export.field.specialist')}: ${t.specialista || '—'}`,
-    ''
-  ];
+   const parts = [
+     `${key} | ${e.greek}`,
+     `${t('export.field.grammar')}: ${e.tvaroslovi || '—'}`,
+     `${t('export.field.meaning', { lang: langTag })}: ${t.vyznam || '—'}`,
+     `${t('export.field.definitionEn')}: ${e.definice || e.def || '—'}`,
+     `${t('export.field.definition', { lang: langTag })}: ${defDisplay}`,
+     `${t('export.field.kjv', { lang: langTag })}: ${t.kjv || e.kjv || '—'}`,
+     `${t('export.field.origin')}: ${t.puvod || '—'}`,
+     `${t('export.field.specialist')}: ${t.specialista || '—'}`,
+     ''
+   ];
   return parts.join('\n');
 }
 
@@ -317,7 +317,7 @@ function appendModelTestLastBatchKeyAudit(appendReport, batchKeys, parsed, missi
   const englishDefinitionFlag = !!(t && isDefinitionLikelyEnglish(t.definice));
   const badFields = t && !complete
     ? [
-        ...['definice', 'pouziti', 'puvod', 'kjv', 'specialista'].filter(f => !hasMeaningfulValue(t[f])),
+        ...['definice', 'puvod', 'kjv', 'specialista'].filter(f => !hasMeaningfulValue(t[f])),
         ...(englishDefinitionFlag ? ['definice(EN)'] : [])
       ]
     : [];

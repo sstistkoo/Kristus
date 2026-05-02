@@ -312,15 +312,14 @@ function renderTopicRepairModal() {
         <div style="font-size:12px;color:var(--txt);margin-bottom:6px"><b>${t('topicRepair.modal.topicInListTitle')}</b> — ${t('topicRepair.modal.topicInListHint')}</div>
         <label style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--txt2);flex-wrap:wrap">
           <span style="white-space:nowrap">${t('topicRepair.modal.select')}</span>
-          <select id="topicRepairBulkTopicSelect" onchange="refreshTopicRepairBatchPromptEditor()" style="min-width:240px;flex:1;max-width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:6px;font-size:12px">
-            <option value="all" ${state.bulkTopicId === 'all' ? 'selected' : ''}>${t('topicRepair.modal.all')}</option>
-            <option value="definice" ${state.bulkTopicId === 'definice' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.definice)}</option>
-            <option value="vyznam" ${state.bulkTopicId === 'vyznam' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.vyznam)}</option>
-            <option value="kjv" ${state.bulkTopicId === 'kjv' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.kjv)}</option>
-            <option value="pouziti" ${state.bulkTopicId === 'pouziti' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.pouziti)}</option>
-            <option value="puvod" ${state.bulkTopicId === 'puvod' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.puvod)}</option>
-            <option value="specialista" ${state.bulkTopicId === 'specialista' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.specialista)}</option>
-          </select>
+           <select id="topicRepairBulkTopicSelect" onchange="refreshTopicRepairBatchPromptEditor()" style="min-width:240px;flex:1;max-width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:6px;font-size:12px">
+             <option value="all" ${state.bulkTopicId === 'all' ? 'selected' : ''}>${t('topicRepair.modal.all')}</option>
+             <option value="definice" ${state.bulkTopicId === 'definice' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.definice)}</option>
+             <option value="vyznam" ${state.bulkTopicId === 'vyznam' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.vyznam)}</option>
+             <option value="kjv" ${state.bulkTopicId === 'kjv' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.kjv)}</option>
+             <option value="puvod" ${state.bulkTopicId === 'puvod' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.puvod)}</option>
+             <option value="specialista" ${state.bulkTopicId === 'specialista' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.specialista)}</option>
+           </select>
         </label>
         <div id="topicRepairBulkListFilterRow" style="display:${state.bulkTopicId === 'all' ? 'flex' : 'none'};flex-wrap:wrap;gap:10px 14px;align-items:center;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);font-size:11px;color:var(--txt2)">
           <span style="width:100%;margin-bottom:2px">${t('topicRepair.modal.allLimitTypes')}</span>
@@ -718,16 +717,15 @@ const TOPIC_BATCH_PROMPT_PRESET_MAP = {
   vyznam: 'preset_topic_vyznam_batch',
   definice: 'preset_topic_definice_batch',
   kjv: 'preset_topic_kjv_batch',
-  pouziti: 'preset_topic_pouziti_batch',
   puvod: 'preset_topic_puvod_batch',
   specialista: 'preset_topic_specialista_batch'
 };
 
 /** Pořadí témat při hromadné opravě „Vše“. */
-const TOPIC_REPAIR_BULK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'pouziti', 'puvod', 'specialista'];
+const TOPIC_REPAIR_BULK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
 
 function defaultBulkListTopicFilter() {
-  return { definice: true, vyznam: true, kjv: true, pouziti: true, puvod: true, specialista: true };
+  return { definice: true, vyznam: true, kjv: true, puvod: true, specialista: true };
 }
 
 function getTopicRepairModalVisibleTasks(state) {
@@ -863,7 +861,6 @@ function getTopicBatchAiLabel(topicId) {
     vyznam: 'VYZNAM',
     definice: 'DEFINICE',
     kjv: 'KJV',
-    pouziti: 'POUZITI',
     puvod: 'PUVOD',
     specialista: 'SPECIALISTA'
   })[topicId] || 'VYZNAM';
@@ -1362,9 +1359,9 @@ function applyTopicPromptResult() {
     log(`🧠 SPECIALISTA auto-upgrade ${key}: použit kvalitnější text z AI odpovědi`);
   }
 
-  // Pokud AI vrátí i další témata, zkus je bezpečně sloučit (jen když jsou kvalitnější).
-  const topicIds = ['vyznam', 'definice', 'pouziti', 'puvod', 'kjv', 'specialista'];
-  for (const extraTopicId of topicIds) {
+   // Pokud AI vrátí i další témata, zkus je bezpečně sloučit (jen když jsou kvalitnější).
+   const topicIds = ['vyznam', 'definice', 'puvod', 'kjv', 'specialista'];
+   for (const extraTopicId of topicIds) {
     if (extraTopicId === topicId) continue;
     const strictVal = extractTopicValueFromAI(rawAiText, extraTopicId, 'strict');
     const looseVal = extractTopicValueFromAI(rawAiText, extraTopicId, 'loose');
@@ -1467,16 +1464,6 @@ function scoreTopicRepairText(topicId, text) {
     score += Math.min(3, countBracketRefs(textStr));
     score += Math.min(3, Math.floor(countCzDiacritics(textStr) / 4));
     score -= Math.min(5, countEnglishNoiseWords(textStr));
-    return { score, notes };
-  }
-
-  if (topicId === 'pouziti') {
-    const refs = countBracketRefs(textStr);
-    score += Math.min(6, refs * 2);
-    score += Math.min(3, Math.floor(textStr.length / 80));
-    score += Math.min(2, Math.floor(countCzDiacritics(textStr) / 6));
-    score -= Math.min(4, countEnglishNoiseWords(textStr));
-    if (refs === 0) notes.push(t('topicRepair.analysis.note.usageFewRefs'));
     return { score, notes };
   }
 
@@ -1883,8 +1870,8 @@ function extractSpecialistaLooseFallback(rawText) {
   if (!m || m.index === undefined) return '';
   const start = m.index + m[0].length;
   const rest = t.slice(start);
-  const nextHdr =
-    /(?:^|[\n\u0085\u2028\u2029])[\s\u00A0]*(?:VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|COMMENTARY|EXEGESIS|DEFINITION|MEANING|USAGE|ORIGIN|DEF)\s*(?:\([^)\n]{0,240}\))?\s*(?:[:\uFF1A\u2013\u2014=\.\-|]|\n{1,4}\s*)/iu;
+    const nextHdr =
+      /(?:^|[\n\u0085\u2028\u2029])[\s\u00A0]*(?:VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|COMMENTARY|EXEGESIS|DEFINITION|MEANING|ORIGIN|DEF)\s*(?:\([^)\n]{0,240}\))?\s*(?:[:\uFF1A\u2013\u2014=\.\-|]|\n{1,4}\s*)/iu;
   const m2 = rest.search(nextHdr);
   const body = m2 >= 0 ? rest.slice(0, m2) : rest;
   return body.trim();
@@ -1911,7 +1898,6 @@ function normalizeTopicFieldLabel(raw) {
   if (u === 'K') return 'KJV';
   if (u === 'S') return 'SPECIALISTA';
   if (u === 'MEANING') return 'VYZNAM';
-  if (u === 'USAGE') return 'POUZITI';
   if (u === 'ORIGIN') return 'PUVOD';
   if (u === 'POVOD' || u === 'POUVOD') return 'PUVOD';
   if (u === 'VYKLAD' || u === 'VÝKLAD' || u === 'KOMENTAR' || u === 'KOMENTÁŘ' || u === 'EXEGEZE' || u === 'COMMENTARY' || u === 'EXEGESIS') return 'SPECIALISTA';
@@ -1919,7 +1905,7 @@ function normalizeTopicFieldLabel(raw) {
 }
 
 /** Alternace názvů polí v AI odpovědi (jednotný zdroj pro anchor / řádkové parsování). */
-const TOPIC_FIELD_LABEL_ALTS_FOR_RE = 'VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|DEF|V|D|P|K|S';
+const TOPIC_FIELD_LABEL_ALTS_FOR_RE = 'VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|DEF|V|D|P|K|S';
 
 /** Po klíčovém slově často následuje „(specialista)“ / poznámka v závorce — bez toho selhával \s*[-:]. */
 function makeTopicFieldHeaderScanRegex() {
@@ -1971,7 +1957,6 @@ function mapNormalizedLabelToTopicId(norm) {
   const n = String(norm || '').toUpperCase();
   if (n === 'VYZNAM') return 'vyznam';
   if (n === 'DEFINICE') return 'definice';
-  if (n === 'POUZITI') return 'pouziti';
   if (n === 'PUVOD') return 'puvod';
   if (n === 'KJV') return 'kjv';
   if (n === 'SPECIALISTA') return 'specialista';
@@ -2004,7 +1989,6 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
   const keyForTopic = {
     vyznam: 'VYZNAM',
     definice: 'DEFINICE',
-    pouziti: 'POUZITI',
     puvod: 'PUVOD',
     kjv: 'KJV',
     specialista: 'SPECIALISTA'
@@ -2045,7 +2029,7 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
     // Ořízni vnořený duplicitní label na začátku (např. "S: SPECIALISTA: text" → "text")
     out = out.replace(new RegExp(`^(${TOPIC_FIELD_LABEL_ALTS_FOR_RE})\\s*[-:–—=.]{0,3}\\s*`, 'iu'), '').trim();
     // Ořízni případ, kdy AI přidá další téma ve stejné větě/řádku.
-    const foreignInline = out.match(/\b(VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
+    const foreignInline = out.match(/\b(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
     if (foreignInline && foreignInline.index !== undefined) {
       const nl = normalizeTopicFieldLabel(foreignInline[1]);
       const sameBucket = keyForTopic === 'SPECIALISTA'
@@ -2079,7 +2063,7 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
   }
   // Poslední ochrana: u single-topic odpovědi ořízni navazující cizí labely i v rámci jednoho řádku.
   if (keyForTopic) {
-    const foreignInlineGlobal = cleaned.match(/\b(VYZNAM|DEFINICE|POUZITI|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|USAGE|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
+    const foreignInlineGlobal = cleaned.match(/\b(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
     if (foreignInlineGlobal && foreignInlineGlobal.index !== undefined) {
       const nl = normalizeTopicFieldLabel(foreignInlineGlobal[1]);
       const sameBucket = keyForTopic === 'SPECIALISTA'

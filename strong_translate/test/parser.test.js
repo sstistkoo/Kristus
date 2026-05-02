@@ -17,7 +17,7 @@ test('parseCzTXT parses one G entry with core fields', () => {
   const out = parseCzTXT(input);
   assert.equal(out.G1.vyznam, 'vyznam text');
   assert.equal(out.G1.definice, 'definice text');
-  assert.equal(out.G1.pouziti, 'uziti');
+  // pouziti field was removed; line "Použití: uziti" is ignored
   assert.equal(out.G1.puvod, 'puvod');
   assert.equal(out.G1.specialista, 'specialista');
   assert.equal(out.G1.kjv, 'kjv');
@@ -86,7 +86,6 @@ test('import/export roundtrip: export-like JSON map can be reimported without fi
       greek: 'alpha',
       vyznam: 'vyznam 1',
       definice: 'def 1',
-      pouziti: 'use 1',
       puvod: 'origin 1',
       specialista: 'spec 1',
       kjv: 'kjv 1'
@@ -95,7 +94,6 @@ test('import/export roundtrip: export-like JSON map can be reimported without fi
       greek: 'beta',
       vyznam: 'vyznam 2',
       definice: 'def 2',
-      pouziti: 'use 2',
       puvod: 'origin 2',
       specialista: 'spec 2',
       kjv: 'kjv 2'
@@ -105,7 +103,6 @@ test('import/export roundtrip: export-like JSON map can be reimported without fi
   assert.deepEqual(out.G1, {
     vyznam: 'vyznam 1',
     definice: 'def 1',
-    pouziti: 'use 1',
     puvod: 'origin 1',
     specialista: 'spec 1',
     kjv: 'kjv 1'
@@ -113,7 +110,6 @@ test('import/export roundtrip: export-like JSON map can be reimported without fi
   assert.deepEqual(out.H2, {
     vyznam: 'vyznam 2',
     definice: 'def 2',
-    pouziti: 'use 2',
     puvod: 'origin 2',
     specialista: 'spec 2',
     kjv: 'kjv 2'
@@ -125,7 +121,6 @@ test('import/export roundtrip: export-like TXT labels are parsed back', () => {
     'G50 | omega',
     'Meaning: value txt',
     'Definition: definition txt',
-    'Usage: usage txt',
     'Origin: origin txt',
     'Specialist: specialist txt',
     'KJV translations: kjv txt'
@@ -134,7 +129,6 @@ test('import/export roundtrip: export-like TXT labels are parsed back', () => {
   assert.deepEqual(out.G50, {
     vyznam: 'value txt',
     definice: 'definition txt',
-    pouziti: 'usage txt',
     puvod: 'origin txt',
     specialista: 'specialist txt',
     kjv: 'kjv txt'

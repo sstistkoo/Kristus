@@ -70,10 +70,9 @@ function showPreviewModal(previewData) {
           <div style="font-size:12px">
             <div><b>${t('field.meaning')}</b> ${escHtml(data.vyznam || '—')}</div>
             <div style="margin-top:5px"><b>${t('field.definition')}</b> ${escHtml(data.definice || '—')}</div>
-            ${hasRaw && rawDef !== data.definice ? `<div style="margin-top:8px;padding:8px;background:var(--bg2);border-radius:4px;border-left:2px solid var(--acc);font-size:11px;color:var(--txt2)"><b>${t('import.fullTranslation')}</b><div style="margin-top:5px;line-height:1.5">${formatPreviewRawTranslation(rawDef)}</div></div>` : ''}
-            <div style="margin-top:5px"><b>${t('field.usage')}</b> ${escHtml(data.pouziti || '—')}</div>
-            <div style="margin-top:5px"><b>${t('field.origin')}</b> ${escHtml(data.puvod || '—')}</div>
-            <div style="margin-top:5px"><b>${t('field.specialist')}</b> ${escHtml(data.specialista || '—')}</div>
+             ${hasRaw && rawDef !== data.definice ? `<div style="margin-top:8px;padding:8px;background:var(--bg2);border-radius:4px;border-left:2px solid var(--acc);font-size:11px;color:var(--txt2)"><b>${t('import.fullTranslation')}</b><div style="margin-top:5px;line-height:1.5">${formatPreviewRawTranslation(rawDef)}</div></div>` : ''}
+             <div style="margin-top:5px"><b>${t('field.origin')}</b> ${escHtml(data.puvod || '—')}</div>
+             <div style="margin-top:5px"><b>${t('field.specialist')}</b> ${escHtml(data.specialista || '—')}</div>
           </div>
         </div>
         <div>
@@ -98,7 +97,7 @@ function toggleAllPreview(checked) {
 function acceptPreview() {
   const mode = (document.querySelector('input[name="importMode"]:checked') || {}).value || 'missing';
 
-  const FIELDS = ['vyznam', 'definice', 'pouziti', 'puvod', 'specialista', 'kjv'];
+  const FIELDS = ['vyznam', 'definice', 'puvod', 'specialista', 'kjv'];
   const isEmpty = v => !v || v === '—';
 
   let applied = 0, skippedConflicts = 0, mergedFields = 0;

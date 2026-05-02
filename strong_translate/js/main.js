@@ -748,14 +748,13 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
        return getResolvedSystemMessage();
      }
 
-     const EN_TOPIC_PROMPT_MAP = {
-      preset_topic_vyznam_en: 'vyznam',
-      preset_topic_definice_en: 'definice',
-      preset_topic_kjv_en: 'kjv',
-      preset_topic_pouziti_en: 'pouziti',
-      preset_topic_puvod_en: 'puvod',
-      preset_topic_specialista_en: 'specialista'
-    };
+      const EN_TOPIC_PROMPT_MAP = {
+        preset_topic_vyznam_en: 'vyznam',
+        preset_topic_definice_en: 'definice',
+        preset_topic_kjv_en: 'kjv',
+        preset_topic_puvod_en: 'puvod',
+        preset_topic_specialista_en: 'specialista'
+      };
 
     function getCurrentTargetLangCode() {
       let target = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
@@ -809,7 +808,6 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
         vyznam: 'topic.label.vyznam',
         definice: 'topic.label.definice',
         kjv: 'topic.label.kjv',
-        pouziti: 'topic.label.pouziti',
         puvod: 'topic.label.puvod',
         specialista: 'topic.label.specialista'
       };
@@ -832,13 +830,11 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
         preset_topic_vyznam: 'vyznam',
         preset_topic_definice: 'definice',
         preset_topic_kjv: 'kjv',
-        preset_topic_pouziti: 'pouziti',
         preset_topic_puvod: 'puvod',
         preset_topic_specialista: 'specialista',
         preset_topic_vyznam_batch: 'vyznam',
         preset_topic_definice_batch: 'definice',
         preset_topic_kjv_batch: 'kjv',
-        preset_topic_pouziti_batch: 'pouziti',
         preset_topic_puvod_batch: 'puvod',
         preset_topic_specialista_batch: 'specialista'
       };
@@ -1569,7 +1565,6 @@ function applySourceEntryEditsToEntries() {
 const TOPIC_LABELS = {
   vyznam: '',
   definice: '',
-  pouziti: '',
   puvod: '',
   kjv: '',
   specialista: ''
@@ -1579,7 +1574,6 @@ function refreshTopicLabels() {
   const langTag = getContentLangTag();
   TOPIC_LABELS.vyznam = `${t('topic.label.vyznam')} (${langTag})`;
   TOPIC_LABELS.definice = `${t('topic.label.definice')} (${langTag})`;
-  TOPIC_LABELS.pouziti = `${t('topic.label.pouziti')} (${langTag})`;
   TOPIC_LABELS.puvod = `${t('topic.label.puvod')} (${langTag})`;
   TOPIC_LABELS.kjv = `${t('topic.label.kjv')} (${langTag})`;
   TOPIC_LABELS.specialista = `${t('topic.label.specialista')} (${langTag})`;
@@ -1590,7 +1584,6 @@ const TOPIC_PROMPT_PRESET_MAP = {
   vyznam: 'preset_topic_vyznam',
   definice: 'preset_topic_definice',
   kjv: 'preset_topic_kjv',
-  pouziti: 'preset_topic_pouziti',
   puvod: 'preset_topic_puvod',
   specialista: 'preset_topic_specialista'
 };
