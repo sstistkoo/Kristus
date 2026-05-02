@@ -186,21 +186,22 @@ export function createPromptLibraryApi(deps) {
     };
     tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).map((cat) => {
         const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
-        if (cat === 'default') {
-          return btn + '<button type="button" class="prompt-tab" id="btnPromptSecondary" onclick="window.promptLibraryApi.showSecondaryPromptsModal()" title="Spravovat sekundární prompty pro follow-up překlady">Sekundární</button>';
-        }
+if (cat === 'default') {
+           return btn + '<button type="button" class="prompt-tab prompt-tab-secondary" id="btnPromptSecondary" onclick="showSecondaryPromptsModal()" title="Spravovat sekundární prompty pro follow-up překlady">Sekundární</button>';
+         }
         return btn;
       }).join('');
-    tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
-      tab.onclick = () => {
-        tabs.querySelectorAll('.prompt-tab').forEach((x) => x.classList.remove('active'));
-        tab.classList.add('active');
-        state.selectedPromptCategory = tab.dataset.category;
-        state.selectedPromptIndex = 0;
-        loadDualEditorForCurrentSelection();
-        renderPromptList();
-      };
-    });
+tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
+       if (tab.id === 'btnPromptSecondary') return;
+       tab.onclick = () => {
+         tabs.querySelectorAll('.prompt-tab').forEach((x) => x.classList.remove('active'));
+         tab.classList.add('active');
+         state.selectedPromptCategory = tab.dataset.category;
+         state.selectedPromptIndex = 0;
+         loadDualEditorForCurrentSelection();
+         renderPromptList();
+       };
+     });
     matchPromptToPreset(savedPrompt);
     const activeTab = tabs.querySelector('.prompt-tab.active');
     if (activeTab && activeTab.dataset.category !== state.selectedPromptCategory) {
