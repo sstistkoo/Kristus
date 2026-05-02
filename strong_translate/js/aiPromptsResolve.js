@@ -29,42 +29,48 @@ export function getResolvedFinalPrompt() {
 }
 
 export function getResolvedPromptLibraryBase() {
-  const base = JSON.parse(JSON.stringify(PROMPT_LIBRARY_BASE));
-  const defText = getResolvedDefaultPrompt();
-  if (base.default?.[0]) {
-    const o = base.default[0];
-    o.name = tp('aiPrompts.lib.default.name', o.name);
-    o.desc = tp('aiPrompts.lib.default.desc', o.desc);
-    o.text = defText;
-  }
-  if (base.detailed?.[0]) {
-    const o = base.detailed[0];
-    o.name = tp('aiPrompts.lib.detailed.name', o.name);
-    o.desc = tp('aiPrompts.lib.detailed.desc', o.desc);
-    o.text = tp('aiPrompts.lib.detailed.text', o.text);
-  }
-  if (base.concise?.[0]) {
-    const o = base.concise[0];
-    o.name = tp('aiPrompts.lib.concise.name', o.name);
-    o.desc = tp('aiPrompts.lib.concise.desc', o.desc);
-    o.text = tp('aiPrompts.lib.concise.text', o.text);
-  }
-  if (base.literal?.[0]) {
-    const o = base.literal[0];
-    o.name = tp('aiPrompts.lib.literal.name', o.name);
-    o.desc = tp('aiPrompts.lib.literal.desc', o.desc);
-    o.text = tp('aiPrompts.lib.literal.text', o.text);
-  }
-  if (Array.isArray(base.library)) {
-    for (let i = 0; i < base.library.length; i++) {
-      const p = `aiPrompts.lib.stack${i}`;
-      const o = base.library[i];
-      o.name = tp(`${p}.name`, o.name);
-      o.desc = tp(`${p}.desc`, o.desc);
-      o.text = tp(`${p}.text`, o.text);
+    const base = JSON.parse(JSON.stringify(PROMPT_LIBRARY_BASE));
+    const defText = getResolvedDefaultPrompt();
+    const sysText = getResolvedSystemMessage();
+    if (base.default?.[0]) {
+        const o = base.default[0];
+        o.name = tp('aiPrompts.lib.default.name', o.name);
+        o.desc = tp('aiPrompts.lib.default.desc', o.desc);
+        o.text = defText;
+        o.system = tp('aiPrompts.lib.default.system', sysText);
     }
-  }
-  return base;
+    if (base.detailed?.[0]) {
+        const o = base.detailed[0];
+        o.name = tp('aiPrompts.lib.detailed.name', o.name);
+        o.desc = tp('aiPrompts.lib.detailed.desc', o.desc);
+        o.text = tp('aiPrompts.lib.detailed.text', o.text);
+        o.system = tp('aiPrompts.lib.detailed.system', sysText);
+    }
+    if (base.concise?.[0]) {
+        const o = base.concise[0];
+        o.name = tp('aiPrompts.lib.concise.name', o.name);
+        o.desc = tp('aiPrompts.lib.concise.desc', o.desc);
+        o.text = tp('aiPrompts.lib.concise.text', o.text);
+        o.system = tp('aiPrompts.lib.concise.system', sysText);
+    }
+    if (base.literal?.[0]) {
+        const o = base.literal[0];
+        o.name = tp('aiPrompts.lib.literal.name', o.name);
+        o.desc = tp('aiPrompts.lib.literal.desc', o.desc);
+        o.text = tp('aiPrompts.lib.literal.text', o.text);
+        o.system = tp('aiPrompts.lib.literal.system', sysText);
+    }
+    if (Array.isArray(base.library)) {
+        for (let i = 0; i < base.library.length; i++) {
+            const p = `aiPrompts.lib.stack${i}`;
+            const o = base.library[i];
+            o.name = tp(`${p}.name`, o.name);
+            o.desc = tp(`${p}.desc`, o.desc);
+            o.text = tp(`${p}.text`, o.text);
+            o.system = tp(`${p}.system`, sysText);
+        }
+    }
+    return base;
 }
 
 export function getResolvedModelTestCatalog(fallbackCat) {

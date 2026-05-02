@@ -3767,52 +3767,143 @@ function saveEditedPrompt() {
 
 // Library prompt editor functions
 function restoreLibraryPrompts() {
-  const sysEl = document.getElementById('librarySystemPrompt');
-  const userEl = document.getElementById('libraryUserPrompt');
-  const status = document.getElementById('libraryPromptStatus');
+   const sysEl = document.getElementById('librarySystemPrompt');
+   const userEl = document.getElementById('libraryUserPrompt');
+   const status = document.getElementById('libraryPromptStatus');
 
-  if (sysEl) sysEl.value = getActiveSystemMessage();
-  if (userEl) userEl.value = getActiveMainPromptTemplate('batch');
+   if (!sysEl || !userEl) return;
 
-  if (status) {
-    status.textContent = '? Obnoveno výchozí';
-    status.style.color = 'var(--grn)';
-    setTimeout(() => { if (status) status.textContent = ''; }, 2200);
-  }
-}
+   // Get current category and index from state
+   const category = state.selectedPromptCategory;
+   const index = state.selectedPromptIndex;
+
+   // Restore based on category
+   if (category === 'custom') {
+     // For custom category, restore global values (current behavior)
+     sysEl.value = getActiveSystemMessage();
+     userEl.value = getActiveMainPromptTemplate('batch');
+   } else {
+     // For built-in categories, restore entry from PROMPT_LIBRARY_BASE
+     const baseEntry = getPromptLibraryBase()[category]?.[index];
+     if (baseEntry) {
+       sysEl.value = baseEntry.system || getActiveSystemMessage();
+       userEl.value = baseEntry.text || '';
+       
+       // Also update the state entry
+       if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
+         state.PROMPT_LIBRARY[category][index] = {
+           ...state.PROMPT_LIBRARY[category][index],
+           system: baseEntry.system || getActiveSystemMessage(),
+           text: baseEntry.text || ''
+         };
+       }
+     } else {
+       // Fallback to active values
+       sysEl.value = getActiveSystemMessage();
+       userEl.value = getActiveMainPromptTemplate('batch');
+     }
+   }
+
+   if (status) {
+     status.textContent = '? Obnoveno výchozí';
+     status.style.color = 'var(--grn)';
+   }
+   setTimeout(() => { if (status) status.textContent = ''; }, 2200);
+ }
 
 function saveLibraryPrompts() {
-  const sysEl = document.getElementById('librarySystemPrompt');
-  const userEl = document.getElementById('libraryUserPrompt');
-  const status = document.getElementById('libraryPromptStatus');
+   const sysEl = document.getElementById('librarySystemPrompt');
+   const userEl = document.getElementById('libraryUserPrompt');
+   const status = document.getElementById('libraryPromptStatus');
 
-  if (!sysEl || !userEl) return;
+   if (!sysEl || !userEl) return;
 
-  const sysVal = (sysEl.value || '').trim();
-  const userVal = (userEl.value || '').trim();
+   const sysVal = (sysEl.value || '').trim();
+   const userVal = (userEl.value || '').trim();
 
-  if (!sysVal) {
-    if (status) { status.textContent = '? Systémový prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
-    return;
-  }
-  if (!userVal) {
-    if (status) { status.textContent = '? Uživatelský prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
-    return;
-  }
+   if (!sysVal) {
+     if (status) { status.textContent = '? Systémový prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+     return;
+   }
+   if (!userVal) {
+     if (status) { status.textContent = '? Uživatelský prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+     return;
+   }
 
-  // Save
-  localStorage.setItem('strong_custom_system_prompt', sysVal);
-  setMainPrompt(userVal, 'custom');
-  updatePromptStatusIndicator();
+   // Get current category and index from state
+   const category = state.selectedPromptCategory;
+   const index = state.selectedPromptIndex;
 
-  if (status) {
-    status.textContent = '? Uloženo';
-    status.style.color = 'var(--grn)';
-  }
-  showToast('? AI prompt uložen');
+   // Save based on category
+   if (category === 'custom') {
+     // Save to custom storage (existing behavior)
+     localStorage.setItem('strong_custom_system_prompt', sysVal);
+     setMainPrompt(userVal, 'custom');
+     
+     // Update the custom entry in state
+     const customEntries = state.PROMPT_LIBRARY.custom || [];
+     if (customEntries[index]) {
+       customEntries[index] = {
+         ...customEntries[index],
+         system: sysVal,
+         text: userVal
+       };
+       state.PROMPT_LIBRARY.custom = customEntries;
+     }
+   } else {
+     // For built-in categories, update only in state (runtime only as per plan)
+     if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
+       state.PROMPT_LIBRARY[category][index] = {
+         ...state.PROMPT_LIBRARY[category][index],
+         system: sysVal,
+         text: userVal
+       };
+     }
+   }
 
-  setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+   // Update UI
+   updatePromptStatusIndicator();
+   renderPromptList();
+   renderPromptPreview();
+
+   if (status) {
+     status.textContent = '? Uloženo';
+     status.style.color = 'var(--grn)';
+   }
+   showToast('? AI prompt uložen');
+
+    setTimeout(() => { if (status) status.textContent = ''; }, 2000);
+ }
+
+// Delete custom prompts with confirmation
+function confirmClearLibraryPrompts() {
+  if (!confirm('Opravdu chcete vymazat uložené uživatelské prompty? Tato akce je nevratná.')) return;
+  clearLibraryPrompts();
 }
+
+function clearLibraryPrompts() {
+   // Reset to defaults – clears custom system prompt, restores main prompt to system default
+   restoreDefaultPrompt();
+   
+   // Clear storage keys as per plan
+   localStorage.removeItem('strong_custom_system_prompt');
+   localStorage.removeItem('strong_prompt');
+   localStorage.removeItem('strong_prompt_mode'); // optional, reset to 'system'
+   localStorage.removeItem('strong_prompt_library_custom'); // clear custom entries
+   
+   // Refresh library editors
+   const sysEl = document.getElementById('librarySystemPrompt');
+   const userEl = document.getElementById('libraryUserPrompt');
+   if (sysEl) sysEl.value = getActiveSystemMessage();
+   if (userEl) userEl.value = getActiveMainPromptTemplate('batch');
+   
+   // Reset custom library state
+   if (state.PROMPT_LIBRARY) {
+     state.PROMPT_LIBRARY.custom = [];
+   }
+   
+   showToast('? Uživatelské prompty byly vymazány');
+ }
 
 function onI18nToolEditorLangChange() {
   const select = document.getElementById('i18nToolEditorLang');
@@ -4403,6 +4494,7 @@ window.saveEditedPrompt = saveEditedPrompt;
 // Prompt library dual editor
 window.restoreLibraryPrompts = restoreLibraryPrompts;
 window.saveLibraryPrompts = saveLibraryPrompts;
+window.confirmClearLibraryPrompts = confirmClearLibraryPrompts;
 
 // Z exportDataApi
 window.exportTXT = exportTXT;
