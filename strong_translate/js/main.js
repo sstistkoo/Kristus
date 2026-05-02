@@ -2222,18 +2222,19 @@ window.selectPrompt = promptLibraryApi.selectPrompt;
  window.closePromptLangModal = closePromptLangModal;
  window.saveLangSettings = saveLangSettings;
  // Secondary prompts
- window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
- window.closeSecondaryPromptsModal = promptLibraryApi.closeSecondaryPromptsModal;
- window.renderSecondaryPromptList = promptLibraryApi.renderSecondaryPromptList;
- window.selectSecondaryPrompt = promptLibraryApi.selectSecondaryPrompt;
- window.addSecondaryPrompt = promptLibraryApi.addSecondaryPrompt;
- window.saveSecondaryPrompt = promptLibraryApi.saveSecondaryPrompt;
- window.updateSecondaryPrompt = promptLibraryApi.updateSecondaryPrompt;
- window.deleteSecondaryPrompt = promptLibraryApi.deleteSecondaryPrompt;
- window.loadSecondaryEditorForCurrentSelection = promptLibraryApi.loadSecondaryEditorForCurrentSelection;
- window.applySecondaryPrompt = promptLibraryApi.applySecondaryPrompt;
- window.getActiveSecondarySystemMessage = getActiveSecondarySystemMessage;
- window.getActiveSecondaryUserPrompt = getActiveSecondaryUserPrompt;
+window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
+  window.closeSecondaryPromptsModal = promptLibraryApi.closeSecondaryPromptsModal;
+  window.renderSecondaryPromptList = promptLibraryApi.renderSecondaryPromptList;
+  window.selectSecondaryPrompt = promptLibraryApi.selectSecondaryPrompt;
+  window.addSecondaryPrompt = promptLibraryApi.addSecondaryPrompt;
+  window.saveSecondaryPrompt = promptLibraryApi.saveSecondaryPrompt;
+  window.updateSecondaryPrompt = promptLibraryApi.updateSecondaryPrompt;
+  window.deleteSecondaryPrompt = promptLibraryApi.deleteSecondaryPrompt;
+  window.loadSecondaryEditorForCurrentSelection = promptLibraryApi.loadSecondaryEditorForCurrentSelection;
+  window.applySecondaryPrompt = promptLibraryApi.applySecondaryPrompt;
+  window.getActiveSecondarySystemMessage = getActiveSecondarySystemMessage;
+  window.getActiveSecondaryUserPrompt = getActiveSecondaryUserPrompt;
+  window.showAddCustomPromptModal = promptLibraryApi.showAddCustomPromptModal;
 
 // Secondary prompts
 window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;

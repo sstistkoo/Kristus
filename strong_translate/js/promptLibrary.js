@@ -656,29 +656,53 @@ tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
     closeSecondaryPromptsModal();
   }
 
-  return {
-      initializePromptLibrary,
-      getStoredCustomPromptLibrary,
-      saveStoredCustomPromptLibrary,
-      getStoredImportedPromptLibrary,
-      saveStoredImportedPromptLibrary,
-      rebuildPromptLibrary,
-      getSystemPromptForCurrentTask,
-      isPromptAutoModeEnabled,
-      setMainPrompt,
-      applySystemPromptForCurrentTask,
-      togglePromptModeQuick,
-      updatePromptAutoButton,
-      togglePromptAutoMode,
-      showPromptLibraryModal,
-      matchPromptToPreset,
-      closePromptLibraryModal,
-      renderPromptList,
-      selectPrompt,
-      applySelectedPrompt,
-      exportPromptLibraryToTxt,
-      importPromptLibraryFromFile,
-      updatePromptStatusIndicator,
+function showAddCustomPromptModal() {
+    const name = prompt(t('prompt.library.namePrompt') || 'Zadej název nového promptu:', '');
+    if (!name) return;
+
+    const desc = prompt(t('prompt.library.descPrompt') || 'Zadej popis promptu (volitelné):', '') || '';
+
+    const sysEl = document.getElementById('librarySystemPrompt');
+    const userEl = document.getElementById('libraryUserPrompt');
+    const newPrompt = {
+      name: name,
+      desc: desc,
+      text: userEl ? userEl.value : '',
+      system: sysEl ? sysEl.value : getActiveSystemMessage()
+    };
+
+    const existing = getStoredCustomPromptLibrary();
+    existing.push(newPrompt);
+    saveStoredCustomPromptLibrary(existing);
+    rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
+    renderPromptList();
+    showToast(t('toast.prompt.saved') || 'Prompt uložen');
+  }
+
+return {
+       initializePromptLibrary,
+       getStoredCustomPromptLibrary,
+       saveStoredCustomPromptLibrary,
+       getStoredImportedPromptLibrary,
+       saveStoredImportedPromptLibrary,
+       rebuildPromptLibrary,
+       getSystemPromptForCurrentTask,
+       isPromptAutoModeEnabled,
+       setMainPrompt,
+       applySystemPromptForCurrentTask,
+       togglePromptModeQuick,
+       updatePromptAutoButton,
+       togglePromptAutoMode,
+       showPromptLibraryModal,
+       matchPromptToPreset,
+       closePromptLibraryModal,
+       renderPromptList,
+       selectPrompt,
+       applySelectedPrompt,
+       exportPromptLibraryToTxt,
+       importPromptLibraryFromFile,
+       showAddCustomPromptModal,
+       updatePromptStatusIndicator,
       // Secondary prompts
       getStoredSecondaryPrompts,
       saveStoredSecondaryPrompts,
