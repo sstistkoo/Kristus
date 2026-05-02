@@ -29,7 +29,6 @@ export function getResolvedFinalPrompt() {
 }
 
 export function getResolvedPromptLibraryBase() {
-export function getResolvedPromptLibraryBase() {
     const base = JSON.parse(JSON.stringify(PROMPT_LIBRARY_BASE));
     const defText = getResolvedDefaultPrompt();
     const sysText = getResolvedSystemMessage();

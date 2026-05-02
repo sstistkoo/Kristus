@@ -51,7 +51,6 @@ const FINAL_PROMPT = {
 };
 
 const PROMPT_LIBRARY_BASE = {
-const PROMPT_LIBRARY_BASE = {
     default: [{ name: 'System', desc: 'System default prompt', text: DEFAULT_PROMPT, system: '' }],
     detailed: [{ name: 'Detailed', desc: 'Detailed translation', text: DEFAULT_PROMPT, system: '' }],
     concise: [{ name: 'Concise', desc: 'Short translation', text: DEFAULT_PROMPT, system: '' }],
