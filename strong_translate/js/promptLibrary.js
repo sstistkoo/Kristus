@@ -126,8 +126,8 @@ export function createPromptLibraryApi(deps) {
     const context = state.topicPromptState ? 'topic' : 'batch';
     const systemPrompt = getSystemPromptForCurrentTask(context);
     setMainPrompt(systemPrompt, 'system');
-    const editor = document.getElementById('promptLibraryEditor');
-    if (editor) editor.value = systemPrompt;
+    const sysEl = document.getElementById('librarySystemPrompt');
+    if (sysEl) sysEl.value = systemPrompt;
     showToast(t('toast.systemPrompt.set', { mode: context === 'topic' ? t('common.topic') : t('common.batch') }));
   }
 
@@ -166,7 +166,6 @@ export function createPromptLibraryApi(deps) {
 function showPromptLibraryModal() {
    const modal = document.getElementById('promptLibraryModal');
    const tabs = document.getElementById('promptTabs');
-   const editor = document.getElementById('promptLibraryEditor');
    const savedPrompt = localStorage.getItem('strong_prompt') || getDefaultPrompt();
    rebuildPromptLibrary(savedPrompt);
 
@@ -194,7 +193,6 @@ function showPromptLibraryModal() {
        renderPromptPreview();
      };
    });
-   if (editor) editor.value = savedPrompt;
    matchPromptToPreset(savedPrompt);
    loadDualEditorForCurrentSelection();
    renderPromptList();
@@ -242,28 +240,25 @@ function showPromptLibraryModal() {
   `).join('');
   }
 
-  function renderPromptPreview() {
-    const preview = document.getElementById('promptPreview');
-    const editor = document.getElementById('promptLibraryEditor');
-    const prompts = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
-    const prompt = prompts[state.selectedPromptIndex];
-    if (prompt) {
-      preview.textContent = prompt.text;
-      if (editor) editor.value = prompt.text;
-    } else {
-      preview.textContent = t('prompt.library.preview.empty');
-    }
-  }
+   function renderPromptPreview() {
+     const preview = document.getElementById('promptPreview');
+     const prompts = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
+     const prompt = prompts[state.selectedPromptIndex];
+     if (prompt) {
+       preview.textContent = prompt.text;
+     } else {
+       preview.textContent = t('prompt.library.preview.empty');
+     }
+   }
 
 function selectPrompt(index) {
    state.selectedPromptIndex = index;
    const prompts = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
    const prompt = prompts[index];
-   if (prompt) document.getElementById('promptLibraryEditor').value = prompt.text;
    loadDualEditorForCurrentSelection();
    renderPromptList();
    renderPromptPreview();
- }
+  }
 
 // Helper function to load dual editor for current selection
 function loadDualEditorForCurrentSelection() {
@@ -277,23 +272,23 @@ function loadDualEditorForCurrentSelection() {
    if (userEl) userEl.value = entry.text;
 }
 
-  function applySelectedPrompt() {
-    const editor = document.getElementById('promptLibraryEditor');
-    const promptText = editor ? editor.value.trim() : '';
-    if (!promptText) {
-      showToast(t('toast.prompt.empty'));
-      return;
-    }
-    setMainPrompt(promptText, 'custom');
-    if (state.selectedPromptCategory === 'custom') {
-      localStorage.setItem('strong_custom_prompt', promptText);
-      const imported = getStoredCustomPromptLibrary().filter((item) => item.text !== promptText);
-      saveStoredCustomPromptLibrary(imported);
-      rebuildPromptLibrary(promptText);
-    }
-    closePromptLibraryModal();
-    showToast(t('toast.prompt.savedApplied'));
-  }
+   function applySelectedPrompt() {
+     const userEl = document.getElementById('libraryUserPrompt');
+     const promptText = userEl ? userEl.value.trim() : '';
+     if (!promptText) {
+       showToast(t('toast.prompt.empty'));
+       return;
+     }
+     setMainPrompt(promptText, 'custom');
+     if (state.selectedPromptCategory === 'custom') {
+       localStorage.setItem('strong_custom_prompt', promptText);
+       const imported = getStoredCustomPromptLibrary().filter((item) => item.text !== promptText);
+       saveStoredCustomPromptLibrary(imported);
+       rebuildPromptLibrary(promptText);
+     }
+     closePromptLibraryModal();
+     showToast(t('toast.prompt.savedApplied'));
+   }
 
   function exportPromptLibraryToTxt() {
     rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
@@ -408,6 +403,9 @@ function loadDualEditorForCurrentSelection() {
       rebuildPromptLibrary(localStorage.getItem('strong_prompt') || getDefaultPrompt());
     }
 
+    // Expose helper for external use
+    window.loadDualEditorForCurrentSelection = loadDualEditorForCurrentSelection;
+
     return {
       initializePromptLibrary,
       getStoredCustomPromptLibrary,
@@ -434,18 +432,3 @@ function loadDualEditorForCurrentSelection() {
       updatePromptStatusIndicator
     };
   }
-
-// Helper function to load dual editor for current selection
-function loadDualEditorForCurrentSelection() {
-  const category = state.selectedPromptCategory;
-  const index = state.selectedPromptIndex;
-  const entry = (state.PROMPT_LIBRARY[category] || [])[index];
-  if (!entry) return;
-  const sysEl = document.getElementById('librarySystemPrompt');
-  const userEl = document.getElementById('libraryUserPrompt');
-  if (sysEl) sysEl.value = entry.system || getActiveSystemMessage();
-  if (userEl) userEl.value = entry.text;
-}
-
-// Expose on window as per plan
-window.loadDualEditorForCurrentSelection = loadDualEditorForCurrentSelection;
