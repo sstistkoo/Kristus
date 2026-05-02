@@ -3755,7 +3755,7 @@ function saveEditedPrompt() {
   setMainPrompt(userVal, 'custom');
   updatePromptStatusIndicator();
   closeEditPromptModal();
-   showToast('? AI prompt ulo�en');
+   showToast('✓ AI prompt uložen');
  }
 
 // Library prompt editor functions
@@ -3862,7 +3862,7 @@ function saveLibraryPrompts() {
      status.textContent = '? Ulo�eno';
      status.style.color = 'var(--grn)';
    }
-   showToast('? AI prompt ulo�en');
+   showToast('✓ AI prompt uložen');
 
     setTimeout(() => { if (status) status.textContent = ''; }, 2000);
  }
