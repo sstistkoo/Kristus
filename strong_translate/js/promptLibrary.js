@@ -584,7 +584,10 @@ function loadDualEditorForCurrentSelection() {
     if (!modal) return;
 
     // Initialize secondary prompt state
-    state.selectedSecondaryPromptIndex = -1;
+    // Zachovat aktuální výběr
+    if (state.selectedSecondaryPromptIndex === undefined || state.selectedSecondaryPromptIndex === null) {
+      state.selectedSecondaryPromptIndex = -1;
+    }
 
     // Clear editors and load active secondary prompts
     const sysEl = document.getElementById('secondarySystemPrompt');
@@ -663,7 +666,8 @@ function loadDualEditorForCurrentSelection() {
 
     state.selectedSecondaryPromptIndex = prompts.length - 1;
     renderSecondaryPromptList();
-    loadSecondaryEditorForCurrentSelection();
+    selectSecondaryPrompt(state.selectedSecondaryPromptIndex);
+    renderPromptList();
     showToast(t('toast.prompt.saved') || 'Prompt uložen');
   }
 
@@ -700,6 +704,7 @@ function loadDualEditorForCurrentSelection() {
 
     state.selectedSecondaryPromptIndex = prompts.length - 1;
     renderSecondaryPromptList();
+    renderPromptList();
     showToast(t('toast.prompt.saved') || 'Prompt uložen');
   }
 
