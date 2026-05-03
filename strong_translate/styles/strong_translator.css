@@ -1314,16 +1314,41 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
     }
     #secondaryPromptsModal.show { display: flex; }
     .prompt-modal-box {
-     background: var(--bg2);
-     border: 1px solid var(--brd);
-     border-radius: 8px;
-     padding: 20px;
-     max-width: 700px;
-     width: 90%;
-     max-height: calc(100vh - 32px);
-     display: flex;
-     flex-direction: column;
-   }
+      background: var(--bg2);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 700px;
+      width: 90%;
+      max-height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .close-modal-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--brd);
+      border-radius: 4px;
+      background: var(--bg3);
+      color: var(--txt3);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .close-modal-btn:hover {
+      border-color: var(--acc);
+      color: var(--acc);
+      background: var(--bg4);
+    }
   .prompt-modal-title {
     font-family: 'JetBrains Mono', monospace;
     font-size: 14px;
