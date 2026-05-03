@@ -314,10 +314,11 @@
 
 <div id="toast" aria-live="polite" aria-atomic="true"></div>
 
-<!-- Custom Modal -->
-  <div id="customModal">
-    <div class="modal-box">
-      <div class="modal-title" id="modalTitle">Rozsah hesel</div>
+   <!-- Custom Modal -->
+   <div id="customModal">
+     <div class="modal-box">
+       <button class="close-modal-btn" onclick="closeModal()" aria-label="Zavřít">×</button>
+       <div class="modal-title" id="modalTitle">Rozsah hesel</div>
       <div class="modal-row">
         <input type="number" class="modal-input" id="modalFrom" placeholder="Od G1" value="1">
         <input type="number" class="modal-input" id="modalTo" placeholder="Do G100" value="100">
@@ -345,10 +346,11 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div id="settingsModal">
-    <div class="mobl-modal-box">
-      <div class="mobl-modal-title" id="settingsModalTitle">⚙ Nastavení AI</div>
+   <!-- Settings Modal -->
+   <div id="settingsModal">
+     <div class="mobl-modal-box">
+       <button class="close-modal-btn" onclick="closeSettingsModal()" aria-label="Zavřít nastavení">×</button>
+       <div class="mobl-modal-title" id="settingsModalTitle">⚙ Nastavení AI</div>
       <div class="mobl-set-row">
         <label id="settingsMainModelLabel">Hlavní model (Groq)</label>
         <select id="providerRunMainGroqModel" aria-label="Hlavní model Groq" title="Hlavní model Groq"></select>
@@ -402,10 +404,11 @@
  </div>
 </div>
 
-   <!-- Limits Modal -->
-   <div id="limitsModal">
-     <div class="limits-modal-box">
-       <div class="limits-title" id="limitsTitle">📊 Limity providera</div>
+    <!-- Limits Modal -->
+    <div id="limitsModal">
+      <div class="limits-modal-box">
+        <button class="close-modal-btn" onclick="closeLimitsModal()" aria-label="Zavřít limity">×</button>
+        <div class="limits-title" id="limitsTitle">📊 Limity providera</div>
        <div class="limits-provider" id="limitsProviderInfo">Provider: —</div>
        <div id="limitsContent">
          <div class="limits-loading" id="limitsLoadingText">Načítám...</div>
@@ -417,9 +420,10 @@
      </div>
    </div>
 
-  <div id="helpModal">
-    <div class="help-modal-box">
-      <div class="limits-title" id="helpTitle">❓ Strong GR → --</div>
+   <div id="helpModal">
+     <div class="help-modal-box">
+       <button class="close-modal-btn" onclick="closeHelpModal()" aria-label="Zavřít nápovědu">×</button>
+       <div class="limits-title" id="helpTitle">❓ Strong GR → --</div>
       <div class="help-block">
         <b id="helpSectionAboutTitle">O čem aplikace je</b><br>
         Tento nástroj překládá hesla Strong slovníku (řečtina/hebrejština) do češtiny po dávkách přes AI provider (`Groq`, `Gemini`, `OpenRouter`).
@@ -447,10 +451,11 @@
     </div>
   </div>
 
-  <!-- Model Test Output Modal -->
-  <div id="modelTestModal">
-    <div class="limits-modal-box model-test-modal-box">
-      <div class="limits-title" id="modelTestTitle">🧪 Výstup testu modelů</div>
+   <!-- Model Test Output Modal -->
+   <div id="modelTestModal">
+     <div class="limits-modal-box model-test-modal-box">
+       <button class="close-modal-btn" onclick="closeModelTestModal()" aria-label="Zavřít test modelů">×</button>
+       <div class="limits-title" id="modelTestTitle">🧪 Výstup testu modelů</div>
       <div class="limits-provider" id="modelTestInfo">Provider: —</div>
       <div class="mobl-set-row">
         <label id="modelTestProviderLabel">Provider testu</label>
@@ -831,9 +836,10 @@
     </div>
   </div>
 
-  <div id="i18nToolModal" class="i18n-tool-main-modal" onclick="if(event.target===this)closeI18nToolModal()">
-    <div class="prompt-modal-box i18n-tool-modal-box" onclick="event.stopPropagation()">
-      <div class="prompt-modal-title" id="i18nToolModalTitle">Překlad i18n JSON</div>
+   <div id="i18nToolModal" class="i18n-tool-main-modal" onclick="if(event.target===this)closeI18nToolModal()">
+     <div class="prompt-modal-box i18n-tool-modal-box" onclick="event.stopPropagation()">
+       <button class="close-modal-btn" onclick="closeI18nToolModal()" aria-label="Zavřít překladač i18n">×</button>
+       <div class="prompt-modal-title" id="i18nToolModalTitle">Překlad i18n JSON</div>
       <pre id="i18nToolBody" class="i18n-tool-pre"></pre>
       <div class="i18n-tool-controls">
         <div class="mobl-set-row i18n-tool-row-zero">
