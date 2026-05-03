@@ -421,31 +421,28 @@ function loadDualEditorForCurrentSelection() {
     if (!actionsContainer) return;
     const category = state.selectedPromptCategory;
 
-    if (category === 'secondary') {
-      actionsContainer.innerHTML = `
-        <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
-        <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
-        <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit prompt">💾 Uložit prompt</button>
-        <button class="prompt-btn ok" onclick="applySecondaryPrompt()" title="Aplikovat vybraný sekundární prompt a použít v překladu">✓ Použít vybraný</button>
-        <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
-        <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
-      `;
-    } else {
-      const entry = state.PROMPT_LIBRARY[category]?.[state.selectedPromptIndex];
-      const isUserAdded = entry && isUserAddedPrompt(category, entry.name, entry.text);
-      const deleteBtn = isUserAdded
-        ? '<button type="button" class="prompt-btn red" onclick="handleDeleteUserPrompt()" title="Smazat tento prompt">🗑 Smazat</button>'
-        : '';
+     if (category === 'secondary') {
+       actionsContainer.innerHTML = `
+         <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
+         <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
+         <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit prompt">💾 Uložit prompt</button>
+         <button class="prompt-btn ok" onclick="applySecondaryPrompt()" title="Aplikovat vybraný sekundární prompt a použít v překladu">✓ Použít vybraný</button>
+         <button type="button" class="prompt-btn red" onclick="deleteSecondaryPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
+         <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
+         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+       `;
+      } else {
+       // Always show delete button for non-secondary categories
        actionsContainer.innerHTML = `
          <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
          <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
          <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
          <button class="prompt-btn ok" onclick="applySelectedPrompt()" title="Aplikovat vybraný prompt">✓ Použít vybraný</button>
-         ${deleteBtn}
+         <button type="button" class="prompt-btn red" onclick="handleDeleteUserPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
          <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
          <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
        `;
-    }
+     }
   }
 
     function exportPromptLibraryToTxt() {
