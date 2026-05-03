@@ -17,7 +17,6 @@ export function createPromptLibraryApi(deps) {
   const PROMPT_LIBRARY_CUSTOM_KEY = 'strong_prompt_library_custom';
   const PROMPT_LIBRARY_IMPORTED_KEY = 'strong_prompt_library_imported';
   const SECONDARY_PROMPTS_KEY = 'strong_secondary_prompts';
-  const USER_ADDED_PROMPTS_KEY = 'strong_user_added_prompts';
 
   function clonePromptLibraryBase() {
     return JSON.parse(JSON.stringify(getPromptLibraryBase() || {}));
@@ -53,21 +52,6 @@ export function createPromptLibraryApi(deps) {
     localStorage.setItem(PROMPT_LIBRARY_IMPORTED_KEY, JSON.stringify(data || {}));
   }
 
-  function getStoredUserAddedPrompts() {
-    try {
-      const raw = localStorage.getItem(USER_ADDED_PROMPTS_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      if (!parsed || typeof parsed !== 'object') return {};
-      return parsed;
-    } catch {
-      return {};
-    }
-  }
-
-  function saveStoredUserAddedPrompts(data) {
-    localStorage.setItem(USER_ADDED_PROMPTS_KEY, JSON.stringify(data || {}));
-  }
-
   function rebuildPromptLibrary(currentSavedPrompt = '') {
     state.PROMPT_LIBRARY = clonePromptLibraryBase();
     const importedByCategory = getStoredImportedPromptLibrary();
@@ -81,23 +65,6 @@ export function createPromptLibraryApi(deps) {
             name: String(item.name || t('prompt.library.imported.name')),
             desc: String(item.desc || t('prompt.library.imported.desc')),
             text: item.text
-          });
-        }
-      }
-    }
-    // Merge user-added prompts for each category
-    const userAddedByCategory = getStoredUserAddedPrompts();
-    for (const [category, prompts] of Object.entries(userAddedByCategory)) {
-      if (!Array.isArray(prompts)) continue;
-      if (!state.PROMPT_LIBRARY[category]) state.PROMPT_LIBRARY[category] = [];
-      for (const item of prompts) {
-        if (!item || typeof item.text !== 'string') continue;
-        if (!state.PROMPT_LIBRARY[category].some((p) => p.text === item.text)) {
-          state.PROMPT_LIBRARY[category].push({
-            name: String(item.name || t('prompt.library.untitled')),
-            desc: String(item.desc || ''),
-            text: item.text,
-            system: item.system || ''
           });
         }
       }
@@ -368,26 +335,6 @@ function applySelectedPrompt() {
         customEntries[index] = { ...customEntries[index], system: sysVal, text: userVal };
         state.PROMPT_LIBRARY.custom = customEntries;
       }
-    } else {
-      // For built-in categories, save as a user-added prompt
-      const userAdded = getStoredUserAddedPrompts();
-      const category = state.selectedPromptCategory;
-      if (!userAdded[category]) userAdded[category] = [];
-
-      // Check for duplicate
-      const exists = userAdded[category].some((p) => p.text === userVal);
-      if (!exists) {
-        // If applying a non-user-added (built-in) prompt, add it as user-added
-        // This allows persisting modifications to built-in prompts
-        userAdded[category].push({
-          name: t('prompt.library.untitled'),
-          desc: '',
-          text: userVal,
-          system: sysVal
-        });
-        saveStoredUserAddedPrompts(userAdded);
-        rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
-      }
     }
 
     closePromptLibraryModal();
@@ -431,20 +378,14 @@ function loadDualEditorForCurrentSelection() {
         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
       `;
     } else {
-      const entry = state.PROMPT_LIBRARY[category]?.[state.selectedPromptIndex];
-      const isUserAdded = entry && isUserAddedPrompt(category, entry.name, entry.text);
-      const deleteBtn = isUserAdded
-        ? '<button type="button" class="prompt-btn red" onclick="handleDeleteUserPrompt()" title="Smazat tento prompt">🗑 Smazat</button>'
-        : '';
-       actionsContainer.innerHTML = `
-         <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
-         <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
-         <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
-         <button class="prompt-btn ok" onclick="applySelectedPrompt()" title="Aplikovat vybraný prompt">✓ Použít vybraný</button>
-         ${deleteBtn}
-         <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
-         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
-       `;
+      actionsContainer.innerHTML = `
+        <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
+        <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
+        <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
+        <button class="prompt-btn ok" onclick="applySelectedPrompt()" title="Aplikovat vybraný prompt">✓ Použít vybraný</button>
+        <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
+        <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+      `;
     }
   }
 
@@ -766,67 +707,6 @@ function loadDualEditorForCurrentSelection() {
     showToast(t('toast.prompt.deleted') || 'Prompt smazán');
   }
 
-  function addUserPromptToCategory(category, name, desc, text, system) {
-    const userAdded = getStoredUserAddedPrompts();
-    if (!userAdded[category]) userAdded[category] = [];
-    // Check for duplicate
-    if (userAdded[category].some((p) => p.text === text)) {
-      return false;
-    }
-    userAdded[category].push({
-      name: name,
-      desc: desc || '',
-      text: text,
-      system: system || ''
-    });
-    saveStoredUserAddedPrompts(userAdded);
-    return true;
-  }
-
-  function deleteUserPromptByIndex(category, index) {
-    const userAdded = getStoredUserAddedPrompts();
-    if (!userAdded[category] || !Array.isArray(userAdded[category]) || index < 0 || index >= userAdded[category].length) {
-      return false;
-    }
-    userAdded[category].splice(index, 1);
-    saveStoredUserAddedPrompts(userAdded);
-    return true;
-  }
-
-  function isUserAddedPrompt(category, name, text) {
-    const userAdded = getStoredUserAddedPrompts();
-    if (!userAdded[category] || !Array.isArray(userAdded[category])) return false;
-    return userAdded[category].some(p => p.text === text && p.name === name);
-  }
-
-  function handleDeleteUserPrompt() {
-    const category = state.selectedPromptCategory;
-    const index = state.selectedPromptIndex;
-    const prompts = state.PROMPT_LIBRARY[category] || [];
-    const entry = prompts[index];
-    if (!entry) {
-      showToast(t('toast.prompt.selectFirst') || 'Nejprve vyber prompt k smazání');
-      return;
-    }
-    if (!confirm(t('toast.prompt.confirmDelete') || 'Opravdu smazat tento prompt?')) return;
-    const userAdded = getStoredUserAddedPrompts();
-    if (!userAdded[category] || !Array.isArray(userAdded[category])) {
-      showToast(t('toast.prompt.notUserAdded') || 'Tento prompt nelze smazat');
-      return;
-    }
-    const userIndex = userAdded[category].findIndex(p => p.text === entry.text && p.name === entry.name);
-    if (userIndex < 0) {
-      showToast(t('toast.prompt.notUserAdded') || 'Tento prompt nelze smazat');
-      return;
-    }
-    deleteUserPromptByIndex(category, userIndex);
-    rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
-    state.selectedPromptIndex = Math.max(0, Math.min(state.selectedPromptIndex, prompts.length - 2));
-    loadDualEditorForCurrentSelection();
-    renderPromptList();
-    showToast(t('toast.prompt.deleted') || 'Prompt smazán');
-  }
-
   function applySecondaryPrompt() {
     const index = state.selectedPromptIndex;
     if (index < 0) {
@@ -844,10 +724,7 @@ function loadDualEditorForCurrentSelection() {
     closePromptLibraryModal();
   }
 
- function showAddCustomPromptModal() {
-    const category = state.selectedPromptCategory;
-    if (!category || category === 'secondary') return;
-
+function showAddCustomPromptModal() {
     const name = prompt(t('prompt.library.namePrompt') || 'Zadej název nového promptu:', '');
     if (!name) return;
 
@@ -855,22 +732,19 @@ function loadDualEditorForCurrentSelection() {
 
     const sysEl = document.getElementById('librarySystemPrompt');
     const userEl = document.getElementById('libraryUserPrompt');
-    const text = userEl ? userEl.value : '';
-    const system = sysEl ? sysEl.value : getActiveSystemMessage();
+    const newPrompt = {
+      name: name,
+      desc: desc,
+      text: userEl ? userEl.value : '',
+      system: sysEl ? sysEl.value : getActiveSystemMessage()
+    };
 
-    if (!text.trim()) {
-      showToast(t('toast.prompt.empty') || 'Uživatelský prompt nesmí být prázdný');
-      return;
-    }
-
-    const ok = addUserPromptToCategory(category, name, desc, text, system);
-    if (ok) {
-      rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
-      renderPromptList();
-      showToast(t('toast.prompt.saved') || 'Prompt uložen');
-    } else {
-      showToast(t('toast.prompt.duplicate') || 'Tento prompt již existuje v této kategorii');
-    }
+    const existing = getStoredCustomPromptLibrary();
+    existing.push(newPrompt);
+    saveStoredCustomPromptLibrary(existing);
+    rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
+    renderPromptList();
+    showToast(t('toast.prompt.saved') || 'Prompt uložen');
   }
 
 return {
@@ -879,7 +753,6 @@ return {
         saveStoredCustomPromptLibrary,
         getStoredImportedPromptLibrary,
         saveStoredImportedPromptLibrary,
-        getStoredUserAddedPrompts,
         rebuildPromptLibrary,
         getSystemPromptForCurrentTask,
         isPromptAutoModeEnabled,
@@ -893,17 +766,12 @@ return {
         closePromptLibraryModal,
         renderPromptList,
         selectPrompt,
-         applySelectedPrompt,
-         exportPromptLibraryToTxt,
-         importPromptLibraryFromFile,
-         showAddCustomPromptModal,
-         handleDeleteUserPrompt,
-         updatePromptStatusIndicator,
-         updatePromptActions,
-         // User-added prompts
-         addUserPromptToCategory,
-         deleteUserPromptByIndex,
-         isUserAddedPrompt,
+        applySelectedPrompt,
+        exportPromptLibraryToTxt,
+        importPromptLibraryFromFile,
+        showAddCustomPromptModal,
+        updatePromptStatusIndicator,
+        updatePromptActions,
         // Secondary prompts
         getStoredSecondaryPrompts,
         saveStoredSecondaryPrompts,

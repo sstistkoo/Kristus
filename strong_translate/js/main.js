@@ -2019,6 +2019,8 @@ const {
   saveStoredCustomPromptLibrary,
   getStoredImportedPromptLibrary,
   saveStoredImportedPromptLibrary,
+  getStoredUserAddedPrompts,
+  saveStoredUserAddedPrompts,
   rebuildPromptLibrary,
   getSystemPromptForCurrentTask,
   isPromptAutoModeEnabled,
@@ -2034,8 +2036,28 @@ const {
    applySelectedPrompt,
    exportPromptLibraryToTxt,
    importPromptLibraryFromFile,
-   updatePromptStatusIndicator
+   updatePromptStatusIndicator,
+  handleDeleteUserPrompt,
+   isUserAddedPrompt,
+  updatePromptActions,
 } = promptLibraryApi;
+
+// Secondary prompts
+const {
+  getStoredSecondaryPrompts,
+  saveStoredSecondaryPrompts,
+  showSecondaryPromptsModal,
+  closeSecondaryPromptsModal,
+  renderSecondaryPromptList,
+  selectSecondaryPrompt,
+  addSecondaryPrompt,
+  saveSecondaryPrompt,
+  updateSecondaryPrompt,
+  deleteSecondaryPrompt,
+  loadSecondaryEditorForCurrentSelection,
+  applySecondaryPrompt,
+} = promptLibraryApi;
+
 initializePromptLibrary();
 
 function getCompactSelectedOptionLabel(selectId, fallback = '???') {
@@ -2211,10 +2233,14 @@ async function loadSavedSettings() {
 // Expose functions to window
 window.showPromptLibraryModal = promptLibraryApi.showPromptLibraryModal;
 window.closePromptLibraryModal = promptLibraryApi.closePromptLibraryModal;
-window.selectPrompt = promptLibraryApi.selectPrompt;
- window.applySelectedPrompt = promptLibraryApi.applySelectedPrompt;
- window.exportPromptLibraryToTxt = promptLibraryApi.exportPromptLibraryToTxt;
- window.importPromptLibraryFromFile = promptLibraryApi.importPromptLibraryFromFile;
+ window.selectPrompt = promptLibraryApi.selectPrompt;
+window.applySelectedPrompt = promptLibraryApi.applySelectedPrompt;
+window.handleDeleteUserPrompt = promptLibraryApi.handleDeleteUserPrompt;
+window.isUserAddedPrompt = promptLibraryApi.isUserAddedPrompt;
+window.addUserPromptToCategory = promptLibraryApi.addUserPromptToCategory;
+window.saveLibraryPrompts = promptLibraryApi.saveLibraryPrompts;
+window.exportPromptLibraryToTxt = promptLibraryApi.exportPromptLibraryToTxt;
+window.importPromptLibraryFromFile = promptLibraryApi.importPromptLibraryFromFile;
  window.showPromptAIModal = showPromptAIModal;
  window.closePromptAIModal = closePromptAIModal;
  window.saveAISettings = saveAISettings;
@@ -3846,68 +3872,116 @@ function restoreLibraryPrompts() {
    setTimeout(() => { if (status) status.textContent = ''; }, 2200);
  }
 
-function saveLibraryPrompts() {
-   const sysEl = document.getElementById('librarySystemPrompt');
-   const userEl = document.getElementById('libraryUserPrompt');
-   const status = document.getElementById('libraryPromptStatus');
+ function saveLibraryPrompts() {
+    const sysEl = document.getElementById('librarySystemPrompt');
+    const userEl = document.getElementById('libraryUserPrompt');
+    const status = document.getElementById('libraryPromptStatus');
 
-   if (!sysEl || !userEl) return;
+    if (!sysEl || !userEl) return;
 
-   const sysVal = (sysEl.value || '').trim();
-   const userVal = (userEl.value || '').trim();
+    const sysVal = (sysEl.value || '').trim();
+    const userVal = (userEl.value || '').trim();
 
-   if (!sysVal) {
-     if (status) { status.textContent = '? Syst�mov� prompt nesm� b�t pr�zdn�'; status.style.color = 'var(--red)'; }
-     return;
-   }
-   if (!userVal) {
-     if (status) { status.textContent = '? U�ivatelsk� prompt nesm� b�t pr�zdn�'; status.style.color = 'var(--red)'; }
-     return;
-   }
+    if (!sysVal) {
+      if (status) { status.textContent = '? Systémový prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+      return;
+    }
+    if (!userVal) {
+      if (status) { status.textContent = '? Uživatelský prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
+      return;
+    }
 
-   // Get current category and index from state
-   const category = state.selectedPromptCategory;
-   const index = state.selectedPromptIndex;
+    // Get current category and index from state
+    const category = state.selectedPromptCategory;
+    const index = state.selectedPromptIndex;
 
-   // Save based on category
-   if (category === 'custom') {
-     // Save to custom storage (existing behavior)
-     localStorage.setItem('strong_custom_system_prompt', sysVal);
-     setMainPrompt(userVal, 'custom');
-     
-     // Update the custom entry in state
-     const customEntries = state.PROMPT_LIBRARY.custom || [];
-     if (customEntries[index]) {
-       customEntries[index] = {
-         ...customEntries[index],
-         system: sysVal,
-         text: userVal
-       };
-       state.PROMPT_LIBRARY.custom = customEntries;
-     }
-   } else {
-     // For built-in categories, update only in state (runtime only as per plan)
-     if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
-       state.PROMPT_LIBRARY[category][index] = {
-         ...state.PROMPT_LIBRARY[category][index],
-         system: sysVal,
-         text: userVal
-       };
-     }
-   }
+    // Save based on category
+    if (category === 'custom') {
+      // Save to custom storage (existing behavior)
+      localStorage.setItem('strong_custom_system_prompt', sysVal);
+      setMainPrompt(userVal, 'custom');
+      
+      // Update the custom entry in state
+      const customEntries = state.PROMPT_LIBRARY.custom || [];
+      if (customEntries[index]) {
+        customEntries[index] = {
+          ...customEntries[index],
+          system: sysVal,
+          text: userVal
+        };
+        state.PROMPT_LIBRARY.custom = customEntries;
+      }
+    } else {
+      // For built-in categories, check if this is a user-added prompt or a built-in one being modified
+      const entry = state.PROMPT_LIBRARY[category]?.[index];
+      const isUserAdded = entry && window.isUserAddedPrompt && window.isUserAddedPrompt(category, entry.name, entry.text);
+
+      // Update in state
+      if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
+        state.PROMPT_LIBRARY[category][index] = {
+          ...state.PROMPT_LIBRARY[category][index],
+          system: sysVal,
+          text: userVal
+        };
+      }
+
+      // Persist to user-added storage
+      if (isUserAdded) {
+        // If it's an existing user-added prompt, update it
+        const userAdded = getStoredUserAddedPrompts();
+        if (userAdded[category] && Array.isArray(userAdded[category])) {
+          const userIdx = userAdded[category].findIndex(p => p.text === entry.text && p.name === entry.name);
+          if (userIdx >= 0) {
+            userAdded[category][userIdx] = {
+              ...userAdded[category][userIdx],
+              system: sysVal,
+              text: userVal
+            };
+            saveStoredUserAddedPrompts(userAdded);
+          }
+        }
+      } else {
+        // For built-in prompts, save as a new user-added prompt
+        const userAdded = getStoredUserAddedPrompts();
+        if (!userAdded[category]) userAdded[category] = [];
+        
+        // Check for duplicate by text
+        const exists = userAdded[category].some(p => p.text === userVal);
+        if (!exists) {
+          userAdded[category].push({
+            name: entry?.name || 'Uživatelský prompt',
+            desc: entry?.desc || '',
+            text: userVal,
+            system: sysVal
+          });
+          saveStoredUserAddedPrompts(userAdded);
+        } else {
+          // Update existing
+          const existingIdx = userAdded[category].findIndex(p => p.text === userVal);
+          if (existingIdx >= 0) {
+            userAdded[category][existingIdx] = {
+              ...userAdded[category][existingIdx],
+              system: sysVal,
+              text: userVal
+            };
+            saveStoredUserAddedPrompts(userAdded);
+          }
+        }
+      }
+    }
 
     // Update UI
     updatePromptStatusIndicator();
     renderPromptList();
 
     if (status) {
-     status.textContent = '? Ulo�eno';
-     status.style.color = 'var(--grn)';
-   }
-   showToast('✓ AI prompt uložen');
+      status.textContent = 'Uloženo';
+      status.style.color = 'var(--grn)';
+    }
+    showToast('✓ Prompt uložen');
 
     setTimeout(() => { if (status) status.textContent = ''; }, 2000);
- }
+  }
 
 // Delete custom prompts with confirmation
 function confirmClearLibraryPrompts() {
