@@ -603,10 +603,11 @@
     </div>
   </div>
 
-  <!-- Model Test Prompt Preview Modal -->
-  <div id="modelTestPromptPreviewModal" class="model-test-prompt-preview-modal">
-    <div class="prompt-modal-box model-test-prompt-preview-box">
-      <div class="prompt-modal-title" id="modelTestPromptPreviewTitle">👁 Náhled test promptu</div>
+   <!-- Model Test Prompt Preview Modal -->
+   <div id="modelTestPromptPreviewModal" class="model-test-prompt-preview-modal">
+     <div class="prompt-modal-box model-test-prompt-preview-box">
+       <button class="close-modal-btn" onclick="closeModelTestPromptPreviewModal()" aria-label="Zavřít náhled promptu">×</button>
+       <div class="prompt-modal-title" id="modelTestPromptPreviewTitle">👁 Náhled test promptu</div>
       <div id="modelTestPromptPreviewLabel" class="model-test-prompt-preview-label">Prompt: -</div>
       <textarea id="modelTestPromptPreviewText" class="model-test-prompt-preview-text" aria-label="Náhled test promptu" title="Náhled test promptu"></textarea>
       <div class="modal-btns model-test-bottom-actions">
@@ -659,10 +660,11 @@
     </div>
   </div>
 
-  <!-- Secondary Prompts Modal -->
-  <div id="secondaryPromptsModal">
-    <div class="prompt-modal-box">
-      <div class="prompt-modal-title" id="secondaryPromptsTitle">🔄 Sekundární prompty</div>
+   <!-- Secondary Prompts Modal -->
+   <div id="secondaryPromptsModal">
+     <div class="prompt-modal-box">
+       <button class="close-modal-btn" onclick="closeSecondaryPromptsModal()" aria-label="Zavřít sekundární prompty">×</button>
+       <div class="prompt-modal-title" id="secondaryPromptsTitle">🔄 Sekundární prompty</div>
 
       <div class="prompt-list" id="secondaryPromptList" style="max-height: 300px; overflow-y: auto; margin-bottom: 12px;">
         <!-- Secondary prompts will be populated by JavaScript -->
@@ -696,9 +698,10 @@
   </div>
 
     <!-- AI Settings Sub-modal -->
-   <div id="promptAIModal" class="prompt-ai-modal">
-      <div class="prompt-modal-box prompt-ai-modal-box" style="max-height: calc(100vh - 32px);">
-       <div class="prompt-modal-title" id="promptAiModalTitle">🤖 AI nastavení</div>
+    <div id="promptAIModal" class="prompt-ai-modal">
+       <div class="prompt-modal-box prompt-ai-modal-box" style="max-height: calc(100vh - 32px);">
+        <button class="close-modal-btn" onclick="closePromptAIModal()" aria-label="Zavřít AI nastavení">×</button>
+        <div class="prompt-modal-title" id="promptAiModalTitle">🤖 AI nastavení</div>
        <div class="mobl-set-row">
         <label id="promptAiGroqTempLabel">Groq (hlavní) · Temperature</label>
         <select id="aiTemperature_groq" class="prompt-ai-select" aria-label="Groq temperature" title="Groq temperature">
@@ -766,10 +769,11 @@
      </div>
    </div>
 
-    <!-- Language Settings Sub-modal -->
-   <div id="promptLangModal" class="prompt-lang-modal">
-     <div class="prompt-modal-box prompt-lang-modal-box" style="max-height: calc(100vh - 32px);">
-       <div class="prompt-modal-title" id="promptLangModalTitle">🌐 Nastavení jazyků</div>
+     <!-- Language Settings Sub-modal -->
+    <div id="promptLangModal" class="prompt-lang-modal">
+      <div class="prompt-modal-box prompt-lang-modal-box" style="max-height: calc(100vh - 32px);">
+        <button class="close-modal-btn" onclick="closePromptLangModal()" aria-label="Zavřít nastavení jazyků">×</button>
+        <div class="prompt-modal-title" id="promptLangModalTitle">🌐 Nastavení jazyků</div>
  <div class="mobl-set-row">
   <label id="uiLanguageLabel">Jazyk rozhraní</label>
   <select id="uiLanguage" class="prompt-ai-select" aria-label="Jazyk rozhraní" title="Jazyk rozhraní">
@@ -894,9 +898,10 @@
     </div>
   </div>
 
-  <div id="i18nToolHelpModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeI18nToolHelpModal()">
-    <div class="prompt-modal-box i18n-tool-help-box" onclick="event.stopPropagation()">
-      <div class="prompt-modal-title" id="i18nToolHelpModalTitle">❓ Nápověda: Překlad Stronguv slovnik</div>
+   <div id="i18nToolHelpModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeI18nToolHelpModal()">
+     <div class="prompt-modal-box i18n-tool-help-box" onclick="event.stopPropagation()">
+       <button class="close-modal-btn" onclick="closeI18nToolHelpModal()" aria-label="Zavřít nápovědu i18n">×</button>
+       <div class="prompt-modal-title" id="i18nToolHelpModalTitle">❓ Nápověda: Překlad Stronguv slovnik</div>
       <pre id="i18nToolHelpBody" class="i18n-tool-help-pre"></pre>
       <div class="prompt-actions prompt-actions-gap-12">
         <button type="button" class="prompt-btn cancel" id="btnI18nToolHelpClose" onclick="closeI18nToolHelpModal()">✕ Zavřít</button>
@@ -928,9 +933,10 @@
     </div>
   </div>
 
-  <div id="i18nToolEditorModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeI18nToolOutputEditor()">
-    <div class="prompt-modal-box i18n-tool-modal-box" onclick="event.stopPropagation()">
-      <div class="prompt-modal-title" id="i18nToolEditorTitle">✏ Editor výstupního JSON</div>
+   <div id="i18nToolEditorModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeI18nToolOutputEditor()">
+     <div class="prompt-modal-box i18n-tool-modal-box" onclick="event.stopPropagation()">
+       <button class="close-modal-btn" onclick="closeI18nToolOutputEditor()" aria-label="Zavřít editor JSON">×</button>
+       <div class="prompt-modal-title" id="i18nToolEditorTitle">✏ Editor výstupního JSON</div>
       <div class="i18n-tool-controls">
         <div class="mobl-set-row i18n-tool-row-zero">
           <label for="i18nToolEditorLang" id="i18nToolEditorLangLabel">Jazyk výstupu</label>
@@ -957,9 +963,10 @@
     </div>
   </div>
 
-  <div id="i18nToolAiModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeI18nToolAiModal()">
-    <div class="prompt-modal-box i18n-tool-modal-box i18n-tool-ai-box" onclick="event.stopPropagation()">
-      <div class="prompt-modal-title" id="i18nToolAiModalTitle">🧠 AI audit/editor i18n</div>
+   <div id="i18nToolAiModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeI18nToolAiModal()">
+     <div class="prompt-modal-box i18n-tool-modal-box i18n-tool-ai-box" onclick="event.stopPropagation()">
+       <button class="close-modal-btn" onclick="closeI18nToolAiModal()" aria-label="Zavřít AI audit">×</button>
+       <div class="prompt-modal-title" id="i18nToolAiModalTitle">🧠 AI audit/editor i18n</div>
       <div class="i18n-tool-status i18n-tool-status-block i18n-tool-status-gap-8" id="i18nToolAiModalHint">
         Nahraj cílový JSON, vytvoř prompt, vlož AI odpověď a aplikuj změny.
       </div>
