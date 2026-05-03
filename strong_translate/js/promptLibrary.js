@@ -579,12 +579,11 @@ function loadDualEditorForCurrentSelection() {
     localStorage.setItem(SECONDARY_PROMPTS_KEY, JSON.stringify(prompts || []));
   }
 
-  function showSecondaryPromptsModal() {
+   function showSecondaryPromptsModal() {
     const modal = document.getElementById('secondaryPromptsModal');
     if (!modal) return;
 
     // Initialize secondary prompt state
-    // Zachovat aktuální výběr
     if (state.selectedSecondaryPromptIndex === undefined || state.selectedSecondaryPromptIndex === null) {
       state.selectedSecondaryPromptIndex = -1;
     }
@@ -603,6 +602,9 @@ function loadDualEditorForCurrentSelection() {
   function closeSecondaryPromptsModal() {
     const modal = document.getElementById('secondaryPromptsModal');
     if (modal) modal.classList.remove('show');
+    // Reset category to default so main tab works correctly
+    state.selectedPromptCategory = 'default';
+    state.selectedPromptIndex = 0;
   }
 
   function renderSecondaryPromptList() {
