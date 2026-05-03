@@ -1014,14 +1014,15 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   z-index: 1000;
  }
  #customModal.show { display: flex; }
- .modal-box {
-  background: var(--bg2);
-  border: 1px solid var(--brd);
-  border-radius: 6px;
-  padding: 20px;
-  max-width: 320px;
-  width: 90%;
- }
+  .modal-box {
+   background: var(--bg2);
+   border: 1px solid var(--brd);
+   border-radius: 6px;
+   padding: 20px;
+   max-width: 320px;
+   width: 90%;
+   position: relative;
+  }
  .modal-title {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
@@ -1086,21 +1087,23 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
      overflow-y: auto;
    }
    #modelTestModal.show { display: flex; }
-  .limits-modal-box {
-    background: var(--bg2);
-    border: 1px solid var(--brd);
-    border-radius: 8px;
-    padding: 20px;
-    max-width: 380px;
-    width: 90%;
-  }
-  .model-test-modal-box {
-    max-width: 860px;
-    max-height: 92vh;
-    display: flex;
-    flex-direction: column;
-    overflow: auto;
-  }
+   .limits-modal-box {
+     background: var(--bg2);
+     border: 1px solid var(--brd);
+     border-radius: 8px;
+     padding: 20px;
+     max-width: 380px;
+     width: 90%;
+     position: relative;
+   }
+   .model-test-modal-box {
+     max-width: 860px;
+     max-height: 92vh;
+     display: flex;
+     flex-direction: column;
+     overflow: auto;
+     position: relative;
+   }
   .model-test-top-actions {
     margin: 4px 0 10px 0;
   }
@@ -1183,16 +1186,17 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
      overflow-y: auto;
    }
    #helpModal.show { display: flex; }
- .help-modal-box {
-     background: var(--bg2);
-     border: 1px solid var(--brd);
-     border-radius: 8px;
-     padding: 18px;
-     max-width: 760px;
-     width: 92%;
-     max-height: calc(100vh - 32px);
-     overflow-y: auto;
-   }
+  .help-modal-box {
+      background: var(--bg2);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      padding: 18px;
+      max-width: 760px;
+      width: 92%;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      position: relative;
+    }
   .help-block {
     margin-bottom: 14px;
     padding: 10px 12px;
@@ -1217,14 +1221,15 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
    z-index: 1001;
  }
  #mobileActionsModal.show { display: flex; }
- .mobl-modal-box {
-   background: var(--bg2);
-   border: 1px solid var(--brd);
-   border-radius: 8px;
-   padding: 16px;
-   max-width: 280px;
-   width: 85%;
- }
+  .mobl-modal-box {
+    background: var(--bg2);
+    border: 1px solid var(--brd);
+    border-radius: 8px;
+    padding: 16px;
+    max-width: 280px;
+    width: 85%;
+    position: relative;
+  }
  .mobl-modal-title {
    font-family: 'JetBrains Mono', monospace;
    font-size: 12px;
@@ -1614,12 +1619,13 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
 }
 .prompt-lang-i18n-tool-row { margin-top: 4px; }
 
-.i18n-tool-modal-box {
-  max-width: 860px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
+ .i18n-tool-modal-box {
+   max-width: 860px;
+   width: 100%;
+   max-height: 90vh;
+   overflow-y: auto;
+   position: relative;
+ }
  .i18n-tool-main-modal {
    position: fixed;
    top: 0;
