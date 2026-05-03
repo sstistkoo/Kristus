@@ -29,15 +29,14 @@ test('DEFAULT_PROMPT has expected structure', () => {
 });
 
 test('CATEGORY_LABELS has expected categories', () => {
-  assert.equal(prompts.CATEGORY_LABELS.default, 'Default');
-  assert.equal(prompts.CATEGORY_LABELS.detailed, 'Detailed');
-  assert.equal(prompts.CATEGORY_LABELS.concise, 'Concise');
-  assert.equal(prompts.CATEGORY_LABELS.literal, 'Literal');
-  assert.equal(prompts.CATEGORY_LABELS.test, 'Test');
-  assert.equal(prompts.CATEGORY_LABELS.custom, 'Custom');
-  assert.equal(prompts.CATEGORY_LABELS.library, 'Library');
-  assert.equal(prompts.CATEGORY_LABELS.final, 'Final');
-});
+   assert.equal(prompts.CATEGORY_LABELS.default, 'Default');
+   assert.equal(prompts.CATEGORY_LABELS.detailed, 'Detailed');
+   assert.equal(prompts.CATEGORY_LABELS.concise, 'Concise');
+   assert.equal(prompts.CATEGORY_LABELS.literal, 'Literal');
+   assert.equal(prompts.CATEGORY_LABELS.test, 'Test');
+   assert.equal(prompts.CATEGORY_LABELS.library, 'Library');
+   assert.equal(prompts.CATEGORY_LABELS.final, 'Final');
+ });
 
 test('FINAL_PROMPT has expected structure', () => {
   assert.equal(prompts.FINAL_PROMPT.name, 'Final');
@@ -46,28 +45,26 @@ test('FINAL_PROMPT has expected structure', () => {
 });
 
 test('PROMPT_LIBRARY_BASE has expected structure', () => {
-  assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.default));
-  assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.detailed));
-  assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.concise));
-  assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.literal));
-  assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.test));
-  assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.custom));
-  assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.library));
-  
-  // Check that each category has at least one prompt
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.default.length, 1);
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.detailed.length, 1);
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.concise.length, 1);
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.literal.length, 1);
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.test.length, 0);
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.custom.length, 0);
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.library.length, 3);
-  
-  // Check default prompt content
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.default[0].name, 'System');
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.default[0].desc, 'System default prompt');
-  assert.equal(prompts.PROMPT_LIBRARY_BASE.default[0].text, prompts.DEFAULT_PROMPT);
-});
+   assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.default));
+   assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.detailed));
+   assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.concise));
+   assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.literal));
+   assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.test));
+   assert.ok(Array.isArray(prompts.PROMPT_LIBRARY_BASE.library));
+   
+   // Check that each category has at least one prompt
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.default.length, 1);
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.detailed.length, 1);
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.concise.length, 1);
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.literal.length, 1);
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.test.length, 0);
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.library.length, 3);
+   
+   // Check default prompt content
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.default[0].name, 'System');
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.default[0].desc, 'System default prompt');
+   assert.equal(prompts.PROMPT_LIBRARY_BASE.default[0].text, prompts.DEFAULT_PROMPT);
+ });
 
 test('MODEL_TEST_PROMPT_CATALOG has expected presets', () => {
   // Check that we have the expected number of presets

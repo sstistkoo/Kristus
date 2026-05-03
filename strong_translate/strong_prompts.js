@@ -34,15 +34,14 @@ HESLA:
 {HESLA}`;
 
 const CATEGORY_LABELS = {
-  default: 'Default',
-  detailed: 'Detailed',
-  concise: 'Concise',
-  literal: 'Literal',
-  test: 'Test',
-  custom: 'Custom',
-  library: 'Library',
-  final: 'Final'
-};
+   default: 'Default',
+   detailed: 'Detailed',
+   concise: 'Concise',
+   literal: 'Literal',
+   test: 'Test',
+   library: 'Library',
+   final: 'Final'
+ };
 
 const FINAL_PROMPT = {
   name: 'Final',
@@ -51,18 +50,17 @@ const FINAL_PROMPT = {
 };
 
 const PROMPT_LIBRARY_BASE = {
-    default: [{ name: 'System', desc: 'System default prompt', text: DEFAULT_PROMPT, system: '' }],
-    detailed: [{ name: 'Detailed', desc: 'Detailed translation', text: DEFAULT_PROMPT, system: '' }],
-    concise: [{ name: 'Concise', desc: 'Short translation', text: DEFAULT_PROMPT, system: '' }],
-    literal: [{ name: 'Literal', desc: 'Literal translation', text: DEFAULT_PROMPT, system: '' }],
-    test: [],
-    custom: [],
-    library: [
-        { name: 'Precision', desc: 'High fidelity', text: DEFAULT_PROMPT, system: '' },
-        { name: 'Theological', desc: 'Context emphasis', text: DEFAULT_PROMPT, system: '' },
-        { name: 'Fast', desc: 'Short and fast', text: DEFAULT_PROMPT, system: '' }
-    ]
-};
+     default: [{ name: 'System', desc: 'System default prompt', text: DEFAULT_PROMPT, system: '' }],
+     detailed: [{ name: 'Detailed', desc: 'Detailed translation', text: DEFAULT_PROMPT, system: '' }],
+     concise: [{ name: 'Concise', desc: 'Short translation', text: DEFAULT_PROMPT, system: '' }],
+     literal: [{ name: 'Literal', desc: 'Literal translation', text: DEFAULT_PROMPT, system: '' }],
+     test: [],
+     library: [
+         { name: 'Precision', desc: 'High fidelity', text: DEFAULT_PROMPT, system: '' },
+         { name: 'Theological', desc: 'Context emphasis', text: DEFAULT_PROMPT, system: '' },
+         { name: 'Fast', desc: 'Short and fast', text: DEFAULT_PROMPT, system: '' }
+     ]
+ };
 
 const MODEL_TEST_PROMPT_CATALOG = {
   preset_v1: { label: 'Fallback preset_v1', template: DEFAULT_PROMPT },

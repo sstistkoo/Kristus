@@ -214,10 +214,10 @@ export function createPromptLibraryApi(deps) {
     state.selectedPromptCategory = 'default';
     state.selectedPromptIndex = 0;
     const getPromptTabLabel = (cat) => {
-      const map = { default: 'prompt.tab.default', detailed: 'prompt.tab.detailed', concise: 'prompt.tab.concise', literal: 'prompt.tab.literal', test: 'prompt.tab.test', custom: 'prompt.tab.custom' };
+      const map = { default: 'prompt.tab.default', detailed: 'prompt.tab.detailed', concise: 'prompt.tab.concise', literal: 'prompt.tab.literal', test: 'prompt.tab.test' };
       return t(map[cat] || cat);
     };
-tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).map((cat) => {
+tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom').map((cat) => {
         const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
 if (cat === 'default') {
            return btn + '<div class="prompt-tab" data-category="secondary">Sekundární</div>';
@@ -267,17 +267,8 @@ tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
       }
       if (foundMatch) break;
     }
-    if (!foundMatch && Array.isArray(state.PROMPT_LIBRARY.custom)) {
-      for (let i = 0; i < state.PROMPT_LIBRARY.custom.length; i++) {
-        if (state.PROMPT_LIBRARY.custom[i].text === promptText) {
-          state.selectedPromptCategory = 'custom';
-          state.selectedPromptIndex = i;
-          return;
-        }
-      }
-    }
     if (!foundMatch) {
-      state.selectedPromptCategory = 'custom';
+      state.selectedPromptCategory = 'default';
       state.selectedPromptIndex = 0;
       rebuildPromptLibrary(promptText);
     }
@@ -529,8 +520,9 @@ function loadDualEditorForCurrentSelection() {
     }
     if (!matched) {
       for (const [category, prompts] of Object.entries(state.PROMPT_LIBRARY)) {
+        if (category === 'custom') continue;
         for (const p of prompts) {
-          if (p.text === currentPrompt && category !== 'custom') {
+          if (p.text === currentPrompt) {
             matched = true;
             matchedName = p.name;
             break;

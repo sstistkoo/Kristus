@@ -378,8 +378,7 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
         detailed: 'prompt.tab.detailed',
         concise: 'prompt.tab.concise',
         literal: 'prompt.tab.literal',
-        test: 'prompt.tab.test',
-        custom: 'prompt.tab.custom'
+        test: 'prompt.tab.test'
       };
       promptTabsEl.querySelectorAll('.prompt-tab').forEach(tab => {
         const cat = String(tab.dataset.category || '');
