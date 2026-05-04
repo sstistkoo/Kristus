@@ -80,8 +80,8 @@ export function buildPromptMessages(batch) {
   const items = batch.map(e => {
     const def = e.definice || e.def || '';
     const tvar = e.orig || e.tvaroslovi || '';
-    const tvarPart = tvar ? `\nT: ${tvar}` : '';
-    return `${e.key} | ${e.greek}\nDEF: ${def}${tvarPart}`;
+    const tvarPart = tvar ? ` (${tvar})` : '';
+    return `${e.key} | ${e.greek}${tvarPart}\nD: ${def}`;
   }).join('\n\n');
   const userContent = String(DEFAULT_PROMPT || '')
     .replace(/{TARGET_LANG}/g, 'češtiny')

@@ -669,8 +669,8 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
       const items = batch.map(e => {
         const def = e.definice || e.def || '';
         const tvar = e.orig || e.tvaroslovi || '';
-        const tvarPart = tvar ? `\nT: ${tvar}` : '';
-        return `${e.key} | ${e.greek}\nDEF: ${def}${tvarPart}`;
+        const tvarPart = tvar ? ` (${tvar})` : '';
+        return `${e.key} | ${e.greek}${tvarPart}\nD: ${def}`;
       }).join('\n\n');
       
       const userPromptTemplate = getActiveMainPromptTemplate('batch');
@@ -931,12 +931,12 @@ async function copyModelTestPromptPreview() {
       return getModelTestPromptCatalog()?.[promptType]?.topicLabel || '';
     }
 
-    function buildPromptMessagesForModelTest(batch, promptType) {
+function buildPromptMessagesForModelTest(batch, promptType) {
       const items = batch.map(e => {
         const def = e.definice || e.def || '';
         const tvar = e.orig || e.tvaroslovi || '';
-        const tvarPart = tvar ? `\nT: ${tvar}` : '';
-        return `${e.key} | ${e.greek}\nDEF: ${def}${tvarPart}`;
+        const tvarPart = tvar ? ` (${tvar})` : '';
+        return `${e.key} | ${e.greek}${tvarPart}\nD: ${def}`;
       }).join('\n\n');
 
       const targetLang = localStorage.getItem('strong_target_lang') || 'cz';

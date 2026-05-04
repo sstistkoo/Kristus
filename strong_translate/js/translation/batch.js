@@ -84,7 +84,7 @@ async function translateSingle(key) {
     
     if (missingKeys.length > 0) {
       const entries = `${key}
-DEF: ${e.definice || e.def || ''}
+D: ${e.definice || e.def || ''}
 KJV: ${e.kjv || ''}
 ORIG: ${e.orig || ''}`;
       const retryContent = t('batch.retry.missingG', { entries });
@@ -632,13 +632,13 @@ async function translateBatch(keys, depth = 0) {
     }
     
      // Pokud neco chybí, zkus opravný retry
-     if (missingKeys.length > 0) {
-       log(`? Pokus o opravu formátu pro ${missingKeys.join(', ')}...`);
-      const entries = keys.map((k) => {
-        const e = state.entryMap.get(k);
-        return e ? `${e.key} | ${e.greek}\nDEF: ${e.definice || e.def || ''}\nKJV: ${e.kjv || ''}` : '';
-      }).join('\n\n');
-      const retryContent = t('batch.retry.missingG', { entries });
+if (missingKeys.length > 0) {
+        log(`? Pokus o opravu formátu pro ${missingKeys.join(', ')}...`);
+       const entries = keys.map((k) => {
+         const e = state.entryMap.get(k);
+         return e ? `${e.key} | ${e.greek}\nD: ${e.definice || e.def || ''}\nKJV: ${e.kjv || ''}` : '';
+       }).join('\n\n');
+       const retryContent = t('batch.retry.missingG', { entries });
       
       try {
         const raw2 = await callOnce(prov, apiKey, model, buildRetryMessages(retryContent));
