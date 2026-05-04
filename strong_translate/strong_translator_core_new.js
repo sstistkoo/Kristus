@@ -179,7 +179,7 @@ function normalizeReferences(input) {
 
 export function parseTranslations(raw, keys, translated = {}) {
   const normalized = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  const blocks = normalized.split(/(?=###[GH]\d+###)/);
+  const blocks = normalized.split(/(?=###(?:[GH])?\d+###)/);
   
   const numToKey = {};
   for (const k of keys) {
@@ -188,11 +188,10 @@ export function parseTranslations(raw, keys, translated = {}) {
   }
   
   for (const block of blocks) {
-    const km = block.match(/###([GH]\d+)###/);
+    const km = block.match(/###(?:([GH]\d+)|(\d+))###/);
     if (!km) continue;
-    
-    const foundKey = km[1];
-    const num = foundKey.slice(1);
+    const foundKey = km[1] || km[2];
+    const num = /^[GH]/.test(foundKey) ? foundKey.slice(1) : foundKey;
     
     let targetKey = null;
     if (keys.includes(foundKey)) {
@@ -233,17 +232,19 @@ export function parseTranslations(raw, keys, translated = {}) {
       const line = lines[i];
       // label followed by colon/space/dash/emdash (single char labels need colon, not \b)
       // Note: allow optional leading whitespace
-       const labelMatch = line.match(/^\s*(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEFINITION|MEANING|ORIGIN|ETYMOLOGY|ETYMOLOGIES|COMMENTARY|EXEGESIS|DEF|V|D|P|K|S)(?:[:–—=.\s]+)/i);
-      if (labelMatch) {
-        let label = labelMatch[1].toUpperCase();
-        if (label === 'VYKLAD' || label === 'KOMENTAR' || label === 'EXEGEZE') label = 'SPECIALISTA';
-        if (normalizedLabels[label]) {
-          label = normalizedLabels[label];
-        }
-        if (['VYZNAM', 'DEFINICE', 'PUVOD', 'KJV', 'SPECIALISTA'].includes(label)) {
-          fieldPositions.push({ label, startLine: i, labelLen: labelMatch[0].length });
-        }
-      }
+const labelMatch = line.match(/^\s*(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEFINITION|MEANING|ORIGIN|ETYMOLOGY|ETYMOLOGIES|COMMENTARY|EXEGESIS|USAGE|DEF|V|D|P|K|S)(?:[:–—=.\s]+)/i);
+       if (labelMatch) {
+         let label = labelMatch[1].toUpperCase();
+         if (label === 'VYKLAD' || label === 'KOMENTAR' || label === 'EXEGEZE') label = 'SPECIALISTA';
+         if (normalizedLabels[label]) {
+           label = normalizedLabels[label];
+         }
+         // USAGE acts as delimiter marker (ends previous field, value not stored)
+         if (label === 'USAGE') label = '__DELIMITER__';
+         if (['VYZNAM', 'DEFINICE', 'PUVOD', 'KJV', 'SPECIALISTA', '__DELIMITER__'].includes(label)) {
+           fieldPositions.push({ label, startLine: i, labelLen: labelMatch[0].length });
+         }
+       }
     }
     
     const fields = {};
@@ -274,10 +275,10 @@ fields[label] = value.trim();
       
       // Úklid: odstranění vnořených labelů na začátku hodnot (např. "S: SPECIALISTA: text" → jen "text")
       // Match jen label následovaný : nebo -- (pro SPECIALISTA: nebo VYKLAD - text)
-      const innerLabelRe = /^(?:VYZNAM|DEFINICE|PUVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)(?:[:：–—=])/u;
-      for (const key of Object.keys(fields)) {
-        fields[key] = fields[key].replace(innerLabelRe, '').trim();
-      }
+      const innerLabelRe = /^(?:VYZNAM|DEFINICE|PUVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|USAGE|V|D|P|K|S)(?:[:：–—=])/u;
+for (const key of Object.keys(fields)) {
+         if (key !== '__DELIMITER__') fields[key] = fields[key].replace(innerLabelRe, '').trim();
+       }
      
       translated[targetKey] = {
         vyznam: fields['VYZNAM'] || '',
