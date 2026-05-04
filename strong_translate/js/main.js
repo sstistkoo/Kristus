@@ -372,20 +372,17 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     refreshStaticProviderSelectLabel('modelTestModel_groq', 'groq');
     refreshStaticProviderSelectLabel('modelTestModel_gemini', 'gemini');
     const promptTabsEl = document.getElementById('promptTabs');
-    if (promptTabsEl) {
-      const tabKeyMap = {
-        default: 'prompt.tab.default',
-        detailed: 'prompt.tab.detailed',
-        concise: 'prompt.tab.concise',
-        literal: 'prompt.tab.literal',
-        test: 'prompt.tab.test'
-      };
-      promptTabsEl.querySelectorAll('.prompt-tab').forEach(tab => {
-        const cat = String(tab.dataset.category || '');
-        const key = tabKeyMap[cat];
-        if (key) tab.textContent = t(key);
-      });
-    }
+     if (promptTabsEl) {
+       const tabKeyMap = {
+         default: 'prompt.tab.default',
+         test: 'prompt.tab.test'
+       };
+       promptTabsEl.querySelectorAll('.prompt-tab').forEach(tab => {
+         const cat = String(tab.dataset.category || '');
+         const key = tabKeyMap[cat];
+         if (key) tab.textContent = t(key);
+       });
+     }
     setAttr('searchInput', 'placeholder', t('list.search.placeholder'));
     setAttr('searchInput', 'aria-label', t('list.search.aria'));
     setText('btnSelectRange', t('list.selectRange'));
