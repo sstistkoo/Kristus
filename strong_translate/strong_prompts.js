@@ -20,7 +20,7 @@ NORMALIZACE: Nahraď __1. za 1. a __2. za 2.
  
 K (KJV): Odvoď hlavní význam z kontextu a přelož jej do češtiny.
  
-S (SPECIALISTA): [detailní odstavec 3-5 vět jako biblický specialista]. Odstavec má vysvětlit teologický a biblický význam slova v kontextu. Nepiš body ani seznam, jen souvislý odstavec.
+S (SPECIALISTA): [detailní odstavec 3-6 vět jako biblický specialista]. Odstavec má vysvětlit teologický a biblický význam slova v kontextu. Nepiš body ani seznam, jen souvislý odstavec.
  
 OMEZENÍ:
  

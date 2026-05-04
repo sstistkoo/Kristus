@@ -651,7 +651,8 @@ const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
     if (!isPromptAutoModeEnabled()) return String(promptText || '');
     const text = String(promptText || '');
     const hasSpecialista = /SPECIALISTA|VYKLAD|EXEGEZE|COMMENTARY/i.test(text);
-    if (hasSpecialista) return text;
+    const systemHasSpecialista = /SPECIALISTA|VYKLAD|EXEGEZE|COMMENTARY/i.test(getResolvedSystemMessage() || '');
+    if (hasSpecialista || systemHasSpecialista) return text;
     return `${text}
 
 ${t('aiPrompts.enforceSpecialistaExtra')}`;
