@@ -3836,7 +3836,7 @@ function restoreLibraryPrompts() {
    const userEl = document.getElementById('libraryUserPrompt');
    const status = document.getElementById('libraryPromptStatus');
 
-   if (!sysEl || !userEl) return;
+    if (!sysEl || !userEl) return;
 
     // Get current category and index from state
     const category = state.selectedPromptCategory;
@@ -3847,21 +3847,17 @@ function restoreLibraryPrompts() {
       // For custom category, restore global values (current behavior)
       sysEl.value = getActiveSystemMessage();
       userEl.value = getActiveMainPromptTemplate('batch');
+    } else if (category === 'default') {
+      // For default category, restore the true original defaults (not from modified library)
+      const baseEntry = promptLibraryApi.getPromptLibraryBase()['default']?.[0];
+      sysEl.value = baseEntry?.system || getResolvedSystemMessage();
+      userEl.value = baseEntry?.text || getResolvedDefaultPrompt();
     } else {
       // For built-in categories, restore entry from PROMPT_LIBRARY_BASE
       const baseEntry = promptLibraryApi.getPromptLibraryBase()[category]?.[index];
       if (baseEntry) {
-        sysEl.value = baseEntry.system || getActiveSystemMessage();
+        sysEl.value = baseEntry.system || getResolvedSystemMessage();
         userEl.value = baseEntry.text || '';
-        
-        // Also update the state entry
-        if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
-          state.PROMPT_LIBRARY[category][index] = {
-            ...state.PROMPT_LIBRARY[category][index],
-            system: baseEntry.system || getActiveSystemMessage(),
-            text: baseEntry.text || ''
-          };
-        }
       } else {
         // Fallback to active values
         sysEl.value = getActiveSystemMessage();
@@ -3870,11 +3866,11 @@ function restoreLibraryPrompts() {
     }
 
    if (status) {
-     status.textContent = '? Obnoveno v�choz�';
+     status.textContent = '? Obnoveno výchozí';
      status.style.color = 'var(--grn)';
    }
    setTimeout(() => { if (status) status.textContent = ''; }, 2200);
- }
+  }
 
  function saveLibraryPrompts() {
     const sysEl = document.getElementById('librarySystemPrompt');
@@ -3900,20 +3896,18 @@ function restoreLibraryPrompts() {
     const index = state.selectedPromptIndex;
 
     // Save based on category
-    if (category === 'custom') {
-      // Save to custom storage (existing behavior)
+    if (category === 'custom' || category === 'default') {
+      // Save to main prompt storage (this is the main translation prompt)
       localStorage.setItem('strong_custom_system_prompt', sysVal);
       setMainPrompt(userVal, 'custom');
       
-      // Update the custom entry in state
-      const customEntries = state.PROMPT_LIBRARY.custom || [];
-      if (customEntries[index]) {
-        customEntries[index] = {
-          ...customEntries[index],
+      // Update the entry in state
+      if (state.PROMPT_LIBRARY[category] && state.PROMPT_LIBRARY[category][index]) {
+        state.PROMPT_LIBRARY[category][index] = {
+          ...state.PROMPT_LIBRARY[category][index],
           system: sysVal,
           text: userVal
         };
-        state.PROMPT_LIBRARY.custom = customEntries;
       }
     } else {
       // For built-in categories, check if this is a user-added prompt or a built-in one being modified

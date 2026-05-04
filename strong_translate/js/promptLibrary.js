@@ -455,15 +455,15 @@ function matchPromptToPreset(promptText) {
     localStorage.setItem('strong_custom_system_prompt', sysVal);
     setMainPrompt(userVal, 'custom');
 
-    if (state.selectedPromptCategory === 'custom') {
+    if (state.selectedPromptCategory === 'custom' || state.selectedPromptCategory === 'default') {
       const imported = getStoredCustomPromptLibrary().filter((item) => item.text !== userVal);
       saveStoredCustomPromptLibrary(imported);
       rebuildPromptLibrary(userVal);
       const index = state.selectedPromptIndex;
-      const customEntries = state.PROMPT_LIBRARY.custom || [];
-      if (customEntries[index]) {
-        customEntries[index] = { ...customEntries[index], system: sysVal, text: userVal };
-        state.PROMPT_LIBRARY.custom = customEntries;
+      const entries = state.PROMPT_LIBRARY[state.selectedPromptCategory] || [];
+      if (entries[index]) {
+        entries[index] = { ...entries[index], system: sysVal, text: userVal };
+        state.PROMPT_LIBRARY[state.selectedPromptCategory] = entries;
       }
     } else {
       // For built-in categories, save as a user-added prompt
@@ -519,7 +519,7 @@ function matchPromptToPreset(promptText) {
     const sysEl = document.getElementById('librarySystemPrompt');
     const userEl = document.getElementById('libraryUserPrompt');
     if (sysEl) sysEl.value = entry.system || getActiveSystemMessage();
-    if (userEl) userEl.value = entry.text;
+    if (userEl) userEl.value = (category === 'default' ? getActiveMainPromptTemplate('batch') : entry.text);
   }
 
   function updatePromptActions() {
