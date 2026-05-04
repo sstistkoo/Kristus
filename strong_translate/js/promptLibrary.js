@@ -11,13 +11,24 @@ export function createPromptLibraryApi(deps) {
     getActiveSystemMessage,
     getActiveMainPromptTemplate,
     getActiveSecondarySystemMessage,
-    getActiveSecondaryUserPrompt
+    getActiveSecondaryUserPrompt,
+    getModelTestPromptCatalog
   } = deps;
 
   const PROMPT_LIBRARY_CUSTOM_KEY = 'strong_prompt_library_custom';
   const PROMPT_LIBRARY_IMPORTED_KEY = 'strong_prompt_library_imported';
   const SECONDARY_PROMPTS_KEY = 'strong_secondary_prompts';
   const USER_ADDED_PROMPTS_KEY = 'strong_user_added_prompts';
+  const TOPIC_SECONDARY_PROMPTS_KEY = 'strong_topic_secondary_prompts';
+
+  const TOPIC_LABELS_CS = {
+    definice: 'Definice',
+    vyznam: 'Význam',
+    kjv: 'KJV',
+    puvod: 'Původ',
+    specialista: 'Specialista'
+  };
+  const TOPIC_IDS_ORDER = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
 
   function clonePromptLibraryBase() {
     return JSON.parse(JSON.stringify(getPromptLibraryBase() || {}));
@@ -66,6 +77,32 @@ export function createPromptLibraryApi(deps) {
 
   function saveStoredUserAddedPrompts(data) {
     localStorage.setItem(USER_ADDED_PROMPTS_KEY, JSON.stringify(data || {}));
+  }
+
+  function getStoredTopicSecondaryPrompts() {
+    try {
+      const raw = localStorage.getItem(TOPIC_SECONDARY_PROMPTS_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (!parsed || typeof parsed !== 'object') return {};
+      return parsed;
+    } catch {
+      return {};
+    }
+  }
+
+  function saveStoredTopicSecondaryPrompts(data) {
+    localStorage.setItem(TOPIC_SECONDARY_PROMPTS_KEY, JSON.stringify(data || {}));
+  }
+
+  function getDefaultTopicPrompt(topicId) {
+    const promptType = ({
+      definice: 'preset_topic_definice_batch',
+      vyznam: 'preset_topic_vyznam_batch',
+      kjv: 'preset_topic_kjv_batch',
+      puvod: 'preset_topic_puvod_batch',
+      specialista: 'preset_topic_specialista_batch'
+    })[topicId];
+    return getModelTestPromptCatalog?.()[promptType]?.template || '';
   }
 
   function rebuildPromptLibrary(currentSavedPrompt = '') {
@@ -199,7 +236,7 @@ export function createPromptLibraryApi(deps) {
     showToast(t('toast.autoPrompt.toggled', { state: on ? t('common.offLower') : t('common.onLower') }));
   }
 
-  function showPromptLibraryModal() {
+function showPromptLibraryModal() {
     const modal = document.getElementById('promptLibraryModal');
     const tabs = document.getElementById('promptTabs');
     const savedPrompt = localStorage.getItem('strong_prompt') || getDefaultPrompt();
@@ -217,24 +254,29 @@ export function createPromptLibraryApi(deps) {
       const map = { default: 'prompt.tab.default', detailed: 'prompt.tab.detailed', concise: 'prompt.tab.concise', literal: 'prompt.tab.literal', test: 'prompt.tab.test' };
       return t(map[cat] || cat);
     };
-tabs.innerHTML = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom').map((cat) => {
-        const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
-if (cat === 'default') {
-           return btn + '<div class="prompt-tab" data-category="secondary">Sekundární</div>';
-         }
-        return btn;
-      }).join('');
-tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
-        tab.onclick = () => {
-          tabs.querySelectorAll('.prompt-tab').forEach((x) => x.classList.remove('active'));
-          tab.classList.add('active');
-          state.selectedPromptCategory = tab.dataset.category;
-          state.selectedPromptIndex = 0;
-          loadDualEditorForCurrentSelection();
-          renderPromptList();
-          updatePromptActions();
-        };
-      });
+    const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom').map((cat) => {
+      const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
+      if (cat === 'default') {
+        const topicTabs = TOPIC_IDS_ORDER.map(tid => 
+          `<div class="prompt-tab prompt-tab-topic" data-category="secondary" data-topic="${tid}">${TOPIC_LABELS_CS[tid]}</div>`
+        ).join('');
+        return btn + topicTabs;
+      }
+      return btn;
+    }).join('');
+    tabs.innerHTML = baseTabs;
+    tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
+      tab.onclick = () => {
+        tabs.querySelectorAll('.prompt-tab').forEach((x) => x.classList.remove('active'));
+        tab.classList.add('active');
+        state.selectedPromptCategory = tab.dataset.category;
+        state.selectedTopicId = tab.dataset.topic || null;
+        state.selectedPromptIndex = 0;
+        loadDualEditorForCurrentSelection();
+        renderPromptList();
+        updatePromptActions();
+      };
+    });
     updatePromptActions();
     matchPromptToPreset(savedPrompt);
     const activeTab = tabs.querySelector('.prompt-tab.active');
@@ -282,6 +324,17 @@ function renderPromptList() {
     const list = document.getElementById('promptList');
     const category = state.selectedPromptCategory;
 
+    if (category === 'secondary' && state.selectedTopicId) {
+      const topicPrompts = getStoredTopicSecondaryPrompts();
+      const topicId = state.selectedTopicId;
+      const prompt = topicPrompts[topicId] || { system: '', user: getDefaultTopicPrompt(topicId) };
+      list.innerHTML = `<div class="prompt-item ${state.selectedPromptIndex === 0 ? 'selected' : ''}" data-index="0" onclick="selectPrompt(0)">
+        <div class="prompt-item-name">${TOPIC_LABELS_CS[topicId]} - Upravit prompt</div>
+        <div class="prompt-item-desc">Systémový a uživatelský prompt pro sekundární překlad</div>
+      </div>`;
+      return;
+    }
+
     if (category === 'secondary') {
       const prompts = getStoredSecondaryPrompts();
       if (prompts.length === 0) {
@@ -328,6 +381,17 @@ function applySelectedPrompt() {
     }
     if (!userVal) {
       showToast(t('toast.prompt.empty') || 'Uživatelský prompt nesmí být prázdný');
+      return;
+    }
+
+    if (state.selectedPromptCategory === 'secondary' && state.selectedTopicId) {
+      const topicId = state.selectedTopicId;
+      const topicPrompts = getStoredTopicSecondaryPrompts();
+      topicPrompts[topicId] = { system: sysVal, user: userVal };
+      saveStoredTopicSecondaryPrompts(topicPrompts);
+      localStorage.setItem('strong_secondary_system_prompt', sysVal);
+      localStorage.setItem('strong_secondary_user_prompt', userVal);
+      showToast(t('toast.prompt.saved') || 'Prompt pro ' + TOPIC_LABELS_CS[topicId] + ' uložen');
       return;
     }
 
@@ -390,6 +454,16 @@ function loadDualEditorForCurrentSelection() {
     const index = state.selectedPromptIndex;
 
     if (category === 'secondary') {
+      if (state.selectedTopicId) {
+        const topicPrompts = getStoredTopicSecondaryPrompts();
+        const topicId = state.selectedTopicId;
+        const prompt = topicPrompts[topicId] || { system: '', user: getDefaultTopicPrompt(topicId) };
+        const sysEl = document.getElementById('librarySystemPrompt');
+        const userEl = document.getElementById('libraryUserPrompt');
+        if (sysEl) sysEl.value = prompt.system || getActiveSystemMessage();
+        if (userEl) userEl.value = prompt.user || '';
+        return;
+      }
       const prompts = getStoredSecondaryPrompts();
       const entry = index >= 0 ? prompts[index] : null;
       const sysEl = document.getElementById('librarySystemPrompt');
@@ -407,33 +481,45 @@ function loadDualEditorForCurrentSelection() {
     if (userEl) userEl.value = entry.text;
   }
 
-  function updatePromptActions() {
+function updatePromptActions() {
     const actionsContainer = document.querySelector('#promptLibraryModal .prompt-actions');
     if (!actionsContainer) return;
     const category = state.selectedPromptCategory;
 
-     if (category === 'secondary') {
-       actionsContainer.innerHTML = `
-         <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
-         <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
-         <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit prompt">💾 Uložit prompt</button>
-         <button class="prompt-btn ok" onclick="applySecondaryPrompt()" title="Aplikovat vybraný sekundární prompt a použít v překladu">✓ Použít vybraný</button>
-         <button type="button" class="prompt-btn red" onclick="deleteSecondaryPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
-         <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
-         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
-       `;
+    if (category === 'secondary' && state.selectedTopicId) {
+      actionsContainer.innerHTML = `
+        <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
+        <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
+        <button class="prompt-btn ok" onclick="applySelectedPrompt()" title="Aplikovat prompt">✓ Použít</button>
+        <button class="prompt-btn red" onclick="deleteTopicSecondaryPrompt()" title="Smazat prompt pro toto téma">🗑 Smazat</button>
+        <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
+        <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+      `;
+      return;
+    }
+
+    if (category === 'secondary') {
+      actionsContainer.innerHTML = `
+        <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
+        <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
+        <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit prompt">💾 Uložit prompt</button>
+        <button class="prompt-btn ok" onclick="applySecondaryPrompt()" title="Aplikovat vybraný sekundární prompt a použít v překladu">✓ Použít vybraný</button>
+        <button type="button" class="prompt-btn red" onclick="deleteSecondaryPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
+        <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
+        <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+      `;
       } else {
-       // Always show delete button for non-secondary categories
-       actionsContainer.innerHTML = `
-         <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
-         <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
-         <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
-         <button class="prompt-btn ok" onclick="applySelectedPrompt()" title="Aplikovat vybraný prompt">✓ Použít vybraný</button>
-         <button type="button" class="prompt-btn red" onclick="handleDeleteUserPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
-         <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
-         <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
-       `;
-     }
+        // Always show delete button for non-secondary categories
+        actionsContainer.innerHTML = `
+          <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
+          <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
+          <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
+          <button class="prompt-btn ok" onclick="applySelectedPrompt()" title="Aplikovat vybraný prompt">✓ Použít vybraný</button>
+          <button type="button" class="prompt-btn red" onclick="handleDeleteUserPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
+          <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
+          <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+        `;
+      }
   }
 
     function exportPromptLibraryToTxt() {
@@ -762,6 +848,20 @@ function loadDualEditorForCurrentSelection() {
     showToast(t('toast.prompt.deleted') || 'Prompt smazán');
   }
 
+  function deleteTopicSecondaryPrompt() {
+    if (!state.selectedTopicId) return;
+    const topicId = state.selectedTopicId;
+    const label = TOPIC_LABELS_CS[topicId] || topicId;
+    if (!confirm(`Smazat sekundární prompt pro "${label}"?`)) return;
+    const topicPrompts = getStoredTopicSecondaryPrompts();
+    if (topicPrompts[topicId]) {
+      delete topicPrompts[topicId];
+      saveStoredTopicSecondaryPrompts(topicPrompts);
+      loadDualEditorForCurrentSelection();
+      showToast(`Prompt pro ${label} smazán`);
+    }
+  }
+
   function addUserPromptToCategory(category, name, desc, text, system) {
     const userAdded = getStoredUserAddedPrompts();
     if (!userAdded[category]) userAdded[category] = [];
@@ -900,18 +1000,23 @@ return {
          addUserPromptToCategory,
          deleteUserPromptByIndex,
          isUserAddedPrompt,
-        // Secondary prompts
-        getStoredSecondaryPrompts,
-        saveStoredSecondaryPrompts,
-        showSecondaryPromptsModal,
-        closeSecondaryPromptsModal,
-        renderSecondaryPromptList,
-        selectSecondaryPrompt,
-        addSecondaryPrompt,
-        saveSecondaryPrompt,
-        updateSecondaryPrompt,
-        deleteSecondaryPrompt,
-        loadSecondaryEditorForCurrentSelection,
-        applySecondaryPrompt
-      };
+// Secondary prompts
+         getStoredSecondaryPrompts,
+         saveStoredSecondaryPrompts,
+         showSecondaryPromptsModal,
+         closeSecondaryPromptsModal,
+         renderSecondaryPromptList,
+         selectSecondaryPrompt,
+         addSecondaryPrompt,
+         saveSecondaryPrompt,
+         updateSecondaryPrompt,
+         deleteSecondaryPrompt,
+         deleteTopicSecondaryPrompt,
+         loadSecondaryEditorForCurrentSelection,
+         applySecondaryPrompt,
+         // Topic secondary prompts
+         getStoredTopicSecondaryPrompts,
+         saveStoredTopicSecondaryPrompts,
+         getDefaultTopicPrompt
+       };
     }

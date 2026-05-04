@@ -1997,20 +1997,21 @@ const settingsModalsApi = createSettingsModalsApi({
 });
 const { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings } = settingsModalsApi;
 
- const promptLibraryApi = createPromptLibraryApi({
-   state,
-   t,
-   getUiLang,
-   getDefaultPrompt: getResolvedDefaultPrompt,
-   getFinalPrompt: getResolvedFinalPrompt,
-   getPromptLibraryBase: getResolvedPromptLibraryBase,
-   enforceSpecialistaFormat,
-   showToast,
-   getActiveSystemMessage,
-   getActiveMainPromptTemplate,
-   getActiveSecondarySystemMessage,
-   getActiveSecondaryUserPrompt
- });
+const promptLibraryApi = createPromptLibraryApi({
+    state,
+    t,
+    getUiLang,
+    getDefaultPrompt: getResolvedDefaultPrompt,
+    getFinalPrompt: getResolvedFinalPrompt,
+    getPromptLibraryBase: getResolvedPromptLibraryBase,
+    enforceSpecialistaFormat,
+    showToast,
+    getActiveSystemMessage,
+    getActiveMainPromptTemplate,
+    getActiveSecondarySystemMessage,
+    getActiveSecondaryUserPrompt,
+    getModelTestPromptCatalog
+  });
 
 const {
   initializePromptLibrary,
@@ -2047,15 +2048,16 @@ const {
   saveStoredSecondaryPrompts,
   showSecondaryPromptsModal,
   closeSecondaryPromptsModal,
-  renderSecondaryPromptList,
-  selectSecondaryPrompt,
-  addSecondaryPrompt,
-  saveSecondaryPrompt,
-  updateSecondaryPrompt,
-  deleteSecondaryPrompt,
-  loadSecondaryEditorForCurrentSelection,
-  applySecondaryPrompt,
-} = promptLibraryApi;
+renderSecondaryPromptList,
+   selectSecondaryPrompt,
+   addSecondaryPrompt,
+   saveSecondaryPrompt,
+   updateSecondaryPrompt,
+   deleteSecondaryPrompt,
+   deleteTopicSecondaryPrompt,
+   loadSecondaryEditorForCurrentSelection,
+   applySecondaryPrompt,
+ } = promptLibraryApi;
 
 initializePromptLibrary();
 
@@ -2246,8 +2248,8 @@ window.importPromptLibraryFromFile = promptLibraryApi.importPromptLibraryFromFil
  window.showPromptLangModal = showPromptLangModal;
  window.closePromptLangModal = closePromptLangModal;
  window.saveLangSettings = saveLangSettings;
- // Secondary prompts
-window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
+// Secondary prompts
+ window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
   window.closeSecondaryPromptsModal = promptLibraryApi.closeSecondaryPromptsModal;
   window.renderSecondaryPromptList = promptLibraryApi.renderSecondaryPromptList;
   window.selectSecondaryPrompt = promptLibraryApi.selectSecondaryPrompt;
@@ -2255,6 +2257,7 @@ window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
   window.saveSecondaryPrompt = promptLibraryApi.saveSecondaryPrompt;
   window.updateSecondaryPrompt = promptLibraryApi.updateSecondaryPrompt;
   window.deleteSecondaryPrompt = promptLibraryApi.deleteSecondaryPrompt;
+  window.deleteTopicSecondaryPrompt = promptLibraryApi.deleteTopicSecondaryPrompt;
   window.loadSecondaryEditorForCurrentSelection = promptLibraryApi.loadSecondaryEditorForCurrentSelection;
   window.applySecondaryPrompt = promptLibraryApi.applySecondaryPrompt;
   window.getActiveSecondarySystemMessage = getActiveSecondarySystemMessage;
@@ -2270,6 +2273,7 @@ window.addSecondaryPrompt = promptLibraryApi.addSecondaryPrompt;
 window.saveSecondaryPrompt = promptLibraryApi.saveSecondaryPrompt;
 window.updateSecondaryPrompt = promptLibraryApi.updateSecondaryPrompt;
 window.deleteSecondaryPrompt = promptLibraryApi.deleteSecondaryPrompt;
+window.deleteTopicSecondaryPrompt = promptLibraryApi.deleteTopicSecondaryPrompt;
 window.loadSecondaryEditorForCurrentSelection = promptLibraryApi.loadSecondaryEditorForCurrentSelection;
 window.applySecondaryPrompt = promptLibraryApi.applySecondaryPrompt;
 
