@@ -292,7 +292,7 @@ export function createPromptLibraryApi(deps) {
     state.selectedPromptCategory = 'default';
     state.selectedPromptIndex = 0;
     const getPromptTabLabel = (cat) => {
-      const map = { default: 'prompt.tab.default', test: 'prompt.tab.test' };
+      const map = { default: 'prompt.tab.default', sekundarni: 'prompt.tab.sekundarni', test: 'prompt.tab.test' };
       return t(map[cat] || cat);
     };
     const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom' && !['detailed', 'concise', 'literal', 'library'].includes(cat)).map((cat) => {
@@ -334,28 +334,28 @@ export function createPromptLibraryApi(deps) {
     modal.onclick = (e) => { if (e.target === modal) closePromptLibraryModal(); };
   }
 
-  function matchPromptToPreset(promptText) {
-     const baseCategories = ['default', 'test', 'library'];
-    let foundMatch = false;
-    for (const category of baseCategories) {
-      const prompts = state.PROMPT_LIBRARY[category];
-      if (!Array.isArray(prompts)) continue;
-      for (let i = 0; i < prompts.length; i++) {
-        if (prompts[i].text === promptText) {
-          state.selectedPromptCategory = category;
-          state.selectedPromptIndex = i;
-          foundMatch = true;
-          break;
-        }
-      }
-      if (foundMatch) break;
-    }
-    if (!foundMatch) {
-      state.selectedPromptCategory = 'default';
-      state.selectedPromptIndex = 0;
-      rebuildPromptLibrary(promptText);
-    }
-  }
+function matchPromptToPreset(promptText) {
+   const baseCategories = ['default', 'test', 'library', 'sekundarni'];
+   let foundMatch = false;
+   for (const category of baseCategories) {
+     const prompts = state.PROMPT_LIBRARY[category];
+     if (!Array.isArray(prompts)) continue;
+     for (let i = 0; i < prompts.length; i++) {
+       if (prompts[i].text === promptText) {
+         state.selectedPromptCategory = category;
+         state.selectedPromptIndex = i;
+         foundMatch = true;
+         break;
+       }
+     }
+     if (foundMatch) break;
+   }
+   if (!foundMatch) {
+     state.selectedPromptCategory = 'default';
+     state.selectedPromptIndex = 0;
+     rebuildPromptLibrary(promptText);
+   }
+ }
 
   function closePromptLibraryModal() {
     document.getElementById('promptLibraryModal').classList.remove('show');

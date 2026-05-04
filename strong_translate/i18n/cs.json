@@ -518,6 +518,7 @@
     "prompt.tab.detailed":  "Detailní",
     "prompt.tab.concise":  "Stručné",
     "prompt.tab.literal":  "Doslovné",
+    "prompt.tab.sekundarni":  "sekundarni",
     "prompt.tab.test":  "Test",
     "provider.top.autoRouter":  "★ Auto Router (doporučeno)",
     "resume.source.currentSlot":  "aktuální slot",
