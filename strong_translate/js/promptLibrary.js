@@ -287,7 +287,7 @@ export function createPromptLibraryApi(deps) {
     const sysLib = document.getElementById('librarySystemPrompt');
     const userLib = document.getElementById('libraryUserPrompt');
     if (sysLib) sysLib.value = getActiveSystemMessage();
-    if (userLib) userLib.value = getActiveMainPromptTemplate('batch');
+    if (userLib) userLib.value = enforceSpecialistaFormat(getActiveMainPromptTemplate('batch'));
 
     state.selectedPromptCategory = 'default';
     state.selectedPromptIndex = 0;
@@ -428,7 +428,7 @@ function matchPromptToPreset(promptText) {
       return;
     }
 
-    if (state.selectedPromptCategory === 'secondary' && state.selectedTopicId) {
+if (state.selectedPromptCategory === 'secondary' && state.selectedTopicId) {
       const topicId = state.selectedTopicId;
       saveStoredTopicSpecificSecondaryPrompt(topicId, { system: sysVal, user: userVal });
       localStorage.setItem('strong_secondary_system_prompt', sysVal);
@@ -437,23 +437,17 @@ function matchPromptToPreset(promptText) {
       return;
     }
 
-    if (state.selectedPromptCategory === 'secondary') {
-      const name = prompt(t('prompt.library.namePrompt') || 'Zadej název promptu:', 'Sekundární prompt');
-      if (!name) return;
-      const desc = prompt(t('prompt.library.descPrompt') || 'Zadej popis (volitelné):', '') || '';
-
-      const newPrompt = { name, desc, system: sysVal, user: userVal };
-      const prompts = getStoredSecondaryPrompts();
-      prompts.push(newPrompt);
-      saveStoredSecondaryPrompts(prompts);
-      state.selectedPromptIndex = prompts.length - 1;
-      renderPromptList();
-      showToast(t('toast.prompt.saved') || 'Sekundární prompt uložen');
-      return;
+    // Strip enforced specialista extra before saving for default category
+    let userValToSave = userVal;
+    if (state.selectedPromptCategory === 'default') {
+      const extraMatch = userVal.match(/\n\nPOVINNÝ VÝSTUP NAVÍC[\s\S]*$/i);
+      if (extraMatch) {
+        userValToSave = userVal.substring(0, extraMatch.index).trim();
+      }
     }
 
     localStorage.setItem('strong_custom_system_prompt', sysVal);
-    setMainPrompt(userVal, 'custom');
+    setMainPrompt(userValToSave, 'custom');
 
     if (state.selectedPromptCategory === 'custom' || state.selectedPromptCategory === 'default') {
       const imported = getStoredCustomPromptLibrary().filter((item) => item.text !== userVal);
@@ -519,7 +513,7 @@ function matchPromptToPreset(promptText) {
     const sysEl = document.getElementById('librarySystemPrompt');
     const userEl = document.getElementById('libraryUserPrompt');
     if (sysEl) sysEl.value = entry.system || getActiveSystemMessage();
-    if (userEl) userEl.value = (category === 'default' ? getActiveMainPromptTemplate('batch') : entry.text);
+    if (userEl) userEl.value = (category === 'default' ? enforceSpecialistaFormat(getActiveMainPromptTemplate('batch')) : entry.text);
   }
 
   function updatePromptActions() {

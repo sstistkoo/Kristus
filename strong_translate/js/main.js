@@ -3783,7 +3783,7 @@ function showPromptEditModal() {
   const status = document.getElementById('editPromptStatus');
   if (!modal || !sysTextarea || !userTextarea) return;
   sysTextarea.value = getActiveSystemMessage();
-  userTextarea.value = getActiveMainPromptTemplate('batch');
+  userTextarea.value = enforceSpecialistaFormat(getActiveMainPromptTemplate('batch'));
   if (status) status.textContent = '';
   modal.classList.add('show');
 }
@@ -3795,15 +3795,15 @@ function closeEditPromptModal() {
 
 function restoreDefaultPrompt() {
   localStorage.removeItem('strong_custom_system_prompt');
-  setMainPrompt(getResolvedDefaultPrompt(), 'system');
+  setMainPrompt(enforceSpecialistaFormat(getResolvedDefaultPrompt()), 'system');
   updatePromptStatusIndicator();
   const sysTextarea = document.getElementById('editSystemPrompt');
   const userTextarea = document.getElementById('editUserPrompt');
   const status = document.getElementById('editPromptStatus');
   if (sysTextarea) sysTextarea.value = getActiveSystemMessage();
-  if (userTextarea) userTextarea.value = getActiveMainPromptTemplate('batch');
+  if (userTextarea) userTextarea.value = enforceSpecialistaFormat(getActiveMainPromptTemplate('batch'));
   if (status) {
-    status.textContent = '? Obnoveno v�choz�';
+    status.textContent = '? Obnoveno výchozí';
     setTimeout(() => { if (status) status.textContent = ''; }, 2000);
   }
 }
@@ -3814,13 +3814,15 @@ function saveEditedPrompt() {
   const status = document.getElementById('editPromptStatus');
   if (!sysTextarea || !userTextarea) return;
   const sysVal = (sysTextarea.value || '').trim();
-  const userVal = (userTextarea.value || '').trim();
+  // Strip enforced specialista extra before saving if present
+  const extraMatch = userTextarea.value.match(/\n\nPOVINNÝ VÝSTUP NAVÍC[\s\S]*$/i);
+  const userVal = extraMatch ? (userTextarea.value.substring(0, extraMatch.index) || '').trim() : (userTextarea.value || '').trim();
   if (!sysVal) {
-    if (status) status.textContent = '? Syst�mov� prompt nesm� b�t pr�zdn�';
+    if (status) status.textContent = '? Systémový prompt nesmí být prázdný';
     return;
   }
   if (!userVal) {
-    if (status) status.textContent = '? U�ivatelsk� prompt nesm� b�t pr�zdn�';
+    if (status) status.textContent = '? Uživatelský prompt nesmí být prázdný';
     return;
   }
   localStorage.setItem('strong_custom_system_prompt', sysVal);
@@ -3828,7 +3830,7 @@ function saveEditedPrompt() {
   updatePromptStatusIndicator();
   closeEditPromptModal();
    showToast('✓ AI prompt uložen');
- }
+  }
 
 // Library prompt editor functions
 function restoreLibraryPrompts() {
@@ -3851,7 +3853,7 @@ function restoreLibraryPrompts() {
       // For default category, restore the true original defaults (not from modified library)
       const baseEntry = promptLibraryApi.getPromptLibraryBase()['default']?.[0];
       sysEl.value = baseEntry?.system || getResolvedSystemMessage();
-      userEl.value = baseEntry?.text || getResolvedDefaultPrompt();
+      userEl.value = enforceSpecialistaFormat(baseEntry?.text || getResolvedDefaultPrompt());
     } else {
       // For built-in categories, restore entry from PROMPT_LIBRARY_BASE
       const baseEntry = promptLibraryApi.getPromptLibraryBase()[category]?.[index];
@@ -3880,7 +3882,9 @@ function restoreLibraryPrompts() {
     if (!sysEl || !userEl) return;
 
     const sysVal = (sysEl.value || '').trim();
-    const userVal = (userEl.value || '').trim();
+    // Strip enforced specialista extra before saving if present (for default category)
+    const extraMatch = userEl.value.match(/\n\nPOVINNÝ VÝSTUP NAVÍC[\s\S]*$/i);
+    const userVal = extraMatch ? (userEl.value.substring(0, extraMatch.index) || '').trim() : (userEl.value || '').trim();
 
     if (!sysVal) {
       if (status) { status.textContent = '? Systémový prompt nesmí být prázdný'; status.style.color = 'var(--red)'; }
