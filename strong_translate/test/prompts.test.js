@@ -29,14 +29,11 @@ test('DEFAULT_PROMPT has expected structure', () => {
 });
 
 test('CATEGORY_LABELS has expected categories', () => {
-   assert.equal(prompts.CATEGORY_LABELS.default, 'Default');
-   assert.equal(prompts.CATEGORY_LABELS.detailed, 'Detailed');
-   assert.equal(prompts.CATEGORY_LABELS.concise, 'Concise');
-   assert.equal(prompts.CATEGORY_LABELS.literal, 'Literal');
-   assert.equal(prompts.CATEGORY_LABELS.test, 'Test');
-   assert.equal(prompts.CATEGORY_LABELS.library, 'Library');
-   assert.equal(prompts.CATEGORY_LABELS.final, 'Final');
- });
+    assert.equal(prompts.CATEGORY_LABELS.default, 'Default');
+    assert.equal(prompts.CATEGORY_LABELS.test, 'Test');
+    assert.equal(prompts.CATEGORY_LABELS.library, 'Library');
+    assert.equal(prompts.CATEGORY_LABELS.final, 'Final');
+});
 
 test('FINAL_PROMPT has expected structure', () => {
   assert.equal(prompts.FINAL_PROMPT.name, 'Final');

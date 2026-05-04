@@ -292,10 +292,10 @@ export function createPromptLibraryApi(deps) {
     state.selectedPromptCategory = 'default';
     state.selectedPromptIndex = 0;
     const getPromptTabLabel = (cat) => {
-      const map = { default: 'prompt.tab.default', detailed: 'prompt.tab.detailed', concise: 'prompt.tab.concise', literal: 'prompt.tab.literal', test: 'prompt.tab.test' };
+      const map = { default: 'prompt.tab.default', test: 'prompt.tab.test' };
       return t(map[cat] || cat);
     };
-    const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom').map((cat) => {
+    const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom' && !['detailed', 'concise', 'literal', 'library'].includes(cat)).map((cat) => {
       const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
       if (cat === 'default') {
         const topicTabs = TOPIC_IDS_ORDER.map(tid => 
@@ -335,7 +335,7 @@ export function createPromptLibraryApi(deps) {
   }
 
   function matchPromptToPreset(promptText) {
-    const baseCategories = ['default', 'detailed', 'concise', 'literal', 'test', 'library'];
+     const baseCategories = ['default', 'test', 'library'];
     let foundMatch = false;
     for (const category of baseCategories) {
       const prompts = state.PROMPT_LIBRARY[category];
