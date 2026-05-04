@@ -4,6 +4,54 @@ import { hasMeaningfulValue, isDefinitionLowQuality, isDefinitionLikelyEnglish }
 import { sleepMs } from '../utils.js';
 import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPromptsResolve.js';
 
+// ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
+const TOPIC_BATCH_TEMPLATES = {
+  definice: `Přelož pouze část "Definice" (D) z daného hesla do češtiny. Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici. Vracet POUZE obsah pole D. Nepřekládat jiné části (V, P, K, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+D: [překlad definice do češtiny]
+
+HESLA:
+{HESLA}`,
+
+  vyznam: `Přelož pouze část "Význam" (V) z daného hesla do češtiny. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole V. Nepřekládat jiné části (D, P, K, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+V: [česky význam]
+
+HESLA:
+{HESLA}`,
+
+  kjv: `Přelož pouze "KJV význam" (K) z daného hesla do češtiny. Odvoď hlavní význam z kontextu KJV verse. Vracet POUZE obsah pole K. Nepřekládat jiné části (V, D, P, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+K: [překlad KJV významu do češtiny]
+
+HESLA:
+{HESLA}`,
+
+  puvod: `Přelož pouze část "Původ" (P) – etymologii a původ slova – do češtiny. Uveďte: původní jazyk, původní písmo (s českým přepisem v závorce) a vývoj významu. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole P. Nepřekládat jiné části (V, D, K, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+P: [jazyk + původní písmo (český přepis v závorce) + etymologie]
+
+HESLA:
+{HESLA}`,
+
+  specialista: `Napiš teologický a biblický výklad (S) pro dané slovo. Vysvětli teologický a biblický význam slova v kontextu. Použij odborný český jazyk, 3–6 souvislých vět (žádné body ani seznamy). Vracet POUZE obsah pole S. Nepřekládat jiné části (V, D, P, K).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+S: [odborný český výklad 3–6 vět]
+
+HESLA:
+{HESLA}`
+};
+
 export function createTopicRepairApi(deps) {
   const {
     state, t, escHtml,
@@ -777,15 +825,21 @@ function applyPromptLanguageTokens(promptText) {
 }
 
 function getDefaultBatchTopicPromptTemplate(topicId) {
-  const promptType = TOPIC_BATCH_PROMPT_PRESET_MAP[topicId] || '';
-  return String(getTopicPromptTemplateByPromptType(promptType) || '').trim();
+  const template = TOPIC_BATCH_TEMPLATES[topicId] || getResolvedDefaultPrompt() || '';
+  console.log(`[TopicRepair] getDefaultBatchTopicPromptTemplate(topicId="${topicId}") → using ${TOPIC_BATCH_TEMPLATES[topicId] ? 'TOPIC_BATCH_TEMPLATES' : 'DEFAULT_PROMPT'}, length:`, template.length);
+  return String(template).trim();
 }
 
 function getTopicRepairBatchPromptTemplate(topicId) {
   const key = getTopicRepairBatchPromptStorageKey(topicId);
   const saved = String(localStorage.getItem(key) || '').trim();
-  if (saved) return saved;
-  return getDefaultBatchTopicPromptTemplate(topicId);
+  if (saved) {
+    console.log(`[TopicRepair] getTopicRepairBatchPromptTemplate(topicId="${topicId}") → USING STORED (key="${key}")`);
+    return saved;
+  }
+  const def = getDefaultBatchTopicPromptTemplate(topicId);
+  console.log(`[TopicRepair] getTopicRepairBatchPromptTemplate(topicId="${topicId}") → USING DEFAULT (key="${key}" not found)`);
+  return def;
 }
 
 function saveTopicRepairBatchPromptDraft() {
@@ -821,6 +875,7 @@ function refreshTopicRepairBatchPromptEditor() {
   if (!topicRepairState) return;
   const topicId = document.getElementById('topicRepairBulkTopicSelect')?.value || state.bulkTopicId || 'all';
   state.bulkTopicId = topicId;
+  console.log(`[TopicRepair] refreshTopicRepairBatchPromptEditor() → topicId="${topicId}"`);
   const row = document.getElementById('topicRepairBulkListFilterRow');
   if (row) row.style.display = topicId === 'all' ? 'flex' : 'none';
   const ta = document.getElementById('topicRepairBatchPrompt');
@@ -830,7 +885,9 @@ function refreshTopicRepairBatchPromptEditor() {
     ta.value = t('topicRepair.bulk.allModeHelp');
   } else {
     ta.readOnly = false;
-    ta.value = applyPromptLanguageTokens(getTopicRepairBatchPromptTemplate(topicId));
+    const template = getTopicRepairBatchPromptTemplate(topicId);
+    console.log(`[TopicRepair] Template for ${topicId}:\n`, template.substring(0, 200));
+    ta.value = applyPromptLanguageTokens(template);
   }
   updateTopicRepairModalUI();
 }
@@ -1175,8 +1232,15 @@ function setTopicRepairBulkIncludeAll(checked) {
 
 function getTopicPromptTemplateByPromptType(promptType) {
   const topicType = String(promptType || '').trim();
-  if (!topicType || !topicType.startsWith('preset_topic_')) return '';
-  return String(getModelTestPromptCatalog()?.[topicType]?.template || '').trim();
+  if (!topicType || !topicType.startsWith('preset_topic_')) {
+    console.log('[TopicRepair] getTopicPromptTemplateByPromptType: invalid promptType:', promptType);
+    return '';
+  }
+  const catalog = getModelTestPromptCatalog();
+  const template = String(catalog?.[topicType]?.template || '').trim();
+  console.log(`[TopicRepair] getTopicPromptTemplateByPromptType("${promptType}") → found:`, !!template, 
+    '| catalog has keys:', catalog ? Object.keys(catalog).join(', ') : 'NO CATALOG');
+  return template;
 }
 
 function getTopicPromptTemplate(topicId) {

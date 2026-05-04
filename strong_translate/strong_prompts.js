@@ -57,6 +57,54 @@ const PROMPT_LIBRARY_BASE = {
       ]
  };
 
+// ─── TÉMATICKÉ (TOPIC) BATCH ŠABLONY ──────────────────────────────────────
+// Každé téma má vlastní instrukce – nahradí DEFAULT_PROMPT v batch režimu
+
+const DEFINICE_BATCH_TEMPLATE = `Přelož pouze část "Definice" (D) z daného hesla do češtiny. Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici. Vracet POUZE obsah pole D. Nepřekládat jiné části (V, P, K, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+D: [překlad definice do češtiny]
+
+HESLA:
+{HESLA}`;
+
+const VYZNAM_BATCH_TEMPLATE = `Přelož pouze část "Význam" (V) z daného hesla do češtiny. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole V. Nepřekládat jiné části (D, P, K, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+V: [česky význam]
+
+HESLA:
+{HESLA}`;
+
+const KJV_BATCH_TEMPLATE = `Přelož pouze "KJV význam" (K) z daného hesla do češtiny. Odvoď hlavní význam z kontextu KJV verse. Vracet POUZE obsah pole K. Nepřekládat jiné části (V, D, P, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+K: [překlad KJV významu do češtiny]
+
+HESLA:
+{HESLA}`;
+
+const PUVOD_BATCH_TEMPLATE = `Přelož pouze část "Původ" (P) – etymologii a původ slova – do češtiny. Uveďte: původní jazyk, původní písmo (s českým přepisem v závorce) a vývoj významu. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole P. Nepřekládat jiné části (V, D, K, S).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+P: [jazyk + původní písmo (český přepis v závorce) + etymologie]
+
+HESLA:
+{HESLA}`;
+
+const SPECIALISTA_BATCH_TEMPLATE = `Napiš teologický a biblický výklad (S) pro dané slovo. Vysvětli teologický a biblický význam slova v kontextu. Použij odborný český jazyk, 3–6 souvislých vět (žádné body ani seznamy). Vracet POUZE obsah pole S. Nepřekládat jiné části (V, D, P, K).
+
+FORMÁT ODPOVĚDI:
+###[číslo]###
+S: [odborný český výklad 3–6 vět]
+
+HESLA:
+{HESLA}`;
+
 const MODEL_TEST_PROMPT_CATALOG = {
   preset_v1: { label: 'Fallback preset_v1', template: DEFAULT_PROMPT },
   preset_v2: { label: 'Fallback preset_v2', template: DEFAULT_PROMPT },
@@ -73,24 +121,25 @@ const MODEL_TEST_PROMPT_CATALOG = {
   preset_v13: { label: 'Fallback preset_v13', template: DEFAULT_PROMPT },
   preset_v14: { label: 'Fallback preset_v14', template: DEFAULT_PROMPT },
   preset_v15: { label: 'Fallback preset_v15', template: DEFAULT_PROMPT },
-  preset_topic_definice: { label: 'Fallback preset_topic_definice', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_vyznam: { label: 'Fallback preset_topic_vyznam', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_kjv: { label: 'Fallback preset_topic_kjv', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_pouziti: { label: 'Fallback preset_topic_pouziti', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_puvod: { label: 'Fallback preset_topic_puvod', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_specialista: { label: 'Fallback preset_topic_specialista', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_definice_batch: { label: 'Fallback preset_topic_definice_batch', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_vyznam_batch: { label: 'Fallback preset_topic_vyznam_batch', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_kjv_batch: { label: 'Fallback preset_topic_kjv_batch', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_pouziti_batch: { label: 'Fallback preset_topic_pouziti_batch', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_puvod_batch: { label: 'Fallback preset_topic_puvod_batch', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_specialista_batch: { label: 'Fallback preset_topic_specialista_batch', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_vyznam_en: { label: 'Fallback preset_topic_vyznam_en', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_definice_en: { label: 'Fallback preset_topic_definice_en', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_kjv_en: { label: 'Fallback preset_topic_kjv_en', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_pouziti_en: { label: 'Fallback preset_topic_pouziti_en', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_puvod_en: { label: 'Fallback preset_topic_puvod_en', template: DEFAULT_PROMPT, topicLabel: 'Topic' },
-  preset_topic_specialista_en: { label: 'Fallback preset_topic_specialista_en', template: DEFAULT_PROMPT, topicLabel: 'Topic' }
+  preset_topic_definice: { label: 'Definice (single)', template: DEFAULT_PROMPT, topicLabel: 'Definice' },
+  preset_topic_vyznam: { label: 'Význam (single)', template: DEFAULT_PROMPT, topicLabel: 'Význam' },
+  preset_topic_kjv: { label: 'KJV (single)', template: DEFAULT_PROMPT, topicLabel: 'KJV' },
+  preset_topic_pouziti: { label: 'Použití (single)', template: DEFAULT_PROMPT, topicLabel: 'Použití' },
+  preset_topic_puvod: { label: 'Původ (single)', template: DEFAULT_PROMPT, topicLabel: 'Původ' },
+  preset_topic_specialista: { label: 'Specialista (single)', template: DEFAULT_PROMPT, topicLabel: 'Specialista' },
+  // ── BATCH prompty pro Opravu témat ─────────────────────────────────────
+  preset_topic_definice_batch: { label: 'Definice (batch)', template: DEFINICE_BATCH_TEMPLATE, topicLabel: 'Definice' },
+  preset_topic_vyznam_batch: { label: 'Význam (batch)', template: VYZNAM_BATCH_TEMPLATE, topicLabel: 'Význam' },
+  preset_topic_kjv_batch: { label: 'KJV (batch)', template: KJV_BATCH_TEMPLATE, topicLabel: 'KJV' },
+  preset_topic_pouziti_batch: { label: 'Použití (batch)', template: DEFAULT_PROMPT, topicLabel: 'Použití' },
+  preset_topic_puvod_batch: { label: 'Původ (batch)', template: PUVOD_BATCH_TEMPLATE, topicLabel: 'Původ' },
+  preset_topic_specialista_batch: { label: 'Specialista (batch)', template: SPECIALISTA_BATCH_TEMPLATE, topicLabel: 'Specialista' },
+  preset_topic_vyznam_en: { label: 'Význam EN (batch)', template: DEFAULT_PROMPT, topicLabel: 'Význam' },
+  preset_topic_definice_en: { label: 'Definice EN (batch)', template: DEFAULT_PROMPT, topicLabel: 'Definice' },
+  preset_topic_kjv_en: { label: 'KJV EN (batch)', template: DEFAULT_PROMPT, topicLabel: 'KJV' },
+  preset_topic_pouziti_en: { label: 'Použití EN (batch)', template: DEFAULT_PROMPT, topicLabel: 'Použití' },
+  preset_topic_puvod_en: { label: 'Původ EN (batch)', template: DEFAULT_PROMPT, topicLabel: 'Původ' },
+  preset_topic_specialista_en: { label: 'Specialista EN (batch)', template: DEFAULT_PROMPT, topicLabel: 'Specialista' }
 };
 
 const strongPrompts = {
