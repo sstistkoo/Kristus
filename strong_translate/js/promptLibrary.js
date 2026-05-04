@@ -295,16 +295,20 @@ export function createPromptLibraryApi(deps) {
       const map = { default: 'prompt.tab.default', sekundarni: 'prompt.tab.sekundarni', test: 'prompt.tab.test' };
       return t(map[cat] || cat);
     };
-    const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom' && !['detailed', 'concise', 'literal', 'library'].includes(cat)).map((cat) => {
-      const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
-      if (cat === 'default') {
-        const topicTabs = TOPIC_IDS_ORDER.map(tid => 
-          `<div class="prompt-tab prompt-tab-topic" data-category="secondary" data-topic="${tid}">${TOPIC_LABELS_CS[tid]}</div>`
-        ).join('');
-        return btn + topicTabs;
-      }
-      return btn;
-    }).join('');
+const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom' && cat !== 'sekundarni' && !['detailed', 'concise', 'literal', 'library'].includes(cat)).map((cat) => {
+       const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
+       if (cat === 'default') {
+         const topicTabs = TOPIC_IDS_ORDER.map(tid => 
+           `<div class="prompt-tab prompt-tab-topic" data-category="secondary" data-topic="${tid}">${TOPIC_LABELS_CS[tid]}</div>`
+         ).join('');
+         // sekundarni tab goes after default, before topic tabs
+         if (state.PROMPT_LIBRARY['sekundarni']) {
+           return btn + `<div class="prompt-tab" data-category="sekundarni">${getPromptTabLabel('sekundarni')}</div>` + topicTabs;
+         }
+         return btn + topicTabs;
+       }
+       return btn;
+     }).join('');
     tabs.innerHTML = baseTabs;
     tabs.querySelectorAll('.prompt-tab').forEach((tab) => {
       tab.onclick = () => {
