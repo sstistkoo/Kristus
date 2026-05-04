@@ -105,6 +105,47 @@ export function createPromptLibraryApi(deps) {
     return getModelTestPromptCatalog?.()[promptType]?.template || '';
   }
 
+  function getStoredTopicSpecificSecondaryPrompt(topicId) {
+    try {
+      const key = `strong_topic_specific_secondary_${topicId}`;
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (!parsed || typeof parsed !== 'object') return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveStoredTopicSpecificSecondaryPrompt(topicId, data) {
+    try {
+      const key = `strong_topic_specific_secondary_${topicId}`;
+      localStorage.setItem(key, JSON.stringify(data || { system: '', user: '' }));
+    } catch {}
+  }
+
+  function deleteStoredTopicSpecificSecondaryPrompt(topicId) {
+    try {
+      const key = `strong_topic_specific_secondary_${topicId}`;
+      localStorage.removeItem(key);
+    } catch {}
+  }
+
+  function getTopicSpecificPromptForEdit(topicId) {
+    const stored = getStoredTopicSpecificSecondaryPrompt(topicId);
+    const defaultPrompt = getDefaultTopicPrompt(topicId);
+    if (stored) {
+      return {
+        system: stored.system || getActiveSystemMessage(),
+        user: stored.user || defaultPrompt
+      };
+    }
+    return {
+      system: getActiveSystemMessage(),
+      user: defaultPrompt
+    };
+  }
+
   function rebuildPromptLibrary(currentSavedPrompt = '') {
     state.PROMPT_LIBRARY = clonePromptLibraryBase();
     const importedByCategory = getStoredImportedPromptLibrary();
@@ -236,7 +277,7 @@ export function createPromptLibraryApi(deps) {
     showToast(t('toast.autoPrompt.toggled', { state: on ? t('common.offLower') : t('common.onLower') }));
   }
 
-function showPromptLibraryModal() {
+  function showPromptLibraryModal() {
     const modal = document.getElementById('promptLibraryModal');
     const tabs = document.getElementById('promptTabs');
     const savedPrompt = localStorage.getItem('strong_prompt') || getDefaultPrompt();
@@ -320,14 +361,13 @@ function showPromptLibraryModal() {
     document.getElementById('promptLibraryModal').classList.remove('show');
   }
 
-function renderPromptList() {
+  function renderPromptList() {
     const list = document.getElementById('promptList');
     const category = state.selectedPromptCategory;
 
     if (category === 'secondary' && state.selectedTopicId) {
-      const topicPrompts = getStoredTopicSecondaryPrompts();
       const topicId = state.selectedTopicId;
-      const prompt = topicPrompts[topicId] || { system: '', user: getDefaultTopicPrompt(topicId) };
+      const prompt = getTopicSpecificPromptForEdit(topicId);
       list.innerHTML = `<div class="prompt-item ${state.selectedPromptIndex === 0 ? 'selected' : ''}" data-index="0" onclick="selectPrompt(0)">
         <div class="prompt-item-name">${TOPIC_LABELS_CS[topicId]} - Upravit prompt</div>
         <div class="prompt-item-desc">Systémový a uživatelský prompt pro sekundární překlad</div>
@@ -369,7 +409,7 @@ function renderPromptList() {
       renderPromptList();
     }
 
-function applySelectedPrompt() {
+  function applySelectedPrompt() {
     const sysEl = document.getElementById('librarySystemPrompt');
     const userEl = document.getElementById('libraryUserPrompt');
     const sysVal = sysEl ? sysEl.value.trim() : '';
@@ -386,9 +426,7 @@ function applySelectedPrompt() {
 
     if (state.selectedPromptCategory === 'secondary' && state.selectedTopicId) {
       const topicId = state.selectedTopicId;
-      const topicPrompts = getStoredTopicSecondaryPrompts();
-      topicPrompts[topicId] = { system: sysVal, user: userVal };
-      saveStoredTopicSecondaryPrompts(topicPrompts);
+      saveStoredTopicSpecificSecondaryPrompt(topicId, { system: sysVal, user: userVal });
       localStorage.setItem('strong_secondary_system_prompt', sysVal);
       localStorage.setItem('strong_secondary_user_prompt', userVal);
       showToast(t('toast.prompt.saved') || 'Prompt pro ' + TOPIC_LABELS_CS[topicId] + ' uložen');
@@ -449,19 +487,18 @@ function applySelectedPrompt() {
     showToast(t('toast.prompt.savedApplied'));
   }
 
-function loadDualEditorForCurrentSelection() {
+  function loadDualEditorForCurrentSelection() {
     const category = state.selectedPromptCategory;
     const index = state.selectedPromptIndex;
 
     if (category === 'secondary') {
       if (state.selectedTopicId) {
-        const topicPrompts = getStoredTopicSecondaryPrompts();
         const topicId = state.selectedTopicId;
-        const prompt = topicPrompts[topicId] || { system: '', user: getDefaultTopicPrompt(topicId) };
+        const prompt = getTopicSpecificPromptForEdit(topicId);
         const sysEl = document.getElementById('librarySystemPrompt');
         const userEl = document.getElementById('libraryUserPrompt');
-        if (sysEl) sysEl.value = prompt.system || getActiveSystemMessage();
-        if (userEl) userEl.value = prompt.user || '';
+        if (sysEl) sysEl.value = prompt.system;
+        if (userEl) userEl.value = prompt.user;
         return;
       }
       const prompts = getStoredSecondaryPrompts();
@@ -481,7 +518,7 @@ function loadDualEditorForCurrentSelection() {
     if (userEl) userEl.value = entry.text;
   }
 
-function updatePromptActions() {
+  function updatePromptActions() {
     const actionsContainer = document.querySelector('#promptLibraryModal .prompt-actions');
     if (!actionsContainer) return;
     const category = state.selectedPromptCategory;
@@ -853,13 +890,14 @@ function updatePromptActions() {
     const topicId = state.selectedTopicId;
     const label = TOPIC_LABELS_CS[topicId] || topicId;
     if (!confirm(`Smazat sekundární prompt pro "${label}"?`)) return;
-    const topicPrompts = getStoredTopicSecondaryPrompts();
-    if (topicPrompts[topicId]) {
-      delete topicPrompts[topicId];
-      saveStoredTopicSecondaryPrompts(topicPrompts);
-      loadDualEditorForCurrentSelection();
-      showToast(`Prompt pro ${label} smazán`);
-    }
+    deleteStoredTopicSpecificSecondaryPrompt(topicId);
+    // Reset local active prompts if they were from this topic
+    const sysEl = document.getElementById('librarySystemPrompt');
+    const userEl = document.getElementById('libraryUserPrompt');
+    if (sysEl) sysEl.value = getActiveSystemMessage();
+    if (userEl) userEl.value = getDefaultTopicPrompt(topicId);
+    loadDualEditorForCurrentSelection();
+    showToast(`Prompt pro ${label} smazán`);
   }
 
   function addUserPromptToCategory(category, name, desc, text, system) {
@@ -940,7 +978,7 @@ function updatePromptActions() {
     closePromptLibraryModal();
   }
 
- function showAddCustomPromptModal() {
+   function showAddCustomPromptModal() {
     const category = state.selectedPromptCategory;
     if (!category || category === 'secondary') return;
 
@@ -969,7 +1007,7 @@ function updatePromptActions() {
     }
   }
 
-return {
+ return {
         initializePromptLibrary,
         getStoredCustomPromptLibrary,
         saveStoredCustomPromptLibrary,
@@ -1000,7 +1038,7 @@ return {
          addUserPromptToCategory,
          deleteUserPromptByIndex,
          isUserAddedPrompt,
-// Secondary prompts
+         // Secondary prompts
          getStoredSecondaryPrompts,
          saveStoredSecondaryPrompts,
          showSecondaryPromptsModal,
@@ -1014,9 +1052,14 @@ return {
          deleteTopicSecondaryPrompt,
          loadSecondaryEditorForCurrentSelection,
          applySecondaryPrompt,
-         // Topic secondary prompts
+         // Topic-specific secondary prompts
+         getStoredTopicSpecificSecondaryPrompt,
+         saveStoredTopicSpecificSecondaryPrompt,
+         deleteStoredTopicSpecificSecondaryPrompt,
+         getTopicSpecificPromptForEdit,
+         // Topic shared prompts
          getStoredTopicSecondaryPrompts,
          saveStoredTopicSecondaryPrompts,
          getDefaultTopicPrompt
-       };
+      };
     }
