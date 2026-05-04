@@ -668,7 +668,9 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
     function buildPromptMessages(batch) {
       const items = batch.map(e => {
         const def = e.definice || e.def || '';
-        return `${e.key} | ${e.greek}\nDEF: ${def}`;
+        const tvar = e.orig || e.tvaroslovi || '';
+        const tvarPart = tvar ? `\nT: ${tvar}` : '';
+        return `${e.key} | ${e.greek}\nDEF: ${def}${tvarPart}`;
       }).join('\n\n');
       
       const userPromptTemplate = getActiveMainPromptTemplate('batch');
@@ -932,7 +934,9 @@ async function copyModelTestPromptPreview() {
     function buildPromptMessagesForModelTest(batch, promptType) {
       const items = batch.map(e => {
         const def = e.definice || e.def || '';
-        return `${e.key} | ${e.greek}\nDEF: ${def}`;
+        const tvar = e.orig || e.tvaroslovi || '';
+        const tvarPart = tvar ? `\nT: ${tvar}` : '';
+        return `${e.key} | ${e.greek}\nDEF: ${def}${tvarPart}`;
       }).join('\n\n');
 
       const targetLang = localStorage.getItem('strong_target_lang') || 'cz';

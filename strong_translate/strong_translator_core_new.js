@@ -79,7 +79,9 @@ function extractVyskyt(defText) {
 export function buildPromptMessages(batch) {
   const items = batch.map(e => {
     const def = e.definice || e.def || '';
-    return `${e.key} | ${e.greek}\nDEF: ${def}`;
+    const tvar = e.orig || e.tvaroslovi || '';
+    const tvarPart = tvar ? `\nT: ${tvar}` : '';
+    return `${e.key} | ${e.greek}\nDEF: ${def}${tvarPart}`;
   }).join('\n\n');
   const userContent = String(DEFAULT_PROMPT || '')
     .replace(/{TARGET_LANG}/g, 'češtiny')
