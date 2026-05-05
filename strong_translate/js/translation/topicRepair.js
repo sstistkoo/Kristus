@@ -343,18 +343,27 @@ function renderTopicRepairModal() {
           </label>
           <span id="topicRepairBulkRunSummary" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3)"></span>
         </div>
-        <div style="margin-top:8px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">${t('topicRepair.modal.batchPromptHelp')}</div>
-          <textarea id="topicRepairBatchPrompt" style="width:100%;min-height:160px;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.45"></textarea>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-            <button class="hbtn" type="button" onclick="saveTopicRepairBatchPromptDraft()">${t('topicRepair.modal.savePrompt')}</button>
-            <button class="hbtn" type="button" onclick="resetTopicRepairBatchPromptToDefault()">${t('topicRepair.modal.defaultFromCatalog')}</button>
-            <button class="hbtn grn" id="topicRepairBulkRunBtn" type="button" onclick="runTopicRepairBulkTranslation()">${t('topicRepair.modal.bulkRunSelected')}</button>
-          </div>
-          <div style="font-size:11px;color:var(--txt3);margin-top:8px">
-            ${t('topicRepair.modal.tipPauseFirst')}
-          </div>
-        </div>
+<div style="margin-top:8px">
+           <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">${t('topicRepair.modal.batchPromptHelp')}</div>
+           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+             <div style="display:flex;flex-direction:column;min-height:0">
+               <label for="topicRepairSystemPrompt" style="font-size:0.79rem;color:var(--txt2);display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t('topicRepair.modal.systemPromptLabel')}</label>
+               <textarea id="topicRepairSystemPrompt" class="topic-repair-system-prompt" style="width:100%;min-height:140px;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.45;box-sizing:border-box"></textarea>
+             </div>
+             <div style="display:flex;flex-direction:column;min-height:0">
+               <label for="topicRepairUserPrompt" style="font-size:0.79rem;color:var(--txt2);display:block;margin-bottom:4px">${t('topicRepair.modal.userPromptLabel')}</label>
+               <textarea id="topicRepairUserPrompt" class="topic-repair-user-prompt" style="width:100%;min-height:140px;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.45;box-sizing:border-box"></textarea>
+             </div>
+           </div>
+           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+             <button class="hbtn" type="button" onclick="saveTopicRepairBatchPromptDraft()">${t('topicRepair.modal.savePrompt')}</button>
+             <button class="hbtn" type="button" onclick="resetTopicRepairBatchPromptToDefault()">${t('topicRepair.modal.defaultFromCatalog')}</button>
+             <button class="hbtn grn" id="topicRepairBulkRunBtn" type="button" onclick="runTopicRepairBulkTranslation()">${t('topicRepair.modal.bulkRunSelected')}</button>
+           </div>
+           <div style="font-size:11px;color:var(--txt3);margin-top:8px">
+             ${t('topicRepair.modal.tipPauseFirst')}
+           </div>
+         </div>
       </details>
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px">
         <div style="font-size:12px;color:var(--txt);margin-bottom:6px"><b>${t('topicRepair.modal.topicInListTitle')}</b> — ${t('topicRepair.modal.topicInListHint')}</div>
@@ -796,9 +805,19 @@ function findNextTopicRepairWaitingTask(state) {
 }
 
 const TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX = 'strong_topic_repair_batch_prompt_v1_';
+const TOPIC_REPAIR_BATCH_SYSTEM_PROMPT_SUFFIX = '_sys';
+const TOPIC_REPAIR_BATCH_USER_PROMPT_SUFFIX = '_usr';
 
 function getTopicRepairBatchPromptStorageKey(topicId) {
   return `${TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX}${topicId}`;
+}
+
+function getTopicRepairSystemPromptStorageKey(topicId) {
+  return `${TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX}${topicId}${TOPIC_REPAIR_BATCH_SYSTEM_PROMPT_SUFFIX}`;
+}
+
+function getTopicRepairUserPromptStorageKey(topicId) {
+  return `${TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX}${topicId}${TOPIC_REPAIR_BATCH_USER_PROMPT_SUFFIX}`;
 }
 
 function applyPromptLanguageTokens(promptText) {
@@ -824,16 +843,27 @@ function applyPromptLanguageTokens(promptText) {
     .replace(/{SOURCE_LANG}/g, sourceName);
 }
 
-function getDefaultBatchTopicPromptTemplate(topicId) {
+function getDefaultBatchTopicSystemPrompt(topicId) {
+  return getResolvedSystemMessage() || '';
+}
+
+function getDefaultBatchTopicUserPrompt(topicId) {
   const template = TOPIC_BATCH_TEMPLATES[topicId] || getResolvedDefaultPrompt() || '';
   return String(template).trim();
 }
 
-function getTopicRepairBatchPromptTemplate(topicId) {
-  const key = getTopicRepairBatchPromptStorageKey(topicId);
+function getTopicRepairSystemPrompt(topicId) {
+  const key = getTopicRepairSystemPromptStorageKey(topicId);
   const saved = String(localStorage.getItem(key) || '').trim();
   if (saved) return saved;
-  return getDefaultBatchTopicPromptTemplate(topicId);
+  return getDefaultBatchTopicSystemPrompt(topicId);
+}
+
+function getTopicRepairUserPrompt(topicId) {
+  const key = getTopicRepairUserPromptStorageKey(topicId);
+  const saved = String(localStorage.getItem(key) || '').trim();
+  if (saved) return saved;
+  return applyPromptLanguageTokens(getDefaultBatchTopicUserPrompt(topicId));
 }
 
 function saveTopicRepairBatchPromptDraft() {
@@ -844,9 +874,11 @@ function saveTopicRepairBatchPromptDraft() {
     showToast(t('toast.prompt.pickSpecificTopicSave'));
     return;
   }
-  const ta = document.getElementById('topicRepairBatchPrompt');
-  if (!ta) return;
-  localStorage.setItem(getTopicRepairBatchPromptStorageKey(topicId), String(ta.value || ''));
+  const sysTa = document.getElementById('topicRepairSystemPrompt');
+  const usrTa = document.getElementById('topicRepairUserPrompt');
+  if (!sysTa || !usrTa) return;
+  localStorage.setItem(getTopicRepairSystemPromptStorageKey(topicId), String(sysTa.value || ''));
+  localStorage.setItem(getTopicRepairUserPromptStorageKey(topicId), String(usrTa.value || ''));
   showToast(t('toast.batchPrompt.saved', { topic: TOPIC_LABELS[topicId] || topicId }));
 }
 
@@ -858,9 +890,12 @@ function resetTopicRepairBatchPromptToDefault() {
     showToast(t('toast.prompt.pickSpecificTopicReset'));
     return;
   }
-  localStorage.removeItem(getTopicRepairBatchPromptStorageKey(topicId));
-  const ta = document.getElementById('topicRepairBatchPrompt');
-  if (ta) ta.value = applyPromptLanguageTokens(getDefaultBatchTopicPromptTemplate(topicId));
+  localStorage.removeItem(getTopicRepairSystemPromptStorageKey(topicId));
+  localStorage.removeItem(getTopicRepairUserPromptStorageKey(topicId));
+  const sysTa = document.getElementById('topicRepairSystemPrompt');
+  const usrTa = document.getElementById('topicRepairUserPrompt');
+  if (sysTa) sysTa.value = getDefaultBatchTopicSystemPrompt(topicId);
+  if (usrTa) usrTa.value = applyPromptLanguageTokens(getDefaultBatchTopicUserPrompt(topicId));
   showToast(t('toast.batchPrompt.reset', { topic: TOPIC_LABELS[topicId] || topicId }));
 }
 
@@ -871,15 +906,19 @@ function refreshTopicRepairBatchPromptEditor() {
   state.bulkTopicId = topicId;
   const row = document.getElementById('topicRepairBulkListFilterRow');
   if (row) row.style.display = topicId === 'all' ? 'flex' : 'none';
-  const ta = document.getElementById('topicRepairBatchPrompt');
-  if (!ta) return;
+  const sysTa = document.getElementById('topicRepairSystemPrompt');
+  const usrTa = document.getElementById('topicRepairUserPrompt');
+  if (!sysTa || !usrTa) return;
   if (topicId === 'all') {
-    ta.readOnly = true;
-    ta.value = t('topicRepair.bulk.allModeHelp');
+    sysTa.readOnly = true;
+    usrTa.readOnly = true;
+    sysTa.value = t('topicRepair.bulk.allModeHelp');
+    usrTa.value = t('topicRepair.bulk.allModeHelp');
   } else {
-    ta.readOnly = false;
-    const template = getTopicRepairBatchPromptTemplate(topicId);
-    ta.value = applyPromptLanguageTokens(template);
+    sysTa.readOnly = false;
+    usrTa.readOnly = false;
+    sysTa.value = getTopicRepairSystemPrompt(topicId);
+    usrTa.value = getTopicRepairUserPrompt(topicId);
   }
   updateTopicRepairModalUI();
 }
@@ -1035,7 +1074,7 @@ function initTopicRepairBulkRunInputs() {
 }
 
 /** Jedno téma — vnitřní smyčka dávek (režim „Vše“ i jedno téma z editoru). */
-async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate, onlyFailed, bs) {
+async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, userPromptTemplate, onlyFailed, bs) {
   const tasks = state.topicRepairState.tasks.filter(t => t && t.topicId === topicId && t.includeBulk !== false);
   const picked = onlyFailed
     ? tasks.filter(t => t.status === 'failed' || !hasMeaningfulValue(t.candidateValue))
@@ -1052,9 +1091,9 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
     const batchKeys = keys.slice(processed, processed + bs);
     const hesla = buildTopicRepairBatchHeslaText(batchKeys, topicId);
-    const userContent = promptTemplate.includes('{HESLA}')
+    const userContent = userPromptTemplate.includes('{HESLA}')
       ? promptTemplate.replace(/{HESLA}/g, hesla)
-      : `${promptTemplate}\n\n${hesla}`;
+      : `${userPromptTemplate}\n\n${hesla}`;
 
     const prov = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
     const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
@@ -1064,8 +1103,9 @@ async function runTopicRepairBulkTranslationCore(state, topicId, promptTemplate,
       throw new Error('missing_api_key');
     }
 
+    const sysContent = String(systemPrompt || getResolvedSystemMessage() || '').trim();
     const raw = await callAIWithRetry(prov, apiKey, model, [
-      { role: 'system', content: getResolvedSystemMessage() },
+      { role: 'system', content: sysContent },
       { role: 'user', content: enforceSpecialistaFormat(userContent) }
     ]);
     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
@@ -1165,26 +1205,30 @@ async function runTopicRepairBulkTranslation() {
         showToast(t('toast.topicRepair.pickTopicInAllMode'));
         return;
       }
-      let ranAny = false;
-      for (let ti = 0; ti < topicsToRun.length; ti++) {
-        const topicId = topicsToRun[ti];
-        const promptTemplate = applyPromptLanguageTokens(String(getTopicRepairBatchPromptTemplate(topicId) || '').trim());
-        if (!promptTemplate) {
-          log(`⚠ Přeskočeno téma ${topicId} — prázdný uložený batch prompt.`);
-          continue;
-        }
-        const res = await runTopicRepairBulkTranslationCore(state, topicId, promptTemplate, onlyFailed, bs);
-        if (res.count > 0) ranAny = true;
-        if (ti < topicsToRun.length - 1 && iv0 > 0) await sleepMs(iv0 * 1000);
-      }
-      showToast(ranAny ? t('topicRepair.bulkAllDone', { count: topicsToRun.length }) : t('topicRepair.bulkAllNone'));
-    } else {
-      const promptTemplate = applyPromptLanguageTokens(String(document.getElementById('topicRepairBatchPrompt')?.value || '').trim());
-      if (!promptTemplate) {
-        showToast(t('toast.batchPrompt.empty'));
-        return;
-      }
-      const res = await runTopicRepairBulkTranslationCore(state, selTopic, promptTemplate, onlyFailed, bs);
+let ranAny = false;
+       for (let ti = 0; ti < topicsToRun.length; ti++) {
+         const topicId = topicsToRun[ti];
+         const sysPrompt = getTopicRepairSystemPrompt(topicId);
+         const usrPrompt = applyPromptLanguageTokens(String(getTopicRepairUserPrompt(topicId) || '').trim());
+         if (!usrPrompt) {
+           log(`⚠ Přeskočeno téma ${topicId} — prázdný uložený batch prompt.`);
+           continue;
+         }
+         const res = await runTopicRepairBulkTranslationCore(state, topicId, sysPrompt, usrPrompt, onlyFailed, bs);
+         if (res.count > 0) ranAny = true;
+         if (ti < topicsToRun.length - 1 && iv0 > 0) await sleepMs(iv0 * 1000);
+       }
+       showToast(ranAny ? t('topicRepair.bulkAllDone', { count: topicsToRun.length }) : t('topicRepair.bulkAllNone'));
+     } else {
+       const sysTa = document.getElementById('topicRepairSystemPrompt');
+       const usrTa = document.getElementById('topicRepairUserPrompt');
+       const sysPrompt = sysTa ? sysTa.value.trim() : '';
+       const usrPrompt = applyPromptLanguageTokens(String(usrTa?.value || '').trim());
+       if (!usrPrompt) {
+         showToast(t('toast.batchPrompt.empty'));
+         return;
+       }
+       const res = await runTopicRepairBulkTranslationCore(state, selTopic, sysPrompt, usrPrompt, onlyFailed, bs);
       if (res.count === 0) {
         showToast(t('toast.batchRun.nothingSelected'));
         return;
