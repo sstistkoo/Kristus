@@ -826,20 +826,14 @@ function applyPromptLanguageTokens(promptText) {
 
 function getDefaultBatchTopicPromptTemplate(topicId) {
   const template = TOPIC_BATCH_TEMPLATES[topicId] || getResolvedDefaultPrompt() || '';
-  console.log(`[TopicRepair] getDefaultBatchTopicPromptTemplate(topicId="${topicId}") → using ${TOPIC_BATCH_TEMPLATES[topicId] ? 'TOPIC_BATCH_TEMPLATES' : 'DEFAULT_PROMPT'}, length:`, template.length);
   return String(template).trim();
 }
 
 function getTopicRepairBatchPromptTemplate(topicId) {
   const key = getTopicRepairBatchPromptStorageKey(topicId);
   const saved = String(localStorage.getItem(key) || '').trim();
-  if (saved) {
-    console.log(`[TopicRepair] getTopicRepairBatchPromptTemplate(topicId="${topicId}") → USING STORED (key="${key}")`);
-    return saved;
-  }
-  const def = getDefaultBatchTopicPromptTemplate(topicId);
-  console.log(`[TopicRepair] getTopicRepairBatchPromptTemplate(topicId="${topicId}") → USING DEFAULT (key="${key}" not found)`);
-  return def;
+  if (saved) return saved;
+  return getDefaultBatchTopicPromptTemplate(topicId);
 }
 
 function saveTopicRepairBatchPromptDraft() {
@@ -875,7 +869,6 @@ function refreshTopicRepairBatchPromptEditor() {
   if (!topicRepairState) return;
   const topicId = document.getElementById('topicRepairBulkTopicSelect')?.value || state.bulkTopicId || 'all';
   state.bulkTopicId = topicId;
-  console.log(`[TopicRepair] refreshTopicRepairBatchPromptEditor() → topicId="${topicId}"`);
   const row = document.getElementById('topicRepairBulkListFilterRow');
   if (row) row.style.display = topicId === 'all' ? 'flex' : 'none';
   const ta = document.getElementById('topicRepairBatchPrompt');
@@ -886,7 +879,6 @@ function refreshTopicRepairBatchPromptEditor() {
   } else {
     ta.readOnly = false;
     const template = getTopicRepairBatchPromptTemplate(topicId);
-    console.log(`[TopicRepair] Template for ${topicId}:\n`, template.substring(0, 200));
     ta.value = applyPromptLanguageTokens(template);
   }
   updateTopicRepairModalUI();
@@ -1232,15 +1224,8 @@ function setTopicRepairBulkIncludeAll(checked) {
 
 function getTopicPromptTemplateByPromptType(promptType) {
   const topicType = String(promptType || '').trim();
-  if (!topicType || !topicType.startsWith('preset_topic_')) {
-    console.log('[TopicRepair] getTopicPromptTemplateByPromptType: invalid promptType:', promptType);
-    return '';
-  }
-  const catalog = getModelTestPromptCatalog();
-  const template = String(catalog?.[topicType]?.template || '').trim();
-  console.log(`[TopicRepair] getTopicPromptTemplateByPromptType("${promptType}") → found:`, !!template, 
-    '| catalog has keys:', catalog ? Object.keys(catalog).join(', ') : 'NO CATALOG');
-  return template;
+  if (!topicType || !topicType.startsWith('preset_topic_')) return '';
+  return String(getModelTestPromptCatalog()?.[topicType]?.template || '').trim();
 }
 
 function getTopicPromptTemplate(topicId) {
