@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Ð’ÑÐ¸Ñ‡ÐºÐ¸",
     "topicRepair.modal.allLimitTypes":  "Ð—Ð° â€žÐ’ÑÐ¸Ñ‡ÐºÐ¸â€œ Ð¾Ð³Ñ€Ð°Ð½Ð¸Ñ‡ÐµÑ‚Ðµ Ñ‚Ð¸Ð¿Ð¾Ð²ÐµÑ‚Ðµ Ñ‚ÐµÐ¼Ð¸:",
     "topicRepair.modal.batchPromptSectionHint":  "ÐŸÐ°ÐºÐµÑ‚Ð½Ð°Ñ‚Ð° Ð¿Ð¾Ð´ÐºÐ°Ð½Ð° Ð¸ Ð³Ñ€ÑƒÐ¿Ð¾Ð²Ð¸ÑÑ‚ Ð¿Ñ€ÐµÐ²Ð¾Ð´ âš¡ Ð¾ÑÑ‚Ð°Ð²Ð°Ñ‚ Ð² ÑÐµÐºÑ†Ð¸ÑÑ‚Ð° â€žÐŸÐ°ÐºÐµÑ‚Ð½Ð° ÐºÐ¾Ñ€ÐµÐºÑ†Ð¸Ñâ€œ Ð¿Ð¾-Ð³Ð¾Ñ€Ðµ â€” Ð¸Ð·Ð±Ð¾Ñ€ÑŠÑ‚ Ð½Ð° Ñ‚ÐµÐ¼Ð¸ Ðµ ÑÑŠÑ‰Ð¸ÑÑ‚.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Ð¡Ñ‚Ð°Ñ€Ñ‚Ð¸Ñ€Ð°Ð¹Ñ‚Ðµ Ð¿Ð¾ÑÐ»ÐµÐ´Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ½ Ñ€ÐµÐ¼Ð¾Ð½Ñ‚",
     "topicRepair.log.emptyResponse":  "(Ð¿Ñ€Ð°Ð·ÐµÐ½ Ð¾Ñ‚Ð³Ð¾Ð²Ð¾Ñ€)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ ÐšÐ¾Ñ€ÐµÐºÑ†Ð¸Ñ Ð½Ð° RAW AI {key}.{topic}: Ð¾Ñ‚Ð¿ÐµÑ‡Ð°Ñ‚Ð²Ð° Ð² ÐºÐ¾Ð½Ð·Ð¾Ð»Ð°Ñ‚Ð°",

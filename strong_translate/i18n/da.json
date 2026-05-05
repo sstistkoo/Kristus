@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Alle",
     "topicRepair.modal.allLimitTypes":  "For \"Alle\" skal du begrÃ¦nse emnetyper:",
     "topicRepair.modal.batchPromptSectionHint":  "Batchprompt og âš¡ masseoversÃ¦ttelse forbliver i afsnittet \"Batchfix\" ovenfor â€“ emnevalget er det samme.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Start sekventiel reparation",
     "topicRepair.log.emptyResponse":  "(blankt svar)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI rettelse {key}.{topic}: udskriver DA til konsollen",

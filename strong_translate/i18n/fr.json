@@ -789,6 +789,8 @@
     "topicRepair.modal.all":  "Tous",
     "topicRepair.modal.allLimitTypes":  "Pour Â«Â TousÂ Â», limitez les types de sujetsÂ :",
     "topicRepair.modal.batchPromptSectionHint":  "L\u0027invite par lots et la traduction groupÃ©e âš¡ restent dans la section \"Correction par lots\" ci-dessus - la sÃ©lection du sujet est la mÃªme.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ DÃ©marrer la rÃ©paration sÃ©quentielle",
     "topicRepair.log.emptyResponse":  "(rÃ©ponse vide)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ Correction de RAW AI {key}.{topic}Â : imprime FR sur la console",

@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Minden",
     "topicRepair.modal.allLimitTypes":  "Az \"Ã–sszes\" esetÃ©n korlÃ¡tozza a tÃ©matÃ­pusokat:",
     "topicRepair.modal.batchPromptSectionHint":  "A kÃ¶tegelt felszÃ³lÃ­tÃ¡s Ã©s a âš¡ tÃ¶meges fordÃ­tÃ¡s a fenti â€žKÃ¶tegelt javÃ­tÃ¡sâ€ rÃ©szben marad â€“ a tÃ©mavÃ¡lasztÃ¡s ugyanaz.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ IndÃ­tsa el a szekvenciÃ¡lis javÃ­tÃ¡st",
     "topicRepair.log.emptyResponse":  "(Ã¼res vÃ¡lasz)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI javÃ­tÃ¡s {key}.{topic}: HU nyomtatÃ¡sa a konzolra",

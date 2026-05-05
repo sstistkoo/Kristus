@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "å…¨ã¦",
     "topicRepair.modal.allLimitTypes":  "ã€Œã™ã¹ã¦ã€ã®å ´åˆã€ãƒˆãƒ”ãƒƒã‚¯ã®ç¨®é¡žã‚’åˆ¶é™ã—ã¾ã™ã€‚",
     "topicRepair.modal.batchPromptSectionHint":  "ãƒãƒƒãƒ ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã¨ âš¡ ä¸€æ‹¬ç¿»è¨³ã¯ã€ä¸Šè¨˜ã®ã€Œãƒãƒƒãƒä¿®æ­£ã€ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã«æ®‹ã‚Šã¾ã™ã€‚ãƒˆãƒ”ãƒƒã‚¯ã®é¸æŠžã¯åŒã˜ã§ã™ã€‚",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ é †æ¬¡ä¿®å¾©ã‚’é–‹å§‹ã™ã‚‹",
     "topicRepair.log.emptyResponse":  "(ç©ºç­”)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI ä¿®æ­£ {key}.{topic}: JA ã‚’ã‚³ãƒ³ã‚½ãƒ¼ãƒ«ã«å‡ºåŠ›ã—ã¾ã™",

@@ -789,6 +789,8 @@
     "topicRepair.modal.all":  "Todos",
     "topicRepair.modal.allLimitTypes":  "Para \"Todos\", limite os tipos de tÃ³picos:",
     "topicRepair.modal.batchPromptSectionHint":  "A solicitaÃ§Ã£o em lote e a traduÃ§Ã£o em massa permanecem na seÃ§Ã£o \"CorreÃ§Ã£o em lote\" acima â€” a seleÃ§Ã£o do tÃ³pico Ã© a mesma.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Iniciar reparo sequencial",
     "topicRepair.log.emptyResponse":  "(resposta em branco)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ CorreÃ§Ã£o RAW AI {key}.{topic}: imprime PT no console",

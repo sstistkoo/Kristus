@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "×›Ö¼Ö¹×œ",
     "topicRepair.modal.allLimitTypes":  "×¢×‘×•×¨ \"×”×›×œ\", ×”×’×‘×œ ×¡×•×’×™ × ×•×©××™×:",
     "topicRepair.modal.batchPromptSectionHint":  "×‘×§×©×ª ××¦×•×•×” ×•×ª×¨×’×•× ×‘×›×ž×•×ª ×’×“×•×œ×” × ×©××¨×™× ×‘×§×˜×¢ \"×ª×™×§×•×Ÿ ××¦×•×•×”\" ×œ×ž×¢×œ×” - ×‘×—×™×¨×ª ×”× ×•×©× ×–×”×”.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ ×”×ª×—×œ ×ª×™×§×•×Ÿ ×¨×¦×™×£",
     "topicRepair.log.emptyResponse":  "(×ª×©×•×‘×” ×¨×™×§×”)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ ×ª×™×§×•×Ÿ RAW AI {key}.{topic}: ×ž×“×¤×™×¡ HE ×œ×ž×¡×•×£",

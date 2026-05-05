@@ -789,6 +789,8 @@
     "topicRepair.modal.all":  "Wszystko",
     "topicRepair.modal.allLimitTypes":  "W trybie â€žWszystkoâ€ ogranicz typy tematÃ³w:",
     "topicRepair.modal.batchPromptSectionHint":  "Batch prompt i âš¡ tÅ‚umaczenie zbiorcze pozostajÄ… w sekcji â€žNaprawa zbiorczaâ€ powyÅ¼ej â€” wybÃ³r tematÃ³w jest wspÃ³lny.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Uruchom naprawÄ™ sekwencyjnÄ…",
     "topicRepair.log.emptyResponse":  "(pusta odpowiedÅº)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI naprawa {key}.{topic}: wypisano do konsoli",

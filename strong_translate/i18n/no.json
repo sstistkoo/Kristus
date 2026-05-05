@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Alle",
     "topicRepair.modal.allLimitTypes":  "For Â«AlleÂ» begrenser du emnetyper:",
     "topicRepair.modal.batchPromptSectionHint":  "Batch-forespÃ¸rsel og âš¡ masseoversettelse forblir i Â«Batch-fiksÂ»-delen ovenfor â€“ emnevalget er det samme.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Start sekvensiell reparasjon",
     "topicRepair.log.emptyResponse":  "(blankt svar)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI-fiks {key}.{topic}: skriver ut NO til konsollen",

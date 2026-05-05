@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "TÃ¼m",
     "topicRepair.modal.allLimitTypes":  "\"TÃ¼mÃ¼\" iÃ§in konu tÃ¼rlerini sÄ±nÄ±rlayÄ±n:",
     "topicRepair.modal.batchPromptSectionHint":  "Toplu istem ve âš¡ toplu Ã§eviri, yukarÄ±daki \"Toplu DÃ¼zeltme\" bÃ¶lÃ¼mÃ¼nde kalÄ±r; konu seÃ§imi aynÄ±dÄ±r.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ SÄ±ralÄ± onarÄ±mÄ± baÅŸlatÄ±n",
     "topicRepair.log.emptyResponse":  "(boÅŸ cevap)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI {key}.{topic} dÃ¼zeltmesini yaptÄ±: konsola TR yazdÄ±rÄ±yor",

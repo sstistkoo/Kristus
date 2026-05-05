@@ -789,6 +789,8 @@
     "topicRepair.modal.all":  "Alle",
     "topicRepair.modal.allLimitTypes":  "BeschrÃ¤nken Sie fÃ¼r â€žAlleâ€œ die Thementypen:",
     "topicRepair.modal.batchPromptSectionHint":  "Batch-Eingabeaufforderung und âš¡ MassenÃ¼bersetzung bleiben im Abschnitt â€žBatch-Fixâ€œ oben â€“ die Themenauswahl ist dieselbe.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Sequentielle Reparatur starten",
     "topicRepair.log.emptyResponse":  "(leere Antwort)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI-Fix {key}.{topic}: Gibt DE auf der Konsole aus",
