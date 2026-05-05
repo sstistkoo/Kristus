@@ -949,6 +949,8 @@
     "topicRepair.modal.batchNone":  "â˜ Ð”Ð¾Ð·Ð°: Ð½ÐµÑ‚",
     "topicRepair.modal.batchPromptHelp":  "ÐŸÐ°ÐºÐµÑ‚Ð½Ñ‹Ð¹ Ð¿Ñ€Ð¾Ð¼Ð¿Ñ‚ (ÑÐ¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚Ðµ Ð´Ð»Ñ ÐºÐ°Ð¶Ð´Ð¾Ð¹ Ñ‚ÐµÐ¼Ñ‹). Ð—Ð°Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»ÑŒ \u003cspan style=\"font-family:\u0027JetBrains Mono\u0027,monospace\"\u003e{HESLA}\u003c/span\u003e = Ð²Ñ…Ð¾Ð´Ð½Ñ‹Ðµ Ð·Ð°Ð¿Ð¸ÑÐ¸.",
     "topicRepair.modal.batchPromptSectionHint":  "ÐŸÐ°ÐºÐµÑ‚Ð½Ñ‹Ð¹ Ð¿Ñ€Ð¾Ð¼Ð¿Ñ‚ Ð¸ âš¡Ð¼Ð°ÑÑÐ¾Ð²Ñ‹Ð¹ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´ Ð¾ÑÑ‚Ð°ÑŽÑ‚ÑÑ Ð² Ñ€Ð°Ð·Ð´ÐµÐ»Ðµ Â«ÐŸÐ°ÐºÐµÑ‚Ð½Ð¾Ðµ Ð¸ÑÐ¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸ÐµÂ» Ð²Ñ‹ÑˆÐµ â€” Ð²Ñ‹Ð±Ð¾Ñ€ Ñ‚ÐµÐ¼ Ñ‚Ð¾Ñ‚ Ð¶Ðµ.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.batchSize":  "ÐŸÐ°ÐºÐµÑ‚ (Ð¿Ð°Ñ€Ð¾Ð»Ð¸)",
     "topicRepair.modal.batchSize.title":  "Ð¡Ð¸Ð½Ñ…Ñ€Ð¾Ð½Ð¸Ð·Ð¸Ñ€ÑƒÐµÑ‚ ÑÐºÑ€Ñ‹Ñ‚Ñ‹Ð¹ batchSizeRun (Ñ‚Ð°Ðº Ð¶Ðµ, ÐºÐ°Ðº AUTO)",
     "topicRepair.modal.bulkHint":  "ÐžÑ‡ÐµÑ€ÐµÐ´ÑŒ Ð¿Ð¾ÑÐ»ÐµÐ´Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾ÑÑ‚Ð¸ Ð½Ðµ Ð·Ð°Ð¿ÑƒÑÐºÐ°ÐµÑ‚ÑÑ. Ð Ð°Ð·Ð²ÐµÑ€Ð½Ð¸Ñ‚Ðµ Â«ÐœÐ°ÑÑÐ¾Ð²Ð¾Ðµ Ð¸ÑÐ¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸ÐµÂ», Ð¿Ñ€Ð¾Ð²ÐµÑ€ÑŒÑ‚Ðµ Ð¿Ð¾Ð´ÑÐºÐ°Ð·ÐºÑƒ Ð¸ Ð´Ð°Ð¹Ñ‚Ðµ âš¡ ÐœÐ°ÑÑÐ¾Ð²Ñ‹Ð¹ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´.",

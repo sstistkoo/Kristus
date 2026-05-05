@@ -789,6 +789,8 @@
     "topicRepair.modal.all":  "Todo",
     "topicRepair.modal.allLimitTypes":  "Para \"Todos\", limite los tipos de temas:",
     "topicRepair.modal.batchPromptSectionHint":  "El mensaje por lotes y la traducciÃ³n masiva âš¡ permanecen en la secciÃ³n \"CorrecciÃ³n por lotes\" de arriba; la selecciÃ³n de temas es la misma.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Iniciar reparaciÃ³n secuencial",
     "topicRepair.log.emptyResponse":  "(respuesta en blanco)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ CorrecciÃ³n RAW AI {key}.{topic}: imprime ES en la consola",

@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Ð²ÑÐµ",
     "topicRepair.modal.allLimitTypes":  "Ð”Ð»Ñ \"Ð’ÑÑ–\" Ð¾Ð±Ð¼ÐµÐ¶Ñ‚Ðµ Ñ‚Ð¸Ð¿Ð¸ Ñ‚ÐµÐ¼:",
     "topicRepair.modal.batchPromptSectionHint":  "ÐŸÐ°ÐºÐµÑ‚Ð½Ð° Ð¿Ñ–Ð´ÐºÐ°Ð·ÐºÐ° Ñ‚Ð° Ð¼Ð°ÑÐ¾Ð²Ð¸Ð¹ Ð¿ÐµÑ€ÐµÐºÐ»Ð°Ð´ âš¡ Ð·Ð°Ð»Ð¸ÑˆÐ°ÑŽÑ‚ÑŒÑÑ Ð² Ñ€Ð¾Ð·Ð´Ñ–Ð»Ñ– Â«ÐŸÐ°ÐºÐµÑ‚Ð½Ðµ Ð²Ð¸Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð½ÑÂ» Ð²Ð¸Ñ‰Ðµ â€” Ð²Ð¸Ð±Ñ–Ñ€ Ñ‚ÐµÐ¼Ð¸ Ñ‚Ð¾Ð¹ ÑÐ°Ð¼Ð¸Ð¹.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ ÐŸÐ¾Ñ‡Ð½Ñ–Ñ‚ÑŒ Ð¿Ð¾ÑÐ»Ñ–Ð´Ð¾Ð²Ð½Ð¸Ð¹ Ñ€ÐµÐ¼Ð¾Ð½Ñ‚",
     "topicRepair.log.emptyResponse":  "(Ð¿ÑƒÑÑ‚Ð° Ð²Ñ–Ð´Ð¿Ð¾Ð²Ñ–Ð´ÑŒ)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ Ð’Ð¸Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð½Ñ RAW AI {key}.{topic}: Ð´Ñ€ÑƒÐºÑƒÑ” Ð² ÐºÐ¾Ð½ÑÐ¾Ð»Ñ–",

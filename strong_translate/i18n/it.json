@@ -789,6 +789,8 @@
     "topicRepair.modal.all":  "Tutto",
     "topicRepair.modal.allLimitTypes":  "Per \"Tutti\", limita i tipi di argomenti:",
     "topicRepair.modal.batchPromptSectionHint":  "La richiesta batch e la traduzione collettiva âš¡ rimangono nella sezione \"Correzione batch\" in alto: la selezione dell\u0027argomento Ã¨ la stessa.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Avviare la riparazione sequenziale",
     "topicRepair.log.emptyResponse":  "(risposta vuota)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ Correzione RAW AI {key}.{topic}: stampa IT su console",

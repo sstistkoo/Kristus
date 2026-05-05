@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Toate",
     "topicRepair.modal.allLimitTypes":  "Pentru â€žToateâ€, limitaÈ›i tipurile de subiecte:",
     "topicRepair.modal.batchPromptSectionHint":  "Solicitarea Ã®n lot È™i âš¡ traducerea Ã®n bloc rÄƒmÃ¢n Ã®n secÈ›iunea â€žRemediere Ã®n lotâ€ de mai sus â€” selecÈ›ia subiectului este aceeaÈ™i.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ ÃŽncepeÈ›i reparaÈ›ia secvenÈ›ialÄƒ",
     "topicRepair.log.emptyResponse":  "(rÄƒspuns necompletat)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ Remediere RAW AI {key}.{topic}: imprimÄƒ RO pe consolÄƒ",

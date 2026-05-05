@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Alla",
     "topicRepair.modal.allLimitTypes":  "FÃ¶r \"Alla\", begrÃ¤nsa Ã¤mnestyperna:",
     "topicRepair.modal.batchPromptSectionHint":  "Gruppuppmaning och âš¡ massÃ¶versÃ¤ttning finns kvar i avsnittet \"Batchfix\" ovan â€“ Ã¤mnesvalet Ã¤r detsamma.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Starta sekventiell reparation",
     "topicRepair.log.emptyResponse":  "(tomt svar)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI fix {key}.{topic}: skriver ut SV till konsolen",

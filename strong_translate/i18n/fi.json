@@ -796,6 +796,8 @@
     "topicRepair.modal.all":  "Kaikki",
     "topicRepair.modal.allLimitTypes":  "Rajoita aihetyyppejÃ¤ \"Kaikille\":",
     "topicRepair.modal.batchPromptSectionHint":  "ErÃ¤kehote ja âš¡ joukkokÃ¤Ã¤nnÃ¶s pysyvÃ¤t yllÃ¤ olevassa \"ErÃ¤korjaus\"-osiossa â€“ aihevalinta on sama.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ Aloita perÃ¤kkÃ¤inen korjaus",
     "topicRepair.log.emptyResponse":  "(tyhjÃ¤ vastaus)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI -korjaus {key}.{topic}: tulostaa FI konsoliin",

@@ -792,6 +792,8 @@
     "topicRepair.modal.all":  "VÅ¡etko",
     "topicRepair.modal.allLimitTypes":  "V reÅ¾ime â€žVÅ¡etkoâ€œ obmedz typy tÃ©m:",
     "topicRepair.modal.batchPromptSectionHint":  "Batch prompt a âš¡ hromadnÃ½ preklad zostÃ¡vajÃº v sekcii â€žHromadnÃ¡ opravaâ€œ vyÅ¡Å¡ie â€” vÃ½ber tÃ©m je rovnakÃ½.",
+    "topicRepair.modal.systemPromptLabel":  "System prompt (role: system)",
+    "topicRepair.modal.userPromptLabel":  "User prompt (role: user)",
     "topicRepair.modal.startSequential":  "â–¶ SpustiÅ¥ sekvenÄnÃº opravu",
     "topicRepair.log.emptyResponse":  "(prÃ¡zdna odpoveÄ)",
     "topicRepair.log.rawRepairPrinted":  "ðŸ“¥ RAW AI oprava {key}.{topic}: vypÃ­sanÃ© do konzoly",
