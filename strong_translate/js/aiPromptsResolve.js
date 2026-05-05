@@ -12,7 +12,44 @@ function tp(key, fallback) {
   return v !== key ? v : fallback;
 }
 
-export function getResolvedSystemMessage() {
+const TOPIC_SYSTEM_PROMPT_STORAGE_PREFIX = 'strong_topic_system_prompt_v1_';
+
+function getTopicSystemPromptStorageKey(topicId) {
+  return `${TOPIC_SYSTEM_PROMPT_STORAGE_PREFIX}${topicId}`;
+}
+
+export function getTopicSystemPromptTemplate(topicId) {
+  const key = getTopicSystemPromptStorageKey(topicId);
+  const stored = localStorage.getItem(key);
+  if (stored !== null) return stored.trim();
+  return '';
+}
+
+export function saveTopicSystemPrompt(text, topicId) {
+  const key = getTopicSystemPromptStorageKey(topicId);
+  if (text && text.trim()) {
+    localStorage.setItem(key, text.trim());
+  } else {
+    localStorage.removeItem(key);
+  }
+}
+
+export function resetTopicSystemPrompt(topicId) {
+  const key = getTopicSystemPromptStorageKey(topicId);
+  localStorage.removeItem(key);
+}
+
+export function getResolvedSystemMessage(topicId = null) {
+  // If a topic ID is provided and a topic-specific system prompt exists, use it.
+  // Otherwise fall back to the global custom/system prompt.
+  if (topicId) {
+    const topicSpecific = getTopicSystemPromptTemplate(topicId);
+    if (topicSpecific) return topicSpecific;
+  }
+  const custom = (typeof localStorage !== 'undefined')
+    ? (localStorage.getItem('strong_custom_system_prompt') || '')
+    : '';
+  if (custom && custom.trim()) return custom.trim();
   return tp('aiPrompts.core.system', core.SYSTEM_MESSAGE);
 }
 
