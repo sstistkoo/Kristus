@@ -976,34 +976,28 @@ if (state.selectedPromptCategory === 'secondary' && state.selectedTopicId) {
     closePromptLibraryModal();
   }
 
-    function showAddCustomPromptModal() {
-     const category = state.selectedPromptCategory;
-     if (!category || category === 'sekundarni') return;
+function showAddCustomPromptModal() {
+  const category = state.selectedPromptCategory;
+  if (!category || category === 'sekundarni') return;
 
-    const name = prompt(t('prompt.library.namePrompt') || 'Zadej název nového promptu:', '');
-    if (!name) return;
+  const name = prompt(t('prompt.library.namePrompt') || 'Zadej název nového promptu:', '');
+  if (!name) return;
 
-    const desc = prompt(t('prompt.library.descPrompt') || 'Zadej popis promptu (volitelné):', '') || '';
+  const desc = prompt(t('prompt.library.descPrompt') || 'Zadej popis promptu (volitelné):', '') || '';
 
-    const sysEl = document.getElementById('librarySystemPrompt');
-    const userEl = document.getElementById('libraryUserPrompt');
-    const text = userEl ? userEl.value : '';
-    const system = sysEl ? sysEl.value : getActiveSystemMessage();
+  // Use default values to avoid duplication and empty prompts
+  const text = 'zde vložit user prompt';
+  const system = 'zde vložit system prompt';
 
-    if (!text.trim()) {
-      showToast(t('toast.prompt.empty') || 'Uživatelský prompt nesmí být prázdný');
-      return;
-    }
-
-    const ok = addUserPromptToCategory(category, name, desc, text, system);
-    if (ok) {
-      rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
-      renderPromptList();
-      showToast(t('toast.prompt.saved') || 'Prompt uložen');
-    } else {
-      showToast(t('toast.prompt.duplicate') || 'Tento prompt již existuje v této kategorii');
-    }
+  const ok = addUserPromptToCategory(category, name, desc, text, system);
+  if (ok) {
+    rebuildPromptLibrary(localStorage.getItem('strong_prompt') || '');
+    renderPromptList();
+    showToast(t('toast.prompt.saved') || 'Prompt uložen');
+  } else {
+    showToast(t('toast.prompt.duplicate') || 'Tento prompt již existuje v této kategorii');
   }
+}
 
   return {
     initializePromptLibrary,
