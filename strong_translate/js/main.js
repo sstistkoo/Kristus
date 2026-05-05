@@ -735,18 +735,28 @@ ${t('aiPrompts.enforceSpecialistaExtra')}`;
        return getActiveMainPromptTemplate('batch');
      }
 
-      function getActiveSystemMessage() {
-        const custom = localStorage.getItem('strong_custom_system_prompt');
-        if (custom && custom.trim()) return custom.trim();
-        return getResolvedSystemMessage();
-      }
+       function getActiveSystemMessage() {
+         const custom = localStorage.getItem('strong_custom_system_prompt');
+         if (custom && custom.trim()) return custom.trim();
+         return getResolvedSystemMessage();
+       }
 
-      function getActiveSecondarySystemMessage() {
-        const secondary = localStorage.getItem('strong_secondary_system_prompt');
-        if (secondary && secondary.trim()) return secondary.trim();
-        // Fallback k hlavnímu systémovému promptu
-        return getActiveSystemMessage();
-      }
+       function getActiveSystemMessageForTopic(topicId) {
+         if (!topicId) return getActiveSystemMessage();
+         // Check for topic-specific system prompt first
+         const topicKey = 'strong_topic_system_prompt_v1_' + topicId;
+         const topicSpecific = localStorage.getItem(topicKey);
+         if (topicSpecific && topicSpecific.trim()) return topicSpecific.trim();
+         // Fall back to global
+         return getActiveSystemMessage();
+       }
+
+       function getActiveSecondarySystemMessage() {
+         const secondary = localStorage.getItem('strong_secondary_system_prompt');
+         if (secondary && secondary.trim()) return secondary.trim();
+         // Fallback k hlavnímu systémovému promptu
+         return getActiveSystemMessage();
+       }
 
       function getActiveSecondaryUserPrompt(context = 'batch') {
         const secondaryUser = localStorage.getItem('strong_secondary_user_prompt');
