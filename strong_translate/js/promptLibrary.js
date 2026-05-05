@@ -976,9 +976,9 @@ if (state.selectedPromptCategory === 'secondary' && state.selectedTopicId) {
     closePromptLibraryModal();
   }
 
-   function showAddCustomPromptModal() {
-    const category = state.selectedPromptCategory;
-    if (!category || category === 'secondary') return;
+    function showAddCustomPromptModal() {
+     const category = state.selectedPromptCategory;
+     if (!category || category === 'sekundarni') return;
 
     const name = prompt(t('prompt.library.namePrompt') || 'Zadej název nového promptu:', '');
     if (!name) return;
