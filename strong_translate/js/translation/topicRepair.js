@@ -7,73 +7,33 @@ import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPrompts
 // ─── VÝCHOZÍ SYSTÉMOVÝ PROMPT PRO DÁVKOVOU OPRAVU TÉMAT ───
 const BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
 
-// ─── TÉMATICKÉ BATCH ŠABLONY (kompletní user prompty s pravidly) ───
-const TOPIC_BATCH_TEMPLATES = {
+// ─── TÉMAT-SPECIFICKÉ DOPLŇKY PRO SYSTÉMOVÝ PROMPT ───
+const TOPIC_SPECIFIC_SYSTEM_PROMPTS = {
   definice: `PRAVIDLA PRO DEFINICI (D):
+- Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) přímo v závorce.
 - Biblické reference [Act], [Mat], [John] přepiš na české zkratky [Sk], [Mt], [Jan].
 - Překládej vše z EN do CZ (včetně termínů: properly, figuratively, lit., spec.).
-- Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici.
-NORMALIZACE: Nahraď __1. za 1. a __2. za 2. a pod.
-DŮLEŽITÉ: Vracet POUZE obsah pole D. Nepřekládej jiné části (V, P, K, S).
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-D: [překlad definice do češtiny]
-
-HESLA:
-{HESLA}`,
+DŮLEŽITÉ: Vracet POUZE obsah pole D. Nepřekládej jiné části (V, P, K, S).`,
 
   vyznam: `PRAVIDLA PRO VÝZNAM (V):
 - Doplňuj české přepisy cizích slov v závorce.
-- Zachovej věcnou přesnost a stručnost (max 1–2 věty).
-- Nepřidávej další informace, pouze překlad původního významu.
-DŮLEŽITÉ: Vracet POUZE obsah pole V. Nepřekládej jiné části (D, P, K, S).
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-V: [český význam]
-
-HESLA:
-{HESLA}`,
+- Zachovej věcnou přesnost a stručnost.
+DŮLEŽITÉ: Vracet POUZE obsah pole V. Nepřekládej jiné části (D, P, K, S).`,
 
   kjv: `PRAVIDLA PRO KJV (K):
 - Odvoď hlavní význam z kontextu KJV verse.
 - Překládej do češtiny s ohledem na biblekní kontext.
-- Zachovej stylistiku překladu KJV (hieratický jazyk).
-DŮLEŽITÉ: Vracet POUZE obsah pole K. Nepřekládej jiné části (V, D, P, S).
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-K: [překlad KJV významu do češtiny]
-
-HESLA:
-{HESLA}`,
+DŮLEŽITÉ: Vracet POUZE obsah pole K. Nepřekládej jiné části (V, D, P, S).`,
 
   puvod: `PRAVIDLA PRO PŮVOD (P):
 - Uveď: původní jazyk, původní písmo (s českým přepisem v závorce) a vývoj významu.
 - Doplňuj české přepisy cizích slov v závorce.
-- Zachovej faktickou přesnost a stručnost.
-DŮLEŽITÉ: Vracet POUZE obsah pole P. Nepřekládej jiné části (V, D, K, S).
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-P: [původ + český přepis + etymologie]
-
-HESLA:
-{HESLA}`,
+DŮLEŽITÉ: Vracet POUZE obsah pole P. Nepřekládej jiné části (V, D, K, S).`,
 
   specialista: `PRAVIDLA PRO SPECIALISTA (S):
 - Vysvětli teologický a biblický význam slova v kontextu.
 - Použij odborný český jazyk, 3–6 souvislých vět (žádné body ani seznamy).
-- Záměrně neopakuj obsah pole D nebo V, pouze rozveď teologický aspekt.
-DŮLEŽITÉ: Vracet POUZE obsah pole S. Nepřekládej jiné části (V, D, P, K).
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-S: [odborný český výklad 3–6 vět]
-
-HESLA:
-{HESLA}`
+DŮLEŽITÉ: Vracet POUZE obsah pole S. Nepřekládej jiné části (V, D, P, K).`
 };
 
 // ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
@@ -916,7 +876,7 @@ function applyPromptLanguageTokens(promptText) {
 }
 
 function getDefaultBatchTopicSystemPrompt(topicId) {
-  return BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT;
+  return TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId] || BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT;
 }
 
 function getDefaultBatchTopicUserPrompt(topicId) {
