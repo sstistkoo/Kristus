@@ -77,14 +77,14 @@ P: [etymologii a původ slova]
 HESLA:
 {HESLA}`,
 
-  specialista: `Napiš teologický a biblický výklad (S) pro dané slovo. Vysvětli teologický a biblický význam slova v kontextu. Použij odborný český jazyk, 3–6 souvislých vět (žádné body ani seznamy). Vracet POUZE obsah pole S. Nepřekládat jiné části (V, D, P, K).
+  specialista: `S (SPECIALISTA): [detailní odstavec 3-7 vět jako biblický specialista]. Odstavec má vysvětlit teologický a biblický význam slova v kontextu. Nepiš body ani seznam, jen souvislý odstavec.
 
-FORMÁT ODPOVĚDI:
-###[číslo]###
-S: [odborný český výklad 3–6 vět]
+  FORMÁT ODPOVĚDI:
+  ###[číslo]###
+  S: [odborný český výklad 3–7 vět]
 
-HESLA:
-{HESLA}`
+  HESLA:
+  {HESLA}`
 };
 
 export function createTopicRepairApi(deps) {
