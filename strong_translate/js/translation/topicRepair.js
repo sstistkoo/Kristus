@@ -972,10 +972,6 @@ function buildTopicRepairBatchHeslaText(keys, topicId) {
   }).join('\n\n---\n\n');
 }
 
-    return lines.join('\n');
-  }).join('\n\n---\n\n');
-}
-
 function getTopicBatchAiLabel(topicId) {
   return ({
     vyznam: 'VYZNAM',
