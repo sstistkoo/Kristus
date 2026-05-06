@@ -1091,9 +1091,9 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
     const batchKeys = keys.slice(processed, processed + bs);
     const hesla = buildTopicRepairBatchHeslaText(batchKeys, topicId);
-    const userContent = userPromptTemplate.includes('{HESLA}')
-      ? promptTemplate.replace(/{HESLA}/g, hesla)
-      : `${userPromptTemplate}\n\n${hesla}`;
+     const userContent = userPromptTemplate.includes('{HESLA}')
+       ? userPromptTemplate.replace(/{HESLA}/g, hesla)
+       : `${userPromptTemplate}\n\n${hesla}`;
 
     const prov = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
     const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
