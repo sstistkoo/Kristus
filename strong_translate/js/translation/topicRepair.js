@@ -1006,15 +1006,19 @@ function getTopicBatchAiLabel(topicId) {
 function parseTopicRepairBatchResponse(rawText, topicId) {
   const text = normalizeAiTopicRawText(rawText).trim();
   if (!text) return {};
-  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]\d+)/i);
+  // Akceptuj ###G66### i ###66### (písmeno volitelné)
+  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]?\d+)/i);
   const out = {};
-  const headerRe = /^#{2,6}\s*([gGhH])(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
+  const headerRe = /^#{2,6}\s*([gGhH]?)(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
   for (const block of blocks) {
     const b = String(block || '').trim();
     if (!b) continue;
     const header = b.match(headerRe);
     if (!header) continue;
-    const key = (String(header[1] || '') + String(header[2] || '')).toUpperCase();
+    // Pokud písmeno chybí, předpokládáme 'G' (default)
+    const letter = (header[1] || 'G').toUpperCase();
+    const num = header[2];
+    const key = letter + num;
     const rest = b.slice(header.index + header[0].length).trim();
     let val = String(extractTopicValueFromAI(rest, topicId, 'strict') || '').trim();
     if (!hasMeaningfulValue(val)) {
@@ -1030,15 +1034,19 @@ function extractTopicRepairBatchBlockForKey(rawText, key) {
   const text = String(normalizeAiTopicRawText(rawText) || '').trim();
   const upperKey = String(key || '').trim().toUpperCase();
   if (!text || !upperKey) return '';
-  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]\d+)/i);
-  const headerRe = /^#{2,6}\s*([gGhH])(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
+  // Akceptuj ###G66### i ###66###
+  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]?\d+)/i);
+  const headerRe = /^#{2,6}\s*([gGhH]?)(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
   for (const block of blocks) {
     const b = String(block || '').trim();
     if (!b) continue;
     const header = b.match(headerRe);
     if (!header) continue;
-    const k = (String(header[1] || '') + String(header[2] || '')).toUpperCase();
-    if (k === upperKey) return b;
+    const letter = (header[1] || 'G').toUpperCase();
+    const num = header[2];
+    const k = (letter + num).toUpperCase();
+    // Hledání s i bez písmene
+    if (k === upperKey || k === upperKey.replace(/^[GH]/, '')) return b;
   }
   return '';
 }
@@ -1163,23 +1171,25 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
     log(t('topicRepair.log.rawBatchPrinted', { topic: topicId }));
 
      const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
-     for (const key of batchKeys) {
-       const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
-       if (!task) continue;
-      const val = String(parsedMap[key] || '').trim();
-      if (hasMeaningfulValue(val)) {
-        task.candidateValue = val;
-        task.provider = prov;
-        task.status = 'done';
-        task.error = '';
-        task.checked = shouldAutoCheckTopicRepairTask(topicId, task.currentValue, val);
-        const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
-        syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
-      } else {
-        task.status = 'failed';
-        task.error = t('topicRepair.error.noValueForEntry');
-      }
-    }
+      for (const key of batchKeys) {
+        const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
+        if (!task) continue;
+       // Fallback: hledej jak s písmenem (G66) tak bez (66)
+       const numericKey = key.replace(/^[GH]/, '');
+       const val = String(parsedMap[key] || parsedMap[numericKey] || '').trim();
+       if (hasMeaningfulValue(val)) {
+         task.candidateValue = val;
+         task.provider = prov;
+         task.status = 'done';
+         task.error = '';
+         task.checked = shouldAutoCheckTopicRepairTask(topicId, task.currentValue, val);
+         const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
+         syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
+       } else {
+         task.status = 'failed';
+         task.error = t('topicRepair.error.noValueForEntry');
+       }
+     }
 
     saveProgress();
     updateTopicRepairModalUI();
