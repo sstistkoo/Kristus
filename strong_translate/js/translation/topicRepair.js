@@ -34,7 +34,14 @@ D: [překlad definice do češtiny]
 HESLA:
 {HESLA}`,
 
-  vyznam: `Přelož pouze část "Význam" (V) z daného hesla do češtiny. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole V. Nepřekládat jiné části (D, P, K, S).
+   vyznam: `Přelož část "Význam" (V) z daného hesla do češtiny.
+Analýza: Identifikuj slovo a gramatiku (buď ze zadaného kódu, nebo vlastní analýzou).
+
+Význam: Definuj sémantické jádro podle Strongova slovníku.
+
+Tvarosloví: Stručně popiš gramatické vlastnosti (vid, čas, pád).
+
+První slovo: Jako nejpřesnější překlad vyber ten, který nejlépe odpovídá gramatickému tvaru a biblickému úzu.
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
@@ -43,7 +50,15 @@ V: [česky význam]
 HESLA:
 {HESLA}`,
 
-  kjv: `Přelož pouze "KJV význam" (K) z daného hesla do češtiny. Odvoď hlavní význam z kontextu KJV verse. Vracet POUZE obsah pole K. Nepřekládat jiné části (V, D, P, S).
+   kjv: `Přelož do češitny  "KJV význam" (K) z daného hesla.
+
+Priorita: Jako úplně první věc v odpovědi uveď nejpřesnější český překlad následovaný čárkou.
+
+Analýza: Identifikuj slovo (G/H) a gramatiku (kmen u H, vid/pád u G).
+
+Význam: Definuj sémantické jádro podle Strongova slovníku.
+
+Korelace: Propoj původní význam s anglickým výrazem z KJV a četností výskytu.
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
