@@ -67,11 +67,12 @@ K: [překlad KJV významu do češtiny]
 HESLA:
 {HESLA}`,
 
-  puvod: `Přelož pouze část "Původ" (P) – etymologii a původ slova – do češtiny. Uveďte: původní jazyk, původní písmo (s českým přepisem v závorce) a vývoj významu. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole P. Nepřekládat jiné části (V, D, K, S).
+   puvod: `"Původ" (P) – etymologii a původ slova
+Uveďte: původní jazyk, původní písmo (s českým překladem v závorce) a vývoj významu a co byl jeho původní doslovný význam.
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
-P: [jazyk + původní písmo (český přepis v závorce) + etymologie]
+P: [etymologii a původ slova]
 
 HESLA:
 {HESLA}`,
