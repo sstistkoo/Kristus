@@ -4,6 +4,17 @@ import { hasMeaningfulValue, isDefinitionLowQuality, isDefinitionLikelyEnglish }
 import { sleepMs } from '../utils.js';
 import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPromptsResolve.js';
 
+// ─── VÝCHOZÍ SYSTÉMOVÝ PROMPT PRO DÁVKOVOU OPRAVU TÉMAT ───
+const BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.
+
+PRAVIDLA:
+- Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) přímo v textu v závorce.
+- Biblické reference (např. [Act], [Mat], [John]) překládej do české zkratky ([Sk], [Mt], [Jan]).
+- Nepřekládej text, který je již v češtině — ponech jej.
+- Zachovej strukturu a formátování dle uživatelského promptu.
+- Pokud je kvalita překladu pochybná, přidej poznámku v závorce (např. "možná alternative: ...").
+- Dbej na konzistenci s běžnou terminologií české biblické exegézy.`;
+
 // ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
 const TOPIC_BATCH_TEMPLATES = {
   definice: `Přelož pouze část "Definice" (D) z daného hesla do češtiny. Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici. Vracet POUZE obsah pole D. Nepřekládat jiné části (V, P, K, S).
@@ -844,7 +855,7 @@ function applyPromptLanguageTokens(promptText) {
 }
 
 function getDefaultBatchTopicSystemPrompt(topicId) {
-  return getResolvedSystemMessage() || '';
+  return BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT;
 }
 
 function getDefaultBatchTopicUserPrompt(topicId) {
