@@ -22,7 +22,10 @@ const TOPIC_SPECIFIC_SYSTEM_PROMPTS = {
 
 // ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
 const TOPIC_BATCH_TEMPLATES = {
-  definice: `Přelož pouze část "Definice" (D) z daného hesla do češtiny. Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici. Vracet POUZE obsah pole D. Nepřekládat jiné části (V, P, K, S).
+  definice: `Přelož "Definice" (D) z daného hesla do češtiny. Doplňuj české překlady cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici.
+NORMALIZACE: Nahraď __1. za 1. a __2. za 2.
+PŘEKLAD ODKAZŮ: Biblické zkratky v [ ] uvnitř pole D musí být v češtině (např. [Act] na [Sk], [Mat] na [Mt], [John] na [Jan]).
+DŮSLEDNOST: Přelož vše z EN do CZ (včetně termínů jako properly, figuratively, lit., spec.).
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
