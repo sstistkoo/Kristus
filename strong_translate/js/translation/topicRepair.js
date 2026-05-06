@@ -4,9 +4,28 @@ import { hasMeaningfulValue, isDefinitionLowQuality, isDefinitionLikelyEnglish }
 import { sleepMs } from '../utils.js';
 import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPromptsResolve.js';
 
+// ─── VÝCHOZÍ SYSTÉMOVÝ PROMPT PRO DÁVKOVOU OPRAVU TÉMAT ───
+const BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+
+// ─── TÉMAT-SPECIFICKÉ DOPLŇKY PRO SYSTÉMOVÝ PROMPT ───
+const TOPIC_SPECIFIC_SYSTEM_PROMPTS = {
+  definice: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+
+  vyznam: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+
+  kjv: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+
+  puvod: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+
+  specialista: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`
+};
+
 // ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
 const TOPIC_BATCH_TEMPLATES = {
-  definice: `Přelož pouze část "Definice" (D) z daného hesla do češtiny. Doplňuj české přepisy cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici. Vracet POUZE obsah pole D. Nepřekládat jiné části (V, P, K, S).
+  definice: `Přelož "Definice" (D) z daného hesla do češtiny. Doplňuj české překlady cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici.
+NORMALIZACE: Nahraď __1. za 1. a __2. za 2.
+PŘEKLAD ODKAZŮ: Biblické zkratky v [ ] uvnitř pole D musí být v češtině (např. [Act] na [Sk], [Mat] na [Mt], [John] na [Jan]).
+DŮSLEDNOST: Přelož vše z EN do CZ (včetně termínů jako properly, figuratively, lit., spec.).
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
@@ -15,7 +34,14 @@ D: [překlad definice do češtiny]
 HESLA:
 {HESLA}`,
 
-  vyznam: `Přelož pouze část "Význam" (V) z daného hesla do češtiny. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole V. Nepřekládat jiné části (D, P, K, S).
+   vyznam: `Přelož část "Význam" (V) z daného hesla do češtiny.
+Analýza: Identifikuj slovo a gramatiku (buď ze zadaného kódu, nebo vlastní analýzou).
+
+Význam: Definuj sémantické jádro podle Strongova slovníku.
+
+Tvarosloví: Stručně popiš gramatické vlastnosti (vid, čas, pád).
+
+První slovo: Jako nejpřesnější překlad vyber ten, který nejlépe odpovídá gramatickému tvaru a biblickému úzu.
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
@@ -24,7 +50,15 @@ V: [česky význam]
 HESLA:
 {HESLA}`,
 
-  kjv: `Přelož pouze "KJV význam" (K) z daného hesla do češtiny. Odvoď hlavní význam z kontextu KJV verse. Vracet POUZE obsah pole K. Nepřekládat jiné části (V, D, P, S).
+   kjv: `Přelož do češitny  "KJV význam" (K) z daného hesla.
+
+Priorita: Jako úplně první věc v odpovědi uveď nejpřesnější český překlad následovaný čárkou.
+
+Analýza: Identifikuj slovo (G/H) a gramatiku (kmen u H, vid/pád u G).
+
+Význam: Definuj sémantické jádro podle Strongova slovníku.
+
+Korelace: Propoj původní význam s anglickým výrazem z KJV a četností výskytu.
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
@@ -33,23 +67,24 @@ K: [překlad KJV významu do češtiny]
 HESLA:
 {HESLA}`,
 
-  puvod: `Přelož pouze část "Původ" (P) – etymologii a původ slova – do češtiny. Uveďte: původní jazyk, původní písmo (s českým přepisem v závorce) a vývoj významu. Doplňuj české přepisy cizích slov v závorce. Vracet POUZE obsah pole P. Nepřekládat jiné části (V, D, K, S).
+   puvod: `"Původ" (P) – etymologii a původ slova
+Uveďte: původní jazyk, původní písmo (s českým překladem v závorce) a vývoj významu a co byl jeho původní doslovný význam.
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
-P: [jazyk + původní písmo (český přepis v závorce) + etymologie]
+P: [etymologii a původ slova]
 
 HESLA:
 {HESLA}`,
 
-  specialista: `Napiš teologický a biblický výklad (S) pro dané slovo. Vysvětli teologický a biblický význam slova v kontextu. Použij odborný český jazyk, 3–6 souvislých vět (žádné body ani seznamy). Vracet POUZE obsah pole S. Nepřekládat jiné části (V, D, P, K).
+  specialista: `S (SPECIALISTA): [detailní odstavec 3-7 vět jako biblický specialista]. Odstavec má vysvětlit teologický a biblický význam slova v kontextu. Nepiš body ani seznam, jen souvislý odstavec.
 
-FORMÁT ODPOVĚDI:
-###[číslo]###
-S: [odborný český výklad 3–6 vět]
+  FORMÁT ODPOVĚDI:
+  ###[číslo]###
+  S: [odborný český výklad 3–7 vět]
 
-HESLA:
-{HESLA}`
+  HESLA:
+  {HESLA}`
 };
 
 export function createTopicRepairApi(deps) {
@@ -844,7 +879,7 @@ function applyPromptLanguageTokens(promptText) {
 }
 
 function getDefaultBatchTopicSystemPrompt(topicId) {
-  return getResolvedSystemMessage() || '';
+  return TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId] || BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT;
 }
 
 function getDefaultBatchTopicUserPrompt(topicId) {
@@ -935,12 +970,29 @@ function buildTopicRepairBatchHeslaText(keys, topicId) {
   const list = Array.isArray(keys) ? keys : [];
   return list.map(key => {
     const e = state.entryMap.get(key) || {};
-    return [
-      `${e.key || key} | ${e.greek || ''}`,
-      `DEF: ${e.definice || e.def || ''}`,
-      e.kjv ? `KJV: ${e.kjv}` : '',
-      e.orig ? `ORIG: ${e.orig}` : ''
-    ].filter(Boolean).join('\n');
+    const lines = [`${e.key || key} | ${e.greek || ''}`];
+
+    switch (topicId) {
+      case 'definice':
+        if (e.definice || e.def) lines.push(`D: ${e.definice || e.def || ''}`);
+        break;
+      case 'vyznam':
+        if (e.definice || e.def) lines.push(`D: ${e.definice || e.def || ''}`);
+        break;
+      case 'kjv':
+        if (e.kjv) lines.push(`K: ${e.kjv}`);
+        break;
+      case 'puvod':
+        if (e.orig) lines.push(`P: ${e.orig}`);
+        break;
+      case 'specialista':
+        if (e.definice || e.def) lines.push(`DEF: ${e.definice || e.def || ''}`);
+        if (e.kjv) lines.push(`KJV: ${e.kjv}`);
+        if (e.orig) lines.push(`ORIG: ${e.orig}`);
+        break;
+    }
+
+    return lines.join('\n');
   }).join('\n\n---\n\n');
 }
 
@@ -957,15 +1009,19 @@ function getTopicBatchAiLabel(topicId) {
 function parseTopicRepairBatchResponse(rawText, topicId) {
   const text = normalizeAiTopicRawText(rawText).trim();
   if (!text) return {};
-  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]\d+)/i);
+  // Akceptuj ###G66### i ###66### (písmeno volitelné)
+  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]?\d+)/i);
   const out = {};
-  const headerRe = /^#{2,6}\s*([gGhH])(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
+  const headerRe = /^#{2,6}\s*([gGhH]?)(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
   for (const block of blocks) {
     const b = String(block || '').trim();
     if (!b) continue;
     const header = b.match(headerRe);
     if (!header) continue;
-    const key = (String(header[1] || '') + String(header[2] || '')).toUpperCase();
+    // Pokud písmeno chybí, předpokládáme 'G' (default)
+    const letter = (header[1] || 'G').toUpperCase();
+    const num = header[2];
+    const key = letter + num;
     const rest = b.slice(header.index + header[0].length).trim();
     let val = String(extractTopicValueFromAI(rest, topicId, 'strict') || '').trim();
     if (!hasMeaningfulValue(val)) {
@@ -981,15 +1037,19 @@ function extractTopicRepairBatchBlockForKey(rawText, key) {
   const text = String(normalizeAiTopicRawText(rawText) || '').trim();
   const upperKey = String(key || '').trim().toUpperCase();
   if (!text || !upperKey) return '';
-  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]\d+)/i);
-  const headerRe = /^#{2,6}\s*([gGhH])(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
+  // Akceptuj ###G66### i ###66###
+  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]?\d+)/i);
+  const headerRe = /^#{2,6}\s*([gGhH]?)(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
   for (const block of blocks) {
     const b = String(block || '').trim();
     if (!b) continue;
     const header = b.match(headerRe);
     if (!header) continue;
-    const k = (String(header[1] || '') + String(header[2] || '')).toUpperCase();
-    if (k === upperKey) return b;
+    const letter = (header[1] || 'G').toUpperCase();
+    const num = header[2];
+    const k = (letter + num).toUpperCase();
+    // Hledání s i bez písmene
+    if (k === upperKey || k === upperKey.replace(/^[GH]/, '')) return b;
   }
   return '';
 }
@@ -1091,9 +1151,9 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
     const batchKeys = keys.slice(processed, processed + bs);
     const hesla = buildTopicRepairBatchHeslaText(batchKeys, topicId);
-    const userContent = userPromptTemplate.includes('{HESLA}')
-      ? promptTemplate.replace(/{HESLA}/g, hesla)
-      : `${userPromptTemplate}\n\n${hesla}`;
+     const userContent = userPromptTemplate.includes('{HESLA}')
+       ? userPromptTemplate.replace(/{HESLA}/g, hesla)
+       : `${userPromptTemplate}\n\n${hesla}`;
 
     const prov = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
     const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
@@ -1114,23 +1174,25 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
     log(t('topicRepair.log.rawBatchPrinted', { topic: topicId }));
 
      const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
-     for (const key of batchKeys) {
-       const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
-       if (!task) continue;
-      const val = String(parsedMap[key] || '').trim();
-      if (hasMeaningfulValue(val)) {
-        task.candidateValue = val;
-        task.provider = prov;
-        task.status = 'done';
-        task.error = '';
-        task.checked = shouldAutoCheckTopicRepairTask(topicId, task.currentValue, val);
-        const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
-        syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
-      } else {
-        task.status = 'failed';
-        task.error = t('topicRepair.error.noValueForEntry');
-      }
-    }
+      for (const key of batchKeys) {
+        const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
+        if (!task) continue;
+       // Fallback: hledej jak s písmenem (G66) tak bez (66)
+       const numericKey = key.replace(/^[GH]/, '');
+       const val = String(parsedMap[key] || parsedMap[numericKey] || '').trim();
+       if (hasMeaningfulValue(val)) {
+         task.candidateValue = val;
+         task.provider = prov;
+         task.status = 'done';
+         task.error = '';
+         task.checked = shouldAutoCheckTopicRepairTask(topicId, task.currentValue, val);
+         const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
+         syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
+       } else {
+         task.status = 'failed';
+         task.error = t('topicRepair.error.noValueForEntry');
+       }
+     }
 
     saveProgress();
     updateTopicRepairModalUI();
