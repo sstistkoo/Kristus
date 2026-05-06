@@ -946,12 +946,33 @@ function buildTopicRepairBatchHeslaText(keys, topicId) {
   const list = Array.isArray(keys) ? keys : [];
   return list.map(key => {
     const e = state.entryMap.get(key) || {};
-    return [
-      `${e.key || key} | ${e.greek || ''}`,
-      `DEF: ${e.definice || e.def || ''}`,
-      e.kjv ? `KJV: ${e.kjv}` : '',
-      e.orig ? `ORIG: ${e.orig}` : ''
-    ].filter(Boolean).join('\n');
+    const lines = [`${e.key || key} | ${e.greek || ''}`];
+
+    switch (topicId) {
+      case 'definice':
+        if (e.definice || e.def) lines.push(`D: ${e.definice || e.def || ''}`);
+        break;
+      case 'vyznam':
+        if (e.definice || e.def) lines.push(`D: ${e.definice || e.def || ''}`);
+        break;
+      case 'kjv':
+        if (e.kjv) lines.push(`K: ${e.kjv}`);
+        break;
+      case 'puvod':
+        if (e.orig) lines.push(`P: ${e.orig}`);
+        break;
+      case 'specialista':
+        if (e.definice || e.def) lines.push(`DEF: ${e.definice || e.def || ''}`);
+        if (e.kjv) lines.push(`KJV: ${e.kjv}`);
+        if (e.orig) lines.push(`ORIG: ${e.orig}`);
+        break;
+    }
+
+    return lines.join('\n');
+  }).join('\n\n---\n\n');
+}
+
+    return lines.join('\n');
   }).join('\n\n---\n\n');
 }
 
