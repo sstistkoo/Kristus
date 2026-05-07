@@ -2,11 +2,9 @@ import { PROVIDERS } from './config.js';
 
 export const UI_LANG_KEY = 'strong_ui_lang';
 export const DEFAULT_UI_LANG = 'cs';
-export const UI_LANGS = new Set([
-  'cs', 'en', 'sk', 'pl', 'de', 'fr', 'es', 'it', 'pt', 'ru',
-  'da', 'fi', 'hu', 'nl', 'no', 'ro', 'sv', 'ar', 'el', 'tr', 'zh-cn',
-  'he', 'ja', 'ko', 'uk', 'bg'
-]);
+// Pro úsporu údržby jsou aktivní pouze cs a en.
+// Ostatní jazyky jsou prázdné (soubory zůstávají pro budoucí rozšíření).
+export const UI_LANGS = new Set(['cs', 'en']);
 const FIXED_EN_KEYS = new Set([
   'detail.label.definitionEn',
   'export.field.definitionEn'

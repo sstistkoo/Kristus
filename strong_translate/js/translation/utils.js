@@ -7,10 +7,16 @@ const { parseTranslations: parseTranslationsCore } = core;
 
 // Lokální kopie pro getTranslationStateForKey (vyhýbá se circular dep s batch.js)
 const _FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
-function _countFailedTopics(translationEntry) {
+
+function isTopicManuallyApproved(key, topicId) {
+  return state.topicRepairManuallyApproved?.has(`${key}:${topicId}`) || false;
+}
+
+function _countFailedTopics(translationEntry, key) {
   const e = translationEntry || {};
   let count = 0;
   for (const topicId of _FALLBACK_TOPIC_ORDER) {
+    if (isTopicManuallyApproved(key, topicId)) continue;
     const val = String(e[topicId] || '').trim();
     if (!hasMeaningfulValue(val)) { count++; continue; }
     if (topicId === 'definice' && isDefinitionLowQuality(val)) count++;
@@ -67,11 +73,16 @@ export function isDefinitionLowQuality(text) {
   return false;
 }
 
-export function isTranslationComplete(t) {
+export function isTranslationComplete(t, key) {
   if (!t || t.skipped) return false;
-  if (isDefinitionLowQuality(t.definice)) return false;
   const required = ['definice', 'puvod', 'kjv', 'specialista'];
-  return required.every(field => hasMeaningfulValue(t[field]));
+  for (const field of required) {
+    if (isTopicManuallyApproved(key, field)) continue;
+    const val = String(t[field] || '').trim();
+    if (!hasMeaningfulValue(val)) return false;
+    if (field === 'definice' && isDefinitionLowQuality(val)) return false;
+  }
+  return true;
 }
 
 export function hasAnyTranslationContent(t) {
@@ -83,9 +94,9 @@ export function hasAnyTranslationContent(t) {
 export function getTranslationStateForKey(key) {
   const t = state.translated[key];
   if (!t || t.skipped) return 'pending';
-  if (isTranslationComplete(t)) return 'done';
+  if (isTranslationComplete(t, key)) return 'done';
   if (!hasAnyTranslationContent(t)) return 'failed';
-  const failedCount = _countFailedTopics(t);
+  const failedCount = _countFailedTopics(t, key);
   if (failedCount > 0 && failedCount <= 2) return 'missing_topic';
   return 'failed_partial';
 }

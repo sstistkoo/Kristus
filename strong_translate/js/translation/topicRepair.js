@@ -220,20 +220,27 @@ function updateTopicRepairModalUI() {
       : '';
     const statusColor = task.status === 'done' ? 'var(--acc3)' : (task.status === 'failed' ? 'var(--red)' : (task.status === 'running' ? 'var(--ylw)' : 'var(--txt3)'));
     const statusText = task.status === 'done' ? t('topicRepair.taskStatus.done') : (task.status === 'failed' ? t('topicRepair.taskStatus.failed') : (task.status === 'running' ? t('topicRepair.taskStatus.running') : t('topicRepair.taskStatus.waiting')));
-    return `
-      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin:0 0 10px 0">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${task.checked ? 'checked' : ''} ${!hasMeaningfulValue(task.candidateValue) ? 'disabled' : ''} onchange="toggleTopicRepairTask(${idx}, this.checked)" style="accent-color:var(--acc)">
-            <span style="font-family:'JetBrains Mono',monospace;color:var(--acc)">${task.key}</span>
-            <span>${escHtml(TOPIC_LABELS[task.topicId] || task.topicId)}</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--txt3);font-size:11px">
-            <input type="checkbox" ${task.includeBulk !== false ? 'checked' : ''} onchange="toggleTopicRepairBulkInclude(${idx}, this.checked)" style="accent-color:var(--acc)">
-            ${t('topicRepair.batchLabel')}
-          </label>
-          <span style="font-size:11px;color:${statusColor}">${statusText}${task.provider ? ` · ${task.provider}` : ''}</span>
-        </div>
+     return `
+       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin:0 0 10px 0${task.hidden ? ';display:none' : ''}">
+         <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+             <input type="checkbox" ${task.checked ? 'checked' : ''} ${!hasMeaningfulValue(task.candidateValue) ? 'disabled' : ''} onchange="toggleTopicRepairTask(${idx}, this.checked)" style="accent-color:var(--acc)">
+             <span style="font-family:'JetBrains Mono',monospace;color:var(--acc)">${task.key}</span>
+             <span>${escHtml(TOPIC_LABELS[task.topicId] || task.topicId)}</span>
+           </label>
+           <div style="display:flex;align-items:center;gap:6px">
+             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--txt3);font-size:11px">
+               <input type="checkbox" ${task.includeBulk !== false ? 'checked' : ''} onchange="toggleTopicRepairBulkInclude(${idx}, this.checked)" style="accent-color:var(--acc)">
+               ${t('topicRepair.batchLabel')}
+             </label>
+             <span style="font-size:11px;color:${statusColor}">${statusText}${task.provider ? ` · ${task.provider}` : ''}</span>
+             ${!task.hidden ? `
+               <button class="hbtn" style="font-size:10px;padding:4px 8px" onclick="toggleTopicRepairManualApproval(${idx})" title="${escHtml(t('topicRepair.manualApproval.title') || 'Označit jako v pořádku')}">
+                 ${task.manuallyApproved ? '✓ ' : ''}${t('topicRepair.manualApproval.label') || 'V pořádku'}
+               </button>
+             ` : ''}
+           </div>
+         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div style="font-size:11px;color:var(--txt2)">
             <div><b>${t('topicRepair.originalTopic')}</b> ${escHtml(task.currentValue || '—')}</div>
@@ -296,6 +303,12 @@ function buildTopicRepairTasks(keys) {
       console.log('TopicRepair build:', key, 'translated:', t, 'missing:', missing);
     }
     for (const topicId of missing) {
+      const ignoreKey = `${key}:${topicId}`;
+      const manuallyApproved = state.topicRepairManuallyApproved?.has(ignoreKey) || false;
+      const hidden = manuallyApproved;
+      if (manuallyApproved) {
+        // Still push task but hidden; it won't show in UI
+      }
       tasks.push({
         key,
         topicId,
@@ -312,7 +325,9 @@ function buildTopicRepairTasks(keys) {
         specialistaPreviousValue: String(t.specialista || '').trim(),
         specialistaCandidateValue: '',
         detectedTopics: [],
-        rawHeaderTopics: []
+        rawHeaderTopics: [],
+        manuallyApproved,
+        hidden
       });
     }
   }
@@ -449,6 +464,7 @@ function renderTopicRepairModal() {
 }
 
 function startTopicRepairFlow(keys) {
+  loadTopicRepairManualApprovals(); // načtení persisted schválení
   const tasks = buildTopicRepairTasks(keys);
   if (!tasks.length) {
     showToast(t('toast.topicRepair.noEligible'));
@@ -746,12 +762,59 @@ function setTopicRepairDetectedTopicDecision(taskIndex, topicId, decision) {
   updateTopicRepairModalUI();
 }
 
+function toggleTopicRepairManualApproval(index) {
+  const topicRepairState = state.topicRepairState;
+  if (!state || !topicRepairState || !topicRepairState.tasks[index]) return;
+  const task = topicRepairState.tasks[index];
+  const ignoreKey = `${task.key}:${task.topicId}`;
+  if (!state.topicRepairManuallyApproved) state.topicRepairManuallyApproved = new Set();
+  if (state.topicRepairManuallyApproved.has(ignoreKey)) {
+    state.topicRepairManuallyApproved.delete(ignoreKey);
+    task.manuallyApproved = false;
+    task.hidden = false;
+    showToast(t('toast.topicRepair.unmarkOk'));
+  } else {
+    state.topicRepairManuallyApproved.add(ignoreKey);
+    task.manuallyApproved = true;
+    task.hidden = true;
+    showToast(t('toast.topicRepair.markOk'));
+  }
+  saveTopicRepairManualApprovals();
+  saveProgress();
+  updateTopicRepairModalUI();
+}
+
+function saveTopicRepairManualApprovals() {
+  if (!state.topicRepairManuallyApproved) return;
+  try {
+    const arr = Array.from(state.topicRepairManuallyApproved);
+    localStorage.setItem('strong_topic_repair_approved', JSON.stringify(arr));
+  } catch (e) {
+    console.warn('[TopicRepair] Chyba pri ukladani manual approvals:', e);
+  }
+}
+
+function loadTopicRepairManualApprovals() {
+  try {
+    const raw = localStorage.getItem('strong_topic_repair_approved');
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) {
+        state.topicRepairManuallyApproved = new Set(arr);
+      }
+    }
+  } catch (e) {
+    console.warn('[TopicRepair] Chyba pri nacitani manual approvals:', e);
+  }
+}
+
 function applyTopicRepairSelected() {
    const topicRepairState = state.topicRepairState;
    if (!topicRepairState) return;
    let applied = 0;
    for (const task of topicRepairState.tasks) {
      if (!task.checked || !hasMeaningfulValue(task.candidateValue)) continue;
+     if (task.hidden) continue; // skip manually approved (hidden) tasks
      state.translated[task.key] = state.translated[task.key] || {};
      state.translated[task.key][task.topicId] = task.candidateValue;
      applied++;
@@ -851,9 +914,9 @@ function getTopicRepairModalVisibleTasks(state) {
   const bid = state.bulkTopicId || 'all';
   if (bid === 'all') {
     const m = state.bulkListTopicFilter || defaultBulkListTopicFilter();
-    return topicRepairState.tasks.filter(t => m[t.topicId] !== false);
+    return topicRepairState.tasks.filter(t => m[t.topicId] !== false && !t.hidden);
   }
-  return topicRepairState.tasks.filter(t => t.topicId === bid);
+  return topicRepairState.tasks.filter(t => t.topicId === bid && !t.hidden);
 }
 
 /** Další čekající úloha v pořadí `topicRepairState.tasks`, ale jen pokud spadá do aktuálního filtru tématu. */
@@ -2225,44 +2288,45 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
    }
    return cleaned;
 }
-  return {
-    closeTopicRepairModalSafe,
-    stopTopicRepairTicker,
-    applyTopicRepairProviderCheckboxes,
-    startTopicRepairFlow,
-    setTopicRepairStrategy,
-    startTopicRepairSequentialWorker,
-    toggleTopicRepairTask,
-    toggleTopicRepairRun,
-    setTopicRepairSpecialistaDecision,
-    setTopicRepairDetectedTopicDecision,
-    applyTopicRepairSelected,
-    closeTopicRepairModalOnly,
-    minimizeTopicRepairModal,
-    restoreTopicRepairModal,
-    saveTopicRepairBatchPromptDraft,
-    resetTopicRepairBatchPromptToDefault,
-    refreshTopicRepairBatchPromptEditor,
-    toggleTopicRepairBulkListFilter,
-    syncTopicRepairBulkRunInputsToHidden,
-    runTopicRepairBulkTranslation,
-    toggleTopicRepairBulkInclude,
-    setTopicRepairBulkIncludeAll,
-    getTopicPromptTemplateByPromptType,
-    syncTopicPromptTemplatesReport,
-    buildTopicPrompt,
-    openTopicPromptModal,
-    runTopicPromptAI,
-    applyTopicPromptResult,
-    shouldReplaceSpecialista,
-    closeTopicPromptModal,
-    openSystemPromptModal,
-    runSystemPromptAI,
-    closeSystemPromptModal,
-    translateSystemPromptText,
-    translateSystemPromptBackToEnglish,
-    reviewSystemPromptWithAI,
-    buildSystemPromptFromRequirement,
-    extractTopicValueFromAI,
+   return {
+     closeTopicRepairModalSafe,
+     stopTopicRepairTicker,
+     applyTopicRepairProviderCheckboxes,
+     startTopicRepairFlow,
+     setTopicRepairStrategy,
+     startTopicRepairSequentialWorker,
+     toggleTopicRepairTask,
+     toggleTopicRepairRun,
+     setTopicRepairSpecialistaDecision,
+     setTopicRepairDetectedTopicDecision,
+     toggleTopicRepairManualApproval,
+     applyTopicRepairSelected,
+     closeTopicRepairModalOnly,
+     minimizeTopicRepairModal,
+     restoreTopicRepairModal,
+     saveTopicRepairBatchPromptDraft,
+     resetTopicRepairBatchPromptToDefault,
+     refreshTopicRepairBatchPromptEditor,
+     toggleTopicRepairBulkListFilter,
+     syncTopicRepairBulkRunInputsToHidden,
+     runTopicRepairBulkTranslation,
+     toggleTopicRepairBulkInclude,
+     setTopicRepairBulkIncludeAll,
+     getTopicPromptTemplateByPromptType,
+     syncTopicPromptTemplatesReport,
+     buildTopicPrompt,
+     openTopicPromptModal,
+     runTopicPromptAI,
+     applyTopicPromptResult,
+     shouldReplaceSpecialista,
+     closeTopicPromptModal,
+     openSystemPromptModal,
+     runSystemPromptAI,
+     closeSystemPromptModal,
+     translateSystemPromptText,
+     translateSystemPromptBackToEnglish,
+     reviewSystemPromptWithAI,
+     buildSystemPromptFromRequirement,
+     extractTopicValueFromAI,
   };
 }
