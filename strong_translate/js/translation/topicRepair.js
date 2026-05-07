@@ -1068,7 +1068,9 @@ function buildTopicRepairBatchHeslaText(keys, topicId) {
         if (e.kjv) lines.push(`K: ${e.kjv}`);
         break;
       case 'puvod':
-        if (e.orig) lines.push(`P: ${e.orig}`);
+        // AI dostane jen hlavní řádek (G537 | ἅπας (G:A))
+        // e.orig obsahuje jen tvarosloví → duplikoval by se
+        // AI původ odvodí sama z čísla a slova
         break;
       case 'specialista':
         break;
