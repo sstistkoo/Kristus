@@ -59,6 +59,8 @@ export function isDefinitionLowQuality(text) {
   const words = s.split(/\s+/).filter(Boolean);
   const hasStructure = /[,:;()]/.test(s);
   const hasCzechDiacritics = /[áčďéěíňóřšťúůýž]/i.test(s);
+  // Povolit 1–2 slova, pokud obsahují českou diakritiku (jako "dávka")
+  if (words.length <= 2 && hasCzechDiacritics) return false;
   if (words.length < 4) return true;
   if (s.length < 30 && !hasStructure) return true;
   if (words.length < 6 && s.length < 45 && !hasStructure && !hasCzechDiacritics) return true;

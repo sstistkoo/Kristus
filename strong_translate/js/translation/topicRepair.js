@@ -691,7 +691,13 @@ function toggleTopicRepairRun() {
 
 function shouldAutoAcceptDetectedTopic(topicId, previousValue, candidateValue) {
   if (!hasMeaningfulValue(candidateValue)) return false;
-  if (topicId === 'definice' && isDefinitionLowQuality(candidateValue)) return false;
+  if (topicId === 'definice' && isDefinitionLowQuality(candidateValue)) {
+    // Povolit krátké, jednoslovné definice s českou diakritikou (např. "dávka")
+    const words = String(candidateValue).trim().split(/\s+/).filter(Boolean);
+    const hasCzechDiacritics = /[áčďéěíňóřšťúůýž]/i.test(candidateValue);
+    if (words.length <= 2 && hasCzechDiacritics) return true;
+    return false;
+  }
   if (topicId === 'specialista') return shouldReplaceSpecialista(previousValue, candidateValue);
   return !hasMeaningfulValue(previousValue);
 }
