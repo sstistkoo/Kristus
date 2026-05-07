@@ -32,9 +32,10 @@ function getValueByLabels(lines, labels) {
           if (after) collected.push(after);
         }
       } else {
-        // Jsme v bloku pod labelem — pokud je řádek prázdný nebo začíná jiným labelem (druhý výskyt ':', mezeru), končíme
-        if (!trimmed || /^\w+:\s*$/.test(trimmed) || trimmed.match(/^\w+:\s*/)) break;
-        collected.push(trimmed);
+        // Jsme v bloku pod labelem — pokud začíná novým labelem (druhý výskyt ':'), končíme
+        // Prázdné řádky již nekončí, aby bylo možné akumulovat víceřádkové hodnoty
+        if (trimmed && /^\w+:\s*$/.test(trimmed)) break;
+        if (trimmed) collected.push(trimmed);
       }
     }
     if (collected.length) return collected.join(' ').trim();

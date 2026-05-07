@@ -112,6 +112,10 @@ export function createTopicRepairApi(deps) {
   } = deps;
 function getTopicSourceTextForPreview(key, topicId) {
   const e = state.entryMap.get(key) || {};
+  const t = state.translated[key] || {};
+  const current = String(t[topicId] || '').trim();
+  if (hasMeaningfulValue(current)) return current;
+  // fallback na původní text z entryMap
   if (topicId === 'definice') return String(e.definice || e.def || '').trim();
   if (topicId === 'kjv') return String(e.kjv || '').trim();
   if (topicId === 'vyznam') return String(e.vyznamCz || e.cz || '').trim();
@@ -2188,19 +2192,7 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
       if (part) out += (out ? ' ' : '') + part;
     }
     out = out.trim();
-    // Ořízni případ, kdy AI přidá další téma ve stejné řádce, pokud je oddělené dvojtečkou/čárkou.
-    // Klasický případ: "DEFINICE: text... PUVOD: další" → odstraníme " PUVOD: ..."
-    const foreignInlineSameLine = out.match(/(?<=\w)\s+(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
-    if (foreignInlineSameLine && foreignInlineSameLine.index !== undefined && foreignInlineSameLine.index > 30) {
-      const nl = normalizeTopicFieldLabel(foreignInlineSameLine[1]);
-      const sameBucket = keyForTopic === 'SPECIALISTA'
-        ? nl === 'SPECIALISTA'
-        : nl === keyForTopic;
-      if (!sameBucket) {
-        out = out.slice(0, foreignInlineSameLine.index).trim();
-      }
-    }
-    return out.trim();
+    return out;
   }
 
    // Když chybí explicitní label cílového tématu, ale AI vrátí další labely,
