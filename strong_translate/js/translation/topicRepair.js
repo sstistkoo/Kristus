@@ -1056,14 +1056,13 @@ function buildTopicRepairBatchHeslaText(keys, topicId) {
   const list = Array.isArray(keys) ? keys : [];
   return list.map(key => {
     const e = state.entryMap.get(key) || {};
-    const lines = [`${e.key || key} | ${e.greek || ''}`];
+    const lines = [`${e.key || key} | ${e.greek || ''}${e.tvaroslovi ? ` (${e.tvaroslovi})` : ''}`];
 
     switch (topicId) {
       case 'definice':
-        if (e.definice || e.def) lines.push(`D: ${e.definice || e.def || ''}`);
+        if (e.definice || e.def) lines.push(`DEF: ${e.definice || e.def || ''}`);
         break;
       case 'vyznam':
-        if (e.definice || e.def) lines.push(`D: ${e.definice || e.def || ''}`);
         break;
       case 'kjv':
         if (e.kjv) lines.push(`K: ${e.kjv}`);
@@ -1072,9 +1071,6 @@ function buildTopicRepairBatchHeslaText(keys, topicId) {
         if (e.orig) lines.push(`P: ${e.orig}`);
         break;
       case 'specialista':
-        if (e.definice || e.def) lines.push(`DEF: ${e.definice || e.def || ''}`);
-        if (e.kjv) lines.push(`KJV: ${e.kjv}`);
-        if (e.orig) lines.push(`ORIG: ${e.orig}`);
         break;
     }
 
@@ -1221,11 +1217,21 @@ function initTopicRepairBulkRunInputs() {
 
 /** Jedno téma — vnitřní smyčka dávek (režim „Vše“ i jedno téma z editoru). */
 async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, userPromptTemplate, onlyFailed, bs) {
-  const tasks = state.topicRepairState.tasks.filter(t => t && t.topicId === topicId && t.includeBulk !== false);
-  const picked = onlyFailed
-    ? tasks.filter(t => t.status === 'failed' || !hasMeaningfulValue(t.candidateValue))
-    : tasks;
-  const keys = picked.map(t => t.key);
+  let tasks = state.topicRepairState.tasks.filter(t => t && t.topicId === topicId && t.includeBulk !== false);
+  let picked;
+  if (onlyFailed) {
+    picked = tasks.filter(t => t.status === 'failed' || !hasMeaningfulValue(t.candidateValue));
+  } else {
+    picked = tasks;
+  }
+  let keys = picked.map(t => t.key);
+  if (!keys.length) {
+    keys = state.topicRepairState.tasks.filter(t => t && !t.hidden).map(t => t.key);
+    const uniqueKeys = [...new Set(keys)];
+    if (uniqueKeys.length) {
+      log(`🔧 Relaxed filter: using all ${uniqueKeys.length} keys for ${topicId}`);
+    }
+  }
   if (!keys.length) return { count: 0 };
 
   const iv0 = parseInt(document.getElementById('intervalRun')?.value, 10) || 20;
@@ -1448,12 +1454,15 @@ function buildTopicPrompt(key, topicId) {
   const e = state.entryMap.get(key) || {};
   const topicLabel = TOPIC_LABELS[topicId] || topicId;
   const promptTemplate = getTopicPromptTemplate(topicId);
-  const sourceText = [
-    `${e.key || key} | ${e.greek || ''}${e.tvaroslovi ? ` (${e.tvaroslovi})` : ''}`,
-    `DEF: ${e.definice || e.def || ''}`,
-    e.kjv ? `KJV: ${e.kjv}` : '',
-    e.orig ? `ORIG: ${e.orig}` : ''
-  ].filter(Boolean).join('\n');
+
+  const firstLine = `${e.key || key} | ${e.greek || ''}${e.tvaroslovi ? ` (${e.tvaroslovi})` : ''}`;
+
+  let extraLines = [];
+  if (topicId === 'definice') {
+    if (e.definice || e.def) extraLines.push(`DEF: ${e.definice || e.def}`);
+  }
+
+  const sourceText = [firstLine, ...extraLines].join('\n');
 
   const specialistaDetailRule = topicId === 'specialista'
     ? `\n\n${t('aiPrompts.topic.specialistaStyleRule')}`
