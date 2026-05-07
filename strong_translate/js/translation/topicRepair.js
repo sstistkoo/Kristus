@@ -2188,55 +2188,36 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
       if (part) out += (out ? ' ' : '') + part;
     }
     out = out.trim();
-    // Ořízni vnořený duplicitní label na začátku (např. "S: SPECIALISTA: text" → "text")
-    out = out.replace(new RegExp(`^(${TOPIC_FIELD_LABEL_ALTS_FOR_RE})\\s*[-:–—=.]{0,3}\\s*`, 'iu'), '').trim();
-    // Ořízni případ, kdy AI přidá další téma ve stejné větě/řádku.
-    const foreignInline = out.match(/\b(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
-    if (foreignInline && foreignInline.index !== undefined) {
-      const nl = normalizeTopicFieldLabel(foreignInline[1]);
+    // Ořízni případ, kdy AI přidá další téma ve stejné řádce, pokud je oddělené dvojtečkou/čárkou.
+    // Klasický případ: "DEFINICE: text... PUVOD: další" → odstraníme " PUVOD: ..."
+    const foreignInlineSameLine = out.match(/(?<=\w)\s+(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
+    if (foreignInlineSameLine && foreignInlineSameLine.index !== undefined && foreignInlineSameLine.index > 30) {
+      const nl = normalizeTopicFieldLabel(foreignInlineSameLine[1]);
       const sameBucket = keyForTopic === 'SPECIALISTA'
         ? nl === 'SPECIALISTA'
         : nl === keyForTopic;
-      if (!sameBucket && foreignInline.index > 0) {
-        out = out.slice(0, foreignInline.index).trim();
+      if (!sameBucket) {
+        out = out.slice(0, foreignInlineSameLine.index).trim();
       }
     }
     return out.trim();
   }
 
-  // Když chybí explicitní label cílového tématu, ale AI vrátí další labely
-  // (např. SPECIALISTA), ber jen text před prvním cizím labelem.
-  if (mode === 'strict' && fieldPositions.length > 0 && keyForTopic && !fieldPositions.some(f => f.label === keyForTopic)) {
-    const anchor = extractTopicSegmentByAnchors(cleaned, keyForTopic);
-    if (hasMeaningfulValue(anchor)) return anchor.trim();
-    return '';
-  }
-  if (fieldPositions.length > 0 && keyForTopic && !fieldPositions.some(f => f.label === keyForTopic)) {
-    const firstOther = fieldPositions[0];
-    if (firstOther.line > 0) {
-      const before = lines.slice(0, firstOther.line).join(' ').trim();
-      if (before) return before;
-    }
-    return '';
-  }
-
-  if (keyForTopic) {
-    cleaned = cleaned.replace(new RegExp(`^${keyForTopic}\\s*[-:–—=.]?\\s*`, 'i'), '').trim();
-  }
-  // Poslední ochrana: u single-topic odpovědi ořízni navazující cizí labely i v rámci jednoho řádku.
-  if (keyForTopic) {
-    const foreignInlineGlobal = cleaned.match(/\b(VYZNAM|DEFINICE|PUVOD|POUVOD|POVOD|KJV|SPECIALISTA|VYKLAD|VÝKLAD|KOMENTAR|KOMENTÁŘ|EXEGEZE|DEF|DEFINITION|MEANING|ORIGIN|COMMENTARY|EXEGESIS|V|D|P|K|S)\s*[-:–—=.]?\s*/iu);
-    if (foreignInlineGlobal && foreignInlineGlobal.index !== undefined) {
-      const nl = normalizeTopicFieldLabel(foreignInlineGlobal[1]);
-      const sameBucket = keyForTopic === 'SPECIALISTA'
-        ? nl === 'SPECIALISTA'
-        : nl === keyForTopic;
-      if (!sameBucket && foreignInlineGlobal.index > 0) {
-        cleaned = cleaned.slice(0, foreignInlineGlobal.index).trim();
-      }
-    }
-  }
-  return cleaned;
+   // Když chybí explicitní label cílového tématu, ale AI vrátí další labely,
+   // fallback na plain text před prvním jiným labelem (pokud existuje).
+   if (mode === 'strict' && fieldPositions.length > 0 && keyForTopic && !fieldPositions.some(f => f.label === keyForTopic)) {
+     const anchor = extractTopicSegmentByAnchors(cleaned, keyForTopic);
+     if (hasMeaningfulValue(anchor)) return anchor.trim();
+     // Fallback: nothing
+   }
+   if (fieldPositions.length > 0 && keyForTopic && !fieldPositions.some(f => f.label === keyForTopic)) {
+     // Bez explicitního labelu nevíme, kde začíná - vrátíme celý očištěný text
+     return cleaned.trim();
+   }
+   if (keyForTopic) {
+     cleaned = cleaned.replace(new RegExp(`^${keyForTopic}\\s*[-:–—=.]?\\s*`, 'i'), '').trim();
+   }
+   return cleaned;
 }
   return {
     closeTopicRepairModalSafe,

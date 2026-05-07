@@ -15,16 +15,29 @@ const TXT_LABEL_ALIASES = {
 };
 
 /**
- * Vrátí hodnotu z řádku "Label: text" podle zadaných aliasů.
- * Podporuje i variantu s fullwidth dvojtečkou (：).
+ * Vrátí hodnotu z řádků "Label: text" podle zadaných aliasů.
+ * Podporuje víceřádkové hodnoty (pokud následují pod labelem bez přerušení novým labelem).
+ * Odstraňuje bílé znaky na začátku/konci.
  */
 function getValueByLabels(lines, labels) {
   for (const label of labels) {
-    const line = lines.find((l) => {
-      const trimmed = l.trim();
-      return trimmed.startsWith(`${label}:`) || trimmed.startsWith(`${label}：`);
-    });
-    if (line) return line.slice(label.length + 1).trim();
+    let started = false;
+    let collected = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!started) {
+        if (trimmed.startsWith(`${label}:`) || trimmed.startsWith(`${label}：`)) {
+          started = true;
+          const after = line.slice(label.length + 1).trim();
+          if (after) collected.push(after);
+        }
+      } else {
+        // Jsme v bloku pod labelem — pokud je řádek prázdný nebo začíná jiným labelem (druhý výskyt ':', mezeru), končíme
+        if (!trimmed || /^\w+:\s*$/.test(trimmed) || trimmed.match(/^\w+:\s*/)) break;
+        collected.push(trimmed);
+      }
+    }
+    if (collected.length) return collected.join(' ').trim();
   }
   return '';
 }
