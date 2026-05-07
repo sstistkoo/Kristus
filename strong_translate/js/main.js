@@ -2332,63 +2332,15 @@ function closeI18nToolHelpModal() {
   if (m) m.classList.remove('show');
 }
 const I18N_TOOL_LANGUAGES = [
-  { code: 'en', tag: 'EN', name: 'Anglictina', flag: '????' },
-  { code: 'sk', tag: 'SK', name: 'Sloven�tina', flag: '????' },
-  { code: 'pl', tag: 'PL', name: 'Pol�tina', flag: '????' },
-  { code: 'de', tag: 'DE', name: 'Nemcina', flag: '????' },
-  { code: 'fr', tag: 'FR', name: 'Francouz�tina', flag: '????' },
-  { code: 'es', tag: 'ES', name: '�panel�tina', flag: '????' },
-  { code: 'it', tag: 'IT', name: 'Ital�tina', flag: '????' },
-  { code: 'pt', tag: 'PT', name: 'Portugal�tina', flag: '????' },
-  { code: 'ru', tag: 'RU', name: 'Ru�tina', flag: '????' },
-  { code: 'uk', tag: 'UK', name: 'Ukrajin�tina', flag: '????' },
-  { code: 'bg', tag: 'BG', name: 'Bulhar�tina', flag: '????' },
-  { code: 'ro', tag: 'RO', name: 'Rumun�tina', flag: '????' },
-  { code: 'hu', tag: 'HU', name: 'Madar�tina', flag: '????' },
-  { code: 'nl', tag: 'NL', name: 'Holand�tina', flag: '????' },
-  { code: 'sv', tag: 'SV', name: '�v�d�tina', flag: '????' },
-  { code: 'da', tag: 'DA', name: 'D�n�tina', flag: '????' },
-  { code: 'no', tag: 'NO', name: 'Nor�tina', flag: '????' },
-  { code: 'fi', tag: 'FI', name: 'Fin�tina', flag: '????' },
-  { code: 'el', tag: 'EL', name: 'Rectina', flag: '????' },
-  { code: 'tr', tag: 'TR', name: 'Turectina', flag: '????' },
-  { code: 'ar', tag: 'AR', name: 'Arab�tina', flag: '????' },
-  { code: 'zh-CN', tag: 'zh-CN', name: 'C�n�tina', flag: '????' },
-  { code: 'ja', tag: 'JA', name: 'Japon�tina', flag: '????' },
-  { code: 'ko', tag: 'KO', name: 'Korej�tina', flag: '????' },
-  { code: 'he', tag: 'HE', name: 'Hebrej�tina', flag: '????' }
+  { code: 'cs', tag: 'CZ', name: 'Čeština', flag: 'CZ' },
+  { code: 'en', tag: 'EN', name: 'Angličtina', flag: 'GB' }
 ];
 const I18N_TOOL_LANG_DISPLAY_CODE = {
-  en: 'GB',
-  sk: 'SK',
-  pl: 'PL',
-  de: 'DE',
-  fr: 'FR',
-  es: 'ES',
-  it: 'IT',
-  pt: 'PT',
-  ru: 'RU',
-  uk: 'UA',
-  bg: 'BG',
-  ro: 'RO',
-  hu: 'HU',
-  nl: 'NL',
-  sv: 'SE',
-  da: 'DK',
-  no: 'NO',
-  fi: 'FI',
-  el: 'GR',
-  tr: 'TR',
-  ar: 'SA',
-  'zh-CN': 'CN',
-  ja: 'JP',
-  ko: 'KR',
-  he: 'IL'
+  cs: 'CZ',
+  en: 'GB'
 };
 const I18N_TOOL_TRANSLATOR_TARGET_CODES = new Set([
-  'cs', 'cz', 'en', 'sk', 'pl', 'de', 'fr', 'es', 'it', 'pt', 'ru', 'uk',
-  'bg', 'ro', 'hu', 'nl', 'sv', 'da', 'no', 'fi', 'el', 'tr', 'ar', 'ja',
-  'ko', 'he', 'zh-CN'
+  'cs', 'cz', 'en'
 ]);
 
 function sanitizeI18nToolLanguages() {
