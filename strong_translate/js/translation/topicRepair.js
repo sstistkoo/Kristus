@@ -115,7 +115,15 @@ function getTopicSourceTextForPreview(key, topicId) {
   const t = state.translated[key] || {};
   const current = String(t[topicId] || '').trim();
   if (hasMeaningfulValue(current)) return current;
-  // fallback na původní text z entryMap
+  // fallback na původní text z entryMap (pokud překlad chybí)
+  if (topicId === 'definice') return String(e.definice || e.def || '').trim();
+  if (topicId === 'kjv') return String(e.kjv || '').trim();
+  if (topicId === 'vyznam') return String(e.vyznamCz || e.cz || '').trim();
+  return String(e.orig || e.definice || e.def || '').trim();
+}
+
+function getTopicOriginText(key, topicId) {
+  const e = state.entryMap.get(key) || {};
   if (topicId === 'definice') return String(e.definice || e.def || '').trim();
   if (topicId === 'kjv') return String(e.kjv || '').trim();
   if (topicId === 'vyznam') return String(e.vyznamCz || e.cz || '').trim();
@@ -294,8 +302,8 @@ function buildTopicRepairTasks(keys) {
         status: 'waiting',
         checked: true,
         includeBulk: true,
-        currentValue: String(t[topicId] || '').trim(),
-        sourceValue: getTopicSourceTextForPreview(key, topicId),
+        currentValue: String(t[topicId] || getTopicSourceTextForPreview(key, topicId) || '').trim(),
+        sourceValue: getTopicOriginText(key, topicId),
         candidateValue: '',
         provider: '',
         error: '',
