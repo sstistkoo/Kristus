@@ -1793,6 +1793,7 @@ const {
   openSystemPromptModal, runSystemPromptAI, closeSystemPromptModal,
   translateSystemPromptText, translateSystemPromptBackToEnglish, reviewSystemPromptWithAI, buildSystemPromptFromRequirement,
   extractTopicValueFromAI,
+  toggleTopicRepairManualApproval,
 } = topicRepairApi;
 
 // -- LIMITS + PREVIEW API ----------------------------------------
@@ -4496,6 +4497,7 @@ window.openSystemPromptModal = openSystemPromptModal;
 window.runSystemPromptAI = runSystemPromptAI;
 window.closeSystemPromptModal = closeSystemPromptModal;
 window.translateSystemPromptText = translateSystemPromptText;
+window.toggleTopicRepairManualApproval = toggleTopicRepairManualApproval;
 window.translateSystemPromptBackToEnglish = translateSystemPromptBackToEnglish;
 window.reviewSystemPromptWithAI = reviewSystemPromptWithAI;
 window.buildSystemPromptFromRequirement = buildSystemPromptFromRequirement;
