@@ -330,7 +330,7 @@ function renderTopicRepairModal() {
   modal.innerHTML = `
     <div style="max-width:980px;margin:0 auto;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <h2 style="color:var(--acc);margin:0">${t('topicRepair.modal.title', { count: topicRepairState.tasks.length })}</h2>
+         <h2 style="color:var(--acc);margin:0">🗔 ${t('topicRepair.modal.title', { count: topicRepairState.tasks.length })}</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="hbtn" id="topicRepairMinimizeBtn" onclick="minimizeTopicRepairModal()">${t('topicRepair.modal.minimize')}</button>
           <button class="hbtn" onclick="closeTopicRepairModalOnly()">${t('topicRepair.modal.closeWindow')}</button>
