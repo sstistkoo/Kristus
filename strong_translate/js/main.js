@@ -4496,6 +4496,7 @@ window.jumpToStart = jumpToStart;
 
 // Z listApi
 window.translateSelected = translateSelected;
+window.toggleSelect = toggleSelect;
 window.selectAll = selectAll;
 window.selectNone = selectNone;
 window.filterMissingTopicsList = filterMissingTopicsList;
