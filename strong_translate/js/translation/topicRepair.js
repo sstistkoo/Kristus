@@ -1280,8 +1280,11 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
          task.status = 'done';
          task.error = '';
          task.checked = shouldAutoCheckTopicRepairTask(topicId, task.currentValue, val);
-         const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
-         syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
+          const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
+          // Extrahuj specialista data POUZE pro tasky s topicId === 'specialista'
+          if (task.topicId === 'specialista') {
+            syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
+          }
        } else {
          task.status = 'failed';
          task.error = t('topicRepair.error.noValueForEntry');
