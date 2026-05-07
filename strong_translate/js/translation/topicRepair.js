@@ -39,9 +39,7 @@ Analýza: Identifikuj slovo a gramatiku (buď ze zadaného kódu, nebo vlastní 
 
 Význam: Definuj sémantické jádro podle Strongova slovníku.
 
-Tvarosloví: Stručně popiš gramatické vlastnosti (vid, čas, pád).
-
-První slovo: Jako nejpřesnější překlad vyber ten, který nejlépe odpovídá gramatickému tvaru a biblickému úzu.
+První slovo: Jako nejpřesnější překlad vyber ten, který nejlépe odpovídá gramatickému tvaru (viz G:V附) a biblickému úzu.
 
 FORMÁT ODPOVĚDI:
 ###[číslo]###
@@ -1451,7 +1449,7 @@ function buildTopicPrompt(key, topicId) {
   const topicLabel = TOPIC_LABELS[topicId] || topicId;
   const promptTemplate = getTopicPromptTemplate(topicId);
   const sourceText = [
-    `${e.key || key} | ${e.greek || ''}`,
+    `${e.key || key} | ${e.greek || ''}${e.tvaroslovi ? ` (${e.tvaroslovi})` : ''}`,
     `DEF: ${e.definice || e.def || ''}`,
     e.kjv ? `KJV: ${e.kjv}` : '',
     e.orig ? `ORIG: ${e.orig}` : ''
