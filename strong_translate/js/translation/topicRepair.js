@@ -729,15 +729,18 @@ function setTopicRepairDetectedTopicDecision(taskIndex, topicId, decision) {
 }
 
 function applyTopicRepairSelected() {
-  const topicRepairState = state.topicRepairState;
-  if (!topicRepairState) return;
-  let applied = 0;
-  for (const task of topicRepairState.tasks) {
-    if (!task.checked || !hasMeaningfulValue(task.candidateValue)) continue;
-    state.translated[task.key] = state.translated[task.key] || {};
-    state.translated[task.key][task.topicId] = task.candidateValue;
-    applied++;
-  }
+   const topicRepairState = state.topicRepairState;
+   if (!topicRepairState) return;
+   let applied = 0;
+   for (const task of topicRepairState.tasks) {
+     if (!task.checked || !hasMeaningfulValue(task.candidateValue)) continue;
+     state.translated[task.key] = state.translated[task.key] || {};
+     state.translated[task.key][task.topicId] = task.candidateValue;
+     applied++;
+     // Clear the task after applying to update UI correctly
+     task.candidateValue = '';
+     task.checked = false;
+   }
   if (applied > 0) {
     saveProgress();
     renderList();
@@ -775,9 +778,13 @@ function applyTopicRepairSelected() {
     } else {
       showToast(t('toast.topic.overwritten.count', { count: applied }));
     }
-  }
-  syncTopicRepairMinimizeBusyIndicator();
-}
+   }
+   // Update UI if modal is still open (not closed)
+   if (state.topicRepairState) {
+     updateTopicRepairModalUI();
+   }
+   syncTopicRepairMinimizeBusyIndicator();
+ }
 
 function closeTopicRepairModalOnly() {
   closeTopicRepairModalSafe();
