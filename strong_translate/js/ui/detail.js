@@ -6,9 +6,22 @@
  *       buildTopicPrompt, openTopicPromptModal,
  *       callAIWithRetry, extractTopicValueFromAI,
  *       resolveProviderForInteractiveAction, getPipelineModelForProvider,
- *       getCurrentApiKey, getSystemMessage
+ *       getCurrentApiKey, getSystemMessage, getResolvedSystemMessage
  */
 import { hasMeaningfulValue, isTranslationComplete } from '../translation/utils.js';
+
+// Storage klíče pro topic-specific prompty (zjednodušená verze z topicRepair.js)
+const TOPIC_REPAIR_PROMPT_PREFIX = 'strong_topic_repair_batch_prompt_v1_';
+
+function getStoredTopicPrompts(topicId) {
+  const sysKey = `${TOPIC_REPAIR_PROMPT_PREFIX}${topicId}_sys`;
+  const usrKey = `${TOPIC_REPAIR_PROMPT_PREFIX}${topicId}_usr`;
+  return {
+    system: String(localStorage.getItem(sysKey) || '').trim() || null,
+    user: String(localStorage.getItem(usrKey) || '').trim() || null
+  };
+}
+
 export function createDetailApi({
   state, t, escHtml,
   TOPIC_LABELS, refreshTopicLabels,
@@ -16,7 +29,7 @@ export function createDetailApi({
   buildTopicPrompt, openTopicPromptModal,
   callAIWithRetry, extractTopicValueFromAI,
   resolveProviderForInteractiveAction, getPipelineModelForProvider,
-  getCurrentApiKey, getSystemMessage
+  getCurrentApiKey, getSystemMessage, getResolvedSystemMessage
 }) {
 
   function renderTranslation(key, tr) {
@@ -210,10 +223,28 @@ export function createDetailApi({
       showToast(t('toast.apiKey.enter'));
       return;
     }
-    const prompt = buildTopicPrompt(key, topicId);
+
+    // Načtení topic-specific promptů z úložiště
+    const stored = getStoredTopicPrompts(topicId);
+    let prompt, systemPrompt;
+    if (stored.user) {
+      const e = state.entryMap.get(key) || {};
+      const hesloText = `${e.key || key} | ${e.greek || ''}${e.tvaroslovi ? ` (${e.tvaroslovi})` : ''}`;
+      if (topicId === 'definice' && (e.definice || e.def)) {
+        // hesloText += `\nDEF: ${e.definice || e.def}`;
+      }
+      prompt = stored.user.includes('{HESLA}')
+        ? stored.user.replace(/{HESLA}/g, hesloText)
+        : `${stored.user}\n\n${hesloText}`;
+      systemPrompt = stored.system;
+    } else {
+      prompt = buildTopicPrompt(key, topicId);
+      systemPrompt = null;
+    }
+
     try {
       const messages = [
-        { role: 'system', content: getSystemMessage() },
+        { role: 'system', content: systemPrompt || getSystemMessage() },
         { role: 'user', content: prompt }
       ];
       const raw = await callAIWithRetry(prov, apiKey, model, messages);

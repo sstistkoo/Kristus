@@ -1455,6 +1455,15 @@ function syncTopicPromptTemplatesReport() {
   }
 }
 
+function getTopicRepairPromptFromStorage(topicId) {
+  const sysKey = getTopicRepairSystemPromptStorageKey(topicId);
+  const usrKey = getTopicRepairUserPromptStorageKey(topicId);
+  return {
+    system: String(localStorage.getItem(sysKey) || '').trim() || null,
+    user: String(localStorage.getItem(usrKey) || '').trim() || null
+  };
+}
+
 function buildTopicPrompt(key, topicId) {
   const e = state.entryMap.get(key) || {};
   const topicLabel = TOPIC_LABELS[topicId] || topicId;
@@ -1489,11 +1498,29 @@ ${specialistaDetailRule}`;
 function openTopicPromptModal(key, topicId) {
   const topicLabel = TOPIC_LABELS[topicId] || topicId;
   const currentValue = String(state.translated?.[key]?.[topicId] || '').trim();
+
+  // Načtení topic-specific promptů z úložiště (Oprava témat)
+  const storedPrompts = getTopicRepairPromptFromStorage(topicId);
+
+  let prompt, systemPrompt;
+  if (storedPrompts.user) {
+    // Použijeme uložený user prompt s vložením dat hesla
+    const hesloText = buildTopicRepairBatchHeslaText([key], topicId);
+    prompt = storedPrompts.user.includes('{HESLA}')
+      ? storedPrompts.user.replace(/{HESLA}/g, hesloText)
+      : `${storedPrompts.user}\n\n${hesloText}`;
+    systemPrompt = storedPrompts.system;
+  } else {
+    prompt = buildTopicPrompt(key, topicId);
+    systemPrompt = null;
+  }
+
   state.topicPromptState = {
     key,
     topicId,
-    prompt: buildTopicPrompt(key, topicId),
-    currentValue
+    prompt,
+    currentValue,
+    systemPrompt
   };
 
   closeTopicPromptModal();
@@ -1553,8 +1580,10 @@ async function runTopicPromptAI() {
   runBtn.disabled = true;
   runBtn.textContent = t('topicPrompt.sending');
   try {
+    // Použití topic-specific systémového promptu pokud existuje
+    const systemPrompt = state.topicPromptState.systemPrompt || getResolvedSystemMessage();
     const messages = [
-      { role: 'system', content: getResolvedSystemMessage() },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: customPrompt }
     ];
     const raw = await callAIWithRetry(prov, apiKey, model, messages);

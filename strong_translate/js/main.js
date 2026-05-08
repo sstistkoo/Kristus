@@ -1695,17 +1695,18 @@ const {
 } = listApi;
 
 _detailApi = createDetailApi({
-  state, t, escHtml,
-  TOPIC_LABELS, refreshTopicLabels,
-  saveProgress: (...a) => saveProgress(...a),
-  renderList, updateStats, showToast,
-  log,
-  buildTopicPrompt: (...a) => buildTopicPrompt(...a),
-  openTopicPromptModal: (...a) => openTopicPromptModal(...a),
-  callAIWithRetry, extractTopicValueFromAI: (...a) => extractTopicValueFromAI(...a),
-  resolveProviderForInteractiveAction, getPipelineModelForProvider: (...a) => getPipelineModelForProvider(...a),
-  getCurrentApiKey: (...a) => getCurrentApiKey(...a),
-  getSystemMessage: getResolvedSystemMessage
+   state, t, escHtml,
+   TOPIC_LABELS, refreshTopicLabels,
+   saveProgress: (...a) => saveProgress(...a),
+   renderList, updateStats, showToast,
+   log,
+   buildTopicPrompt: (...a) => buildTopicPrompt(...a),
+   openTopicPromptModal: (...a) => openTopicPromptModal(...a),
+   callAIWithRetry, extractTopicValueFromAI: (...a) => extractTopicValueFromAI(...a),
+   resolveProviderForInteractiveAction, getPipelineModelForProvider: (...a) => getPipelineModelForProvider(...a),
+   getCurrentApiKey: (...a) => getCurrentApiKey(...a),
+   getSystemMessage: getResolvedSystemMessage,
+   getResolvedSystemMessage
 });
 const {
   renderDetail, renderTranslation, toggleEditSection, saveSection,
