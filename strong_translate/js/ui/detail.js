@@ -29,7 +29,8 @@ export function createDetailApi({
   buildTopicPrompt, openTopicPromptModal,
   callAIWithRetry, extractTopicValueFromAI,
   resolveProviderForInteractiveAction, getPipelineModelForProvider,
-  getCurrentApiKey, getSystemMessage, getResolvedSystemMessage
+  getCurrentApiKey, getSystemMessage, getResolvedSystemMessage,
+  getDefaultBatchTopicUserPrompt, getDefaultBatchTopicSystemPrompt
 }) {
 
   function renderTranslation(key, tr) {
@@ -238,8 +239,14 @@ export function createDetailApi({
         : `${stored.user}\n\n${hesloText}`;
       systemPrompt = stored.system;
     } else {
-      prompt = buildTopicPrompt(key, topicId);
-      systemPrompt = null;
+      // Použijeme výchozí batch šablonu pro dané téma
+      const e = state.entryMap.get(key) || {};
+      const hesloText = `${e.key || key} | ${e.greek || ''}${e.tvaroslovi ? ` (${e.tvaroslovi})` : ''}`;
+      prompt = getDefaultBatchTopicUserPrompt(topicId) || '';
+      prompt = prompt.includes('{HESLA}')
+        ? prompt.replace(/{HESLA}/g, hesloText)
+        : `${prompt}\n\n${hesloText}`;
+      systemPrompt = getDefaultBatchTopicSystemPrompt(topicId);
     }
 
     try {

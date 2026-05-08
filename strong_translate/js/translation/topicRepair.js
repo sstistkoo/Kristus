@@ -93,6 +93,17 @@ HESLA:
   {TOPIC}: [překlad]`
 };
 
+function getDefaultBatchTopicSystemPrompt(topicId) {
+  return TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId] || BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT;
+}
+
+function getDefaultBatchTopicUserPrompt(topicId) {
+  const template = TOPIC_BATCH_TEMPLATES[topicId] || getResolvedDefaultPrompt() || '';
+  return String(template).trim();
+}
+
+export { getDefaultBatchTopicSystemPrompt, getDefaultBatchTopicUserPrompt };
+
 export function createTopicRepairApi(deps) {
   const {
     state, t, escHtml,
@@ -971,15 +982,6 @@ function applyPromptLanguageTokens(promptText) {
   return String(promptText || '')
     .replace(/{TARGET_LANG}/g, targetName)
     .replace(/{SOURCE_LANG}/g, sourceName);
-}
-
-function getDefaultBatchTopicSystemPrompt(topicId) {
-  return TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId] || BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT;
-}
-
-function getDefaultBatchTopicUserPrompt(topicId) {
-  const template = TOPIC_BATCH_TEMPLATES[topicId] || getResolvedDefaultPrompt() || '';
-  return String(template).trim();
 }
 
 function getTopicRepairSystemPrompt(topicId) {

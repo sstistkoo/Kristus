@@ -62,10 +62,11 @@
    import { createHeaderApi } from './ui/header.js';
    import { createModalsApi } from './ui/modals.js';
    import { startResize as uiStartResize, doResize as uiDoResize, stopResize as uiStopResize } from './ui/resize.js';
-   import { createListApi } from './ui/list.js';
-   import { createDetailApi } from './ui/detail.js';
-   import { createBatchApi } from './translation/batch.js';
-   import { createTopicRepairApi } from './translation/topicRepair.js';
+import { createListApi } from './ui/list.js';
+    import { createDetailApi } from './ui/detail.js';
+    import { createBatchApi } from './translation/batch.js';
+    import { getDefaultBatchTopicSystemPrompt, getDefaultBatchTopicUserPrompt } from './translation/topicRepair.js';
+    import { createTopicRepairApi } from './translation/topicRepair.js';
    import { createLimitsApi } from './ui/limits.js';
    import { createPreviewApi } from './ui/preview.js';
    import { createSettingsApi } from './settings.js';
@@ -1707,10 +1708,9 @@ _detailApi = createDetailApi({
    getCurrentApiKey: (...a) => getCurrentApiKey(...a),
    getSystemMessage: getResolvedSystemMessage,
    getResolvedSystemMessage,
-   buildTopicRepairBatchHeslaText: (...a) => buildTopicRepairBatchHeslaText(...a),
-   getTopicRepairSystemPrompt: (...a) => getTopicRepairSystemPrompt(...a),
-   getTopicRepairUserPrompt: (...a) => getTopicRepairUserPrompt(...a)
- });
+   getDefaultBatchTopicUserPrompt: (...a) => getDefaultBatchTopicUserPrompt(...a),
+   getDefaultBatchTopicSystemPrompt: (...a) => getDefaultBatchTopicSystemPrompt(...a)
+  });
 const {
   renderDetail, renderTranslation, toggleEditSection, saveSection,
   toggleSourceEntryEdit, saveSourceEntryField, refillSingleField
