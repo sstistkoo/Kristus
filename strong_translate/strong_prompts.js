@@ -1,28 +1,44 @@
-const SYSTEM_MESSAGE = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.
-  
+const SYSTEM_MESSAGE = `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+
+const DEFAULT_PROMPT = `PRAVIDLA PRO ČEŠTINU A KVALITU
+OBECNÉ POKYNY:
+
+PŘEPISY: U všech cizích slov (řečtina, hebrejština, aramejština) v polích P a D vždy doplň český překlad/přepis do závorky.
+
+PŘEKLAD ODKAZŮ: Biblické zkratky v hranatých závorkách [ ] uvnitř pole D musí být v češtině (např. [Act] -> [Sk], [Mat] -> [Mt], [John] -> [Jan]).
+
+DŮSLEDNOST: Přelož vše z EN do CZ včetně odborných termínů (např. properly, figuratively, lit., spec.).
+
+NORMALIZACE: Odstraň podtržítka u číslování. Nahraď __1., __1.__ za 1. a __2., __2.__ za 2..
+
+INSTRUKCE PRO JEDNOTLIVÁ POLE:
+
+V (Význam):
+Přelož význam hesla do češtiny. Proveď analýzu slova a gramatiky (ze zadaného kódu nebo vlastní). Definuj sémantické jádro podle Strongova slovníku. Jako první slovo vyber nejpřesnější překlad, který nejlépe odpovídá gramatickému tvaru a biblickému úzu.
+
+D (Definice):
+Věrně přelož definici do češtiny. Přímo do textu doplňuj české překlady cizích slov v závorkách. Zachovej veškeré značky a technické termíny v českém ekvivalentu.
+
+P (Původ):
+Zpracuj etymologii a původ slova. Uveď původní jazyk, původní písmo (s českým překladem v závorce), vývoj významu a původní doslovný smysl slova.
+
+K (KJV):
+Odvoď hlavní význam z kontextu KJV a přelož jej. Identifikuj slovo a gramatiku (kmen u H, vid/pád u G). Propoj sémantické jádro Strongova slovníku s anglickým výrazem v KJV a četností výskytu.
+
+S (Specialista):
+Napiš souvislý odborný odstavec (3–7 vět). Vysvětli teologický a biblický význam slova v širším kontextu jako biblický specialista. Nepoužívej odrážky ani seznamy.
+
+OMEZENÍ A FORMÁT:
+
+ÚSPORA: Používej výhradně jednopísmenné klíče (V, D, P, K, S).
+
 FORMÁT ODPOVĚDI (Striktně dodržet):
 ###[číslo]###
-V: [česky význam]
-D: [věrný překlad EN definice do češtiny včetně závorek a značek]
-P: [jazyk + původní písmo (český překlad v závorce) + etymologie]
-K: [Odvoď hlavní význam KJV z kontextu a přelož jej do češtiny.]
-S: [detailní odstavec 3-6 vět jako biblický specialista]. Odstavec má vysvětlit teologický a biblický význam slova v kontextu. Nepiš body ani seznam, jen souvislý odstavec.]
-  
-PRAVIDLA PRO ČEŠTINU A KVALITU:
-  
-PŘEPISY: U všech cizích slov (řečtina, hebrejština, aramejština) v poli P, D i S vždy doplň český překlad v závorce.
-  
-PŘEKLAD ODKAZŮ: Biblické zkratky v [ ] uvnitř pole D musí být v češtině (např. [Act] na [Sk], [Mat] na [Mt], [John] na [Jan]).
-  
-DŮSLEDNOST: Přelož vše z EN do CZ (včetně termínů jako properly, figuratively, lit., spec.).
-  
-NORMALIZACE: Nahraď __1. za 1. a __2. za 2.
-  
-OMEZENÍ:
-  
-Používej pouze jednopísmenné klíče (V, D, P, K, S) pro úsporu tokenů.`;
-
-const DEFAULT_PROMPT = `Přelož následující hesla z angličtiny a originálních jazyků do češtiny podle pravidel. Doplňuj české přepisy v závorkách i v rámci překladu definice. Vrat pouze data bez komentářů.
+V: [český význam]
+D: [překlad definice včetně závorek a značek]
+P: [jazyk + původní písmo (přepis) + etymologie]
+K: [překlad hlavního KJV významu]
+S: [odborný výklad v souvislém odstavci]
 
 HESLA:
 {HESLA}`;
@@ -55,7 +71,7 @@ const PROMPT_LIBRARY_BASE = {
           { name: 'Theological', desc: 'Context emphasis', text: DEFAULT_PROMPT, system: '' },
           { name: 'Fast', desc: 'Short and fast', text: DEFAULT_PROMPT, system: '' }
       ]
- };
+  };
 
 // ─── TÉMATICKÉ (TOPIC) BATCH ŠABLONY ──────────────────────────────────────
 // Každé téma má vlastní instrukce – nahradí DEFAULT_PROMPT v batch režimu
