@@ -45,7 +45,12 @@ export function createAutoApi(deps) {
       showToast(t('toast.auto.notStartedTokenLimit'));
       return;
     }
-    runAutoStep();
+    // Spustit až po malém zpoždění, aby UI mohlo aktualizovat
+    setTimeout(() => {
+      if (state.autoRunning && !state.autoStepRunning) {
+        runAutoStep();
+      }
+    }, 50);
   }
 
   function stopAuto() {
@@ -204,9 +209,9 @@ export function createAutoApi(deps) {
       log(t('auto.log.translatingRange', { from: batch[0], to: batch[batch.length - 1] }));
       updateETA();
 
-      const result = await translateBatch(batch);
-      updateStats();
-      renderList();
+const result = await translateBatch(batch);
+       updateStats();
+       renderList();
       if (state.activeKey && state.translated[state.activeKey]) renderDetail();
       if (!state.autoRunning) return;
 
@@ -215,18 +220,20 @@ export function createAutoApi(deps) {
       log(`${done}/${total}`);
 
       const delaySeconds = result?.rateLimited ? (result.cooldownSeconds || 60) : state.currentInterval;
-      let remaining = delaySeconds;
-      const countdown = document.getElementById('countdown');
-      if (countdown) countdown.textContent = String(remaining);
-      clearInterval(state.autoCountTimer);
-      state.autoCountTimer = setInterval(() => {
-        remaining--;
+      if (state.autoRunning) {
+        let remaining = delaySeconds;
+        const countdown = document.getElementById('countdown');
         if (countdown) countdown.textContent = String(remaining);
-        if (remaining <= 0) clearInterval(state.autoCountTimer);
-      }, 1000);
-      updateAutoProviderCountdowns();
+        clearInterval(state.autoCountTimer);
+        state.autoCountTimer = setInterval(() => {
+          remaining--;
+          if (countdown) countdown.textContent = String(remaining);
+          if (remaining <= 0) clearInterval(state.autoCountTimer);
+        }, 1000);
+        updateAutoProviderCountdowns();
 
-      state.autoTimer = setTimeout(runAutoStep, delaySeconds * 1000);
+        state.autoTimer = setTimeout(runAutoStep, delaySeconds * 1000);
+      }
     } finally {
       state.autoStepRunning = false;
     }
