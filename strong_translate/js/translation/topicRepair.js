@@ -9,15 +9,17 @@ const BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT = `Jsi expert na biblistiku, koine ře�
 
 // ─── TÉMAT-SPECIFICKÉ DOPLŇKY PRO SYSTÉMOVÝ PROMPT ───
 const TOPIC_SPECIFIC_SYSTEM_PROMPTS = {
-  definice: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+  definice: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
 
-  vyznam: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+  vyznam: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
 
-  kjv: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+  kjv: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
 
-  puvod: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+  puvod: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
 
-  specialista: `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`
+  specialista: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
+
+  all: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny. Režim „Vše“: seznam řádků filtruješ zaškrtávkami výše. Hromadný překlad postupně použije uložený batch prompt pro každé zaškrtnuté téma.`
 };
 
 // ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
@@ -82,7 +84,13 @@ HESLA:
   S: [odborný český výklad 3–7 vět]
 
   HESLA:
-  {HESLA}`
+  {HESLA}`,
+
+  all: `Režim „Vše“: seznam řádků filtruješ zaškrtávkami výše. Hromadný překlad postupně použije uložený batch prompt (💾 Uložit prompt) pro každé zaškrtnuté téma — jedno téma vyber v seznamu, uprav text a ulož.
+
+  FORMÁT ODPOVĚDI:
+  ###[číslo]###
+  {TOPIC}: [překlad]`
 };
 
 export function createTopicRepairApi(deps) {
@@ -896,7 +904,8 @@ const TOPIC_BATCH_PROMPT_PRESET_MAP = {
   definice: 'preset_topic_definice_batch',
   kjv: 'preset_topic_kjv_batch',
   puvod: 'preset_topic_puvod_batch',
-  specialista: 'preset_topic_specialista_batch'
+  specialista: 'preset_topic_specialista_batch',
+  all: 'preset_topic_all_batch'
 };
 
 /** Pořadí témat při hromadné opravě „Vše“. */
