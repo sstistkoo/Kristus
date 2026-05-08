@@ -1524,8 +1524,13 @@ function openTopicPromptModal(key, topicId) {
       : `${storedPrompts.user}\n\n${hesloText}`;
     systemPrompt = storedPrompts.system;
   } else {
-    prompt = buildTopicPrompt(key, topicId);
-    systemPrompt = null;
+    // Použijeme výchozí batch šablonu pro dané téma
+    const hesloText = buildTopicRepairBatchHeslaText([key], topicId);
+    prompt = getDefaultBatchTopicUserPrompt(topicId) || '';
+    prompt = prompt.includes('{HESLA}')
+      ? prompt.replace(/{HESLA}/g, hesloText)
+      : `${prompt}\n\n${hesloText}`;
+    systemPrompt = getDefaultBatchTopicSystemPrompt(topicId);
   }
 
   state.topicPromptState = {
