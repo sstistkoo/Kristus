@@ -1706,8 +1706,11 @@ _detailApi = createDetailApi({
    resolveProviderForInteractiveAction, getPipelineModelForProvider: (...a) => getPipelineModelForProvider(...a),
    getCurrentApiKey: (...a) => getCurrentApiKey(...a),
    getSystemMessage: getResolvedSystemMessage,
-   getResolvedSystemMessage
-});
+   getResolvedSystemMessage,
+   buildTopicRepairBatchHeslaText: (...a) => buildTopicRepairBatchHeslaText(...a),
+   getTopicRepairSystemPrompt: (...a) => getTopicRepairSystemPrompt(...a),
+   getTopicRepairUserPrompt: (...a) => getTopicRepairUserPrompt(...a)
+ });
 const {
   renderDetail, renderTranslation, toggleEditSection, saveSection,
   toggleSourceEntryEdit, saveSourceEntryField, refillSingleField
@@ -1793,6 +1796,7 @@ const {
   applyTopicPromptResult, shouldReplaceSpecialista, closeTopicPromptModal,
   openSystemPromptModal, runSystemPromptAI, closeSystemPromptModal,
   translateSystemPromptText, translateSystemPromptBackToEnglish, reviewSystemPromptWithAI, buildSystemPromptFromRequirement,
+  getTopicRepairSystemPrompt, getTopicRepairUserPrompt, buildTopicRepairBatchHeslaText,
   extractTopicValueFromAI,
   toggleTopicRepairManualApproval,
 } = topicRepairApi;

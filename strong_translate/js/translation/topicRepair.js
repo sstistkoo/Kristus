@@ -1056,21 +1056,25 @@ function buildTopicRepairBatchHeslaText(keys, topicId) {
   const list = Array.isArray(keys) ? keys : [];
   return list.map(key => {
     const e = state.entryMap.get(key) || {};
-    const lines = [`${e.key || key} | ${e.greek || ''}${e.tvaroslovi ? ` (${e.tvaroslovi})` : ''}`];
+    const lines = [];
+
+    const idPart = e.key || key;
+    const wordPart = e.greek || '';
+    const tvarPart = e.tvaroslovi ? ` (${e.tvaroslovi})` : '';
+    lines.push(`${idPart} | ${wordPart}${tvarPart}`);
 
     switch (topicId) {
       case 'definice':
         if (e.definice || e.def) lines.push(`DEF: ${e.definice || e.def || ''}`);
         break;
       case 'vyznam':
+        const curMean = String(e.vyznamCz || e.cz || '').trim();
+        if (curMean) lines.push(`V: ${curMean}`);
         break;
       case 'kjv':
         if (e.kjv) lines.push(`K: ${e.kjv}`);
         break;
       case 'puvod':
-        // AI dostane jen hlavní řádek (G537 | ἅπας (G:A))
-        // e.orig obsahuje jen tvarosloví → duplikoval by se
-        // AI původ odvodí sama z čísla a slova
         break;
       case 'specialista':
         break;
@@ -2326,10 +2330,44 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
    }
    if (keyForTopic) {
      cleaned = cleaned.replace(new RegExp(`^${keyForTopic}\\s*[-:–—=.]?\\s*`, 'i'), '').trim();
-   }
-   return cleaned;
 }
-   return {
+    return cleaned;
+}
+
+function buildTopicDataBlockForDetail(key, topicId) {
+  const e = state.entryMap.get(key) || {};
+  const lines = [];
+
+  const idPart = e.key || key;
+  const wordPart = e.greek || '';
+  const tvarPart = e.tvaroslovi ? ` (${e.tvaroslovi})` : '';
+  lines.push(`${idPart} | ${wordPart}${tvarPart}`);
+
+  const translated = state.translated[key] || {};
+  const currentVal = String(translated[topicId] || '').trim();
+  const origVal = String(e[topicId === 'definice' ? 'definice' : topicId] || e.definice || e.def || '').trim();
+
+  switch (topicId) {
+    case 'definice':
+      if (origVal) lines.push(`DEF: ${origVal}`);
+      break;
+    case 'vyznam':
+      if (currentVal) lines.push(`V: ${currentVal}`);
+      break;
+    case 'kjv':
+      if (e.kjv) lines.push(`K: ${e.kjv}`);
+      break;
+    case 'puvod':
+      break;
+    case 'specialista':
+      if (currentVal) lines.push(`S: ${currentVal}`);
+      break;
+  }
+
+  return lines.join('\n');
+}
+
+return {
      closeTopicRepairModalSafe,
      stopTopicRepairTicker,
      applyTopicRepairProviderCheckboxes,
@@ -2354,20 +2392,26 @@ function extractTopicValueFromAI(rawText, topicId, mode = 'loose') {
      toggleTopicRepairBulkInclude,
      setTopicRepairBulkIncludeAll,
      getTopicPromptTemplateByPromptType,
-     syncTopicPromptTemplatesReport,
-     buildTopicPrompt,
-     openTopicPromptModal,
-     runTopicPromptAI,
-     applyTopicPromptResult,
-     shouldReplaceSpecialista,
-     closeTopicPromptModal,
-     openSystemPromptModal,
-     runSystemPromptAI,
-     closeSystemPromptModal,
-     translateSystemPromptText,
-     translateSystemPromptBackToEnglish,
-     reviewSystemPromptWithAI,
+syncTopicPromptTemplatesReport,
+      buildTopicPrompt,
+      openTopicPromptModal,
+      runTopicPromptAI,
+      applyTopicPromptResult,
+      shouldReplaceSpecialista,
+      closeTopicPromptModal,
+      openSystemPromptModal,
+      runSystemPromptAI,
+      closeSystemPromptModal,
+      translateSystemPromptText,
+      translateSystemPromptBackToEnglish,
+      reviewSystemPromptWithAI,
      buildSystemPromptFromRequirement,
+     getTopicRepairSystemPrompt,
+     getTopicRepairUserPrompt,
+     buildTopicRepairBatchHeslaText,
+     buildTopicDataBlockForDetail,
+     getDefaultBatchTopicSystemPrompt,
+     getDefaultBatchTopicUserPrompt,
      extractTopicValueFromAI,
-  };
+   };
 }
