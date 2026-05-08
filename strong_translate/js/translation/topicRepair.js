@@ -690,8 +690,8 @@ async function processTopicRepairQueue() {
         nextTask.status = 'failed';
       }
       updateTopicRepairModalUI();
-      saveProgress();
-      await sleepMsMs(80);
+       saveProgress();
+       await sleepMsMs(state.currentInterval * 1000);
     }
     updateTopicRepairModalUI();
     if (state.topicRepairState && !state.topicRepairState.closed) {
