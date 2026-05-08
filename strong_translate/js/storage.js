@@ -138,7 +138,7 @@ async function forceAutoBackup() {
   }
 }
 
-function cleanupOldBackups() {
+export function cleanupOldBackups() {
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);

@@ -55,6 +55,7 @@
      safeSetLocalStorage,
      checkQuotaAndMaybeAutoBackup
    } from './storage.js';
+    import { cleanupOldBackups } from './storage.js';
    
    // UI a translation API moduly
    import { createExportApi } from './exportData.js';
@@ -4240,10 +4241,10 @@ window.downloadI18nToolAiResult = downloadI18nToolAiResult;
 // Toast s akcn�m tlac�tkem (napr. Undo). Vydr�� 2� d�le.
 
 
-const { download, exportTXT, exportJSON, exportRange } = createExportApi({
-  state,
-  t,
-  showToast
+const { download, exportTXT, exportJSON, exportRange, exportAllLocalStorage } = createExportApi({
+   state,
+   t,
+   showToast
 });
 
  function log(msg) {
@@ -4571,6 +4572,8 @@ window.confirmClearLibraryPrompts = confirmClearLibraryPrompts;
 window.exportTXT = exportTXT;
 window.exportJSON = exportJSON;
 window.exportRange = exportRange;
+window.exportAllLocalStorage = exportAllLocalStorage;
+window.cleanupOldBackups = cleanupOldBackups;
 
 // Z modalsApi + modelTestUiApi + main.js funkce
 window.closeModal = closeModal;

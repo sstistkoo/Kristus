@@ -181,8 +181,10 @@
        <button class="hbtn" id="btnStep" onclick="translateNext()" aria-label="Přeložit další dávku">⚡ Dávka</button>
       <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů (nejdřív modal, pak ▶ Test provideru)" aria-label="Test modelů — otevře nastavení">🧪 Test modelů</button>
       <button class="hbtn" id="btnI18nHelpTop" onclick="openI18nToolHelpModal()" title="Nápověda">❓</button>
-      <button class="hbtn grn" id="btnExportTxt" onclick="exportTXT()" aria-label="Exportovat do TXT">⬇ TXT</button>
-      <button class="hbtn grn" id="btnExportJson" onclick="exportJSON()" aria-label="Exportovat do JSON">⬇ JSON</button>
+<button class="hbtn grn" id="btnExportTxt" onclick="exportTXT()" aria-label="Exportovat do TXT">⬇ TXT</button>
+       <button class="hbtn grn" id="btnExportJson" onclick="exportJSON()" aria-label="Exportovat do JSON">⬇ JSON</button>
+       <button class="hbtn grn" id="btnExportAll" onclick="exportAllLocalStorage()" title="Exportovat všechny překlady z localStorage" aria-label="Exportovat všechny překlady">⬇ Vše</button>
+       <button class="hbtn red" id="btnCleanupBackups" onclick="cleanupOldBackups()" title="Vymazat staré zálohy a undo" aria-label="Vymazat staré zálohy">🧹 Zálohy</button>
       <button class="hbtn" id="btnExportRange" onclick="exportRange()" title="Export vybraného rozsahu G čísel" aria-label="Exportovat rozsah G čísel">⬇ Rozsah</button>
       <button class="hbtn red" id="btnFailedEntries" onclick="showFailedEntries()" title="Zobrazit neúspěšné překlady" aria-label="Zobrazit neúspěšné překlady">⚠ Neus. <span id="failedCount"></span></button>
       <button class="hbtn" id="btnAISettingsDesktop" onclick="showSettingsModal()" title="Nastavení AI (provider, model, dávka)" aria-label="Nastavení AI">⚙ Nastavení AI</button>
