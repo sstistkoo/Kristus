@@ -733,9 +733,6 @@ saveProgress();
           delete state.translated[key]._processing;
         }
       }
-      if (fallbackPromise) {
-        try { await fallbackPromise; } catch (e) {}
-      }
       return { ok: true };
 } catch(e) {
       const reqMs = performance.now() - reqStart;
@@ -792,9 +789,6 @@ saveProgress();
       });
       updateFailedCount();
       showToast(t('toast.error.withMessage', { message: e.message }));
-      if (fallbackPromise) {
-        try { await fallbackPromise; } catch (e) {}
-      }
       return { ok: false };
    }
 }
