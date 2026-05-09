@@ -87,6 +87,17 @@ export function createExportApi({ state, t, showToast }) {
   }
 
 async function exportAllLocalStorage() {
+      function deduplicateText(text) {
+        if (!text) return text;
+        // Odstraní KJV/Původ/Specialista uvnitř definice (ty se načtou jako samostatná pole)
+        return text
+          .replace(/\s*KJV překlady \(CZ\):[^\n]*(?=Původ:|Specialista:|$)/gi, '')
+          .replace(/\s*Původ:[^\n]*(?=Specialista:|KJV překlady|Původ:|Specialista:|$)/gi, '')
+          .replace(/\s*Specialista:[^\n]*(?=KJV překlady|Původ:|Specialista:|$)/gi, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+      }
+      
       // Exportuje všechna přeložená hesla z aktuálně načteného souboru (state.entries + state.translated)
       const langTag = getUiTag();
       
@@ -113,7 +124,7 @@ async function exportAllLocalStorage() {
       sampleKeys.forEach(k => {
         const tr = state.translated[k];
         const existsInEntries = entryKeys.includes(k);
-        console.log(`  ${k}: existsInEntries=${existsInEntries} vyznam="${tr?.vyznam}" skipped=${tr?.skipped}`);
+        console.log(`  ${k}: existsInEntries=${existsInEntries} vyznam="${tr?.vyznam}" definice="${tr?.definice}" def="${tr?.def}" hasAnyContent=${!!(tr?.vyznam || tr?.definice || tr?.def || tr?.kjv || tr?.puvod)}`);
       });
       
       // Kontrola: existují importované klíče ve entries?
@@ -142,19 +153,19 @@ async function exportAllLocalStorage() {
        return;
      }
 
-     const lines = done.map(e => {
-       const tr = state.translated[e.key];
-       return [
-         `${e.key} | ${e.greek}`,
-         `${t('export.field.meaning', { lang: langTag })}: ${tr.vyznam || '—'}`,
-         `${t('export.field.definitionEn')}: ${tr.def || '—'}`,
-         `${t('export.field.definition', { lang: langTag })}: ${tr.definice || '—'}`,
-         `${t('export.field.kjv', { lang: langTag })}: ${tr.kjv || '—'}`,
-         `${t('export.field.origin')}: ${tr.puvod || '—'}`,
-         `${t('export.field.specialist')}: ${tr.specialista || '—'}`,
-         ''
-       ].join('\n');
-     });
+const lines = done.map(e => {
+        const tr = state.translated[e.key];
+        return [
+          `${e.key} | ${e.greek}`,
+          `${t('export.field.meaning', { lang: langTag })}: ${tr.vyznam || '—'}`,
+          `${t('export.field.definitionEn')}: ${tr.def || '—'}`,
+          `${t('export.field.definition', { lang: langTag })}: ${deduplicateText(tr.definice) || '—'}`,
+          `${t('export.field.kjv', { lang: langTag })}: ${deduplicateText(tr.kjv) || '—'}`,
+          `${t('export.field.origin')}: ${deduplicateText(tr.puvod) || '—'}`,
+          `${t('export.field.specialist')}: ${deduplicateText(tr.specialista) || '—'}`,
+          ''
+        ].join('\n');
+      });
 
      download('strong_gr_cz_all_translations.txt', lines.join('\n'), 'text/plain');
      showToast(t('toast.exported.count', { count: done.length }));

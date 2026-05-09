@@ -20,28 +20,39 @@ const TXT_LABEL_ALIASES = {
  * Odstraňuje bílé znaky na začátku/konci.
  */
 function getValueByLabels(lines, labels) {
-  for (const label of labels) {
-    let started = false;
-    let collected = [];
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!started) {
-        if (trimmed.startsWith(`${label}:`) || trimmed.startsWith(`${label}：`)) {
-          started = true;
-          const after = line.slice(label.length + 1).trim();
-          if (after) collected.push(after);
-        }
-      } else {
-        // Jsme v bloku pod labelem — pokud začíná novým labelem (druhý výskyt ':'), končíme
-        // Prázdné řádky již nekončí, aby bylo možné akumulovat víceřádkové hodnoty
-        if (trimmed && /^\w+:\s*$/.test(trimmed)) break;
-        if (trimmed) collected.push(trimmed);
-      }
-    }
-    if (collected.length) return collected.join(' ').trim();
-  }
-  return '';
-}
+   const ALL_LABELS = Object.values(TXT_LABEL_ALIASES).flat();
+   for (const label of labels) {
+     let started = false;
+     let collected = [];
+     for (const line of lines) {
+       if (!started) {
+         if (line.includes(`${label}:`)) {
+           started = true;
+           let idx = line.indexOf(`${label}:`);
+           let after = line.slice(idx + `${label}:`.length);
+           // Zkontroluj, jestli za labelem následuje další label
+           for (const otherLabel of ALL_LABELS) {
+             const otherIdx = after.indexOf(`${otherLabel}:`);
+             if (otherIdx > 0) {
+               after = after.slice(0, otherIdx);
+               break;
+             }
+           }
+           after = after.trim();
+           if (after) collected.push(after);
+         }
+       } else {
+         const foundLabel = ALL_LABELS.find(l => line.includes(`${l}:`));
+         if (foundLabel) break;
+         const trimmed = line.trim();
+         if (/^\w+:\s*$/.test(trimmed)) break;
+         if (trimmed) collected.push(trimmed);
+       }
+     }
+     if (collected.length) return collected.join(' ').trim();
+   }
+   return '';
+ }
 
 export function parseCzTXT(text) {
   const result = {};
