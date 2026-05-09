@@ -29,8 +29,10 @@
      MODEL_TEST_RAW_OUTPUT_KEY,
      MODEL_TEST_MODEL_STORAGE_KEY,
      MODEL_TEST_PINNED_MODELS,
-     API_KEY_PROFILES_PREFIX,
-     API_KEY_ACTIVE_PROFILE_PREFIX
+API_KEY_PROFILES_PREFIX,
+      API_KEY_ACTIVE_PROFILE_PREFIX,
+      BATCH_SIZE_KEY,
+      INTERVAL_KEY
     } from './config.js';
    import {
      UI_LANG_KEY,
@@ -1216,10 +1218,16 @@ function onProviderChange() {
 }
 
 function initRunSelects() {
-  const bs = document.getElementById('batchSizeRun');
-  if (bs) bs.value = document.getElementById('batchSize').value;
-  const iv = document.getElementById('intervalRun');
-  if (iv) iv.value = document.getElementById('interval').value;
+  const savedBatchSize = localStorage.getItem(BATCH_SIZE_KEY) || '5';
+  const savedInterval = localStorage.getItem(INTERVAL_KEY) || '20';
+  const bs = document.getElementById('batchSize');
+  if (bs) bs.value = savedBatchSize;
+  const iv = document.getElementById('interval');
+  if (iv) iv.value = savedInterval;
+  const bsRun = document.getElementById('batchSizeRun');
+  if (bsRun && bs) bsRun.value = bs.value;
+  const ivRun = document.getElementById('intervalRun');
+  if (ivRun && iv) ivRun.value = iv.value;
   syncAutoPanelSettingsInputs();
 }
 
@@ -2187,7 +2195,27 @@ async function loadSavedSettings() {
     modelSelect.value = mainPipelineModel;
     localStorage.setItem('strong_model', mainPipelineModel);
   }
-  
+
+  // Načti uloženou velikost dávky a interval
+  const savedBatchSize = localStorage.getItem(BATCH_SIZE_KEY);
+  const savedInterval = localStorage.getItem(INTERVAL_KEY);
+  const batchSizeEl = document.getElementById('batchSize');
+  const intervalEl = document.getElementById('interval');
+  if (savedBatchSize && batchSizeEl) batchSizeEl.value = savedBatchSize;
+  if (savedInterval && intervalEl) intervalEl.value = savedInterval;
+
+  // Ukládání změn do localStorage
+  if (batchSizeEl) {
+    batchSizeEl.addEventListener('change', () => {
+      localStorage.setItem(BATCH_SIZE_KEY, batchSizeEl.value);
+    });
+  }
+  if (intervalEl) {
+    intervalEl.addEventListener('change', () => {
+      localStorage.setItem(INTERVAL_KEY, intervalEl.value);
+    });
+  }
+
   checkDefaultFile();
   loadDefaultFile();
   updateFailedCount();

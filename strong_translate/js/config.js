@@ -62,3 +62,5 @@ export const MODEL_TEST_PINNED_MODELS = [
 ];
 export const API_KEY_PROFILES_PREFIX = 'strong_apikey_profiles_';
 export const API_KEY_ACTIVE_PROFILE_PREFIX = 'strong_apikey_active_';
+export const BATCH_SIZE_KEY = 'strong_batch_size';
+export const INTERVAL_KEY = 'strong_interval';

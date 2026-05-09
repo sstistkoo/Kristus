@@ -12,7 +12,7 @@ export const state = {
   autoProviderCountdownTimer: null,
   autoRunning: false,
   autoStepRunning: false,
-  currentBatchSize: 10,
+  currentBatchSize: 5,
   currentInterval: 10,
   filteredKeys: [],
   retryMode: false,

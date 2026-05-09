@@ -1,5 +1,6 @@
 import { t, getUiLang, getDefaultContentTag, CONTENT_TAG_LANG_KEY, CONTENT_TAG_LANG_MANUAL_KEY } from '../i18n.js';
 import { safeSetLocalStorage, safeRemoveLocalStorage } from '../storage.js';
+import { BATCH_SIZE_KEY, INTERVAL_KEY } from '../config.js';
 
 export function createSettingsModalsApi({ initRunSelects, updateSetupCompactSummary, initPipelineModelSelectors, initPipelineModelSelectorsInSettingsModal, showToast, refreshTopicLabels, renderList, saveProgress, refreshLanguageAwarePromptOptionLabels, applySystemPromptForCurrentTask, applyUiLanguage, DEFAULT_UI_LANG, UI_LANGS, UI_LANG_KEY, setPipelineModelForProvider, setPipelineSecondaryEnabled, syncSecondaryProviderToggles, updateAutoProviderCountdowns }) {
 
@@ -206,12 +207,15 @@ function closeSettingsModal() {
    if (providerEl) providerEl.value = 'groq';
    const mainGroqEl = document.getElementById('model');
    if (mainGroq && mainGroqEl) mainGroqEl.value = mainGroq;
-   const batchSizeRunMobile = document.getElementById('batchSizeRunMobile');
-   const batchSize = document.getElementById('batchSize');
-   if (batchSizeRunMobile && batchSize) batchSize.value = batchSizeRunMobile.value;
-   const intervalRunMobile = document.getElementById('intervalRunMobile');
-   const interval = document.getElementById('interval');
-   if (intervalRunMobile && interval) interval.value = intervalRunMobile.value;
+const batchSizeRunMobile = document.getElementById('batchSizeRunMobile');
+    const batchSize = document.getElementById('batchSize');
+    if (batchSizeRunMobile && batchSize) batchSize.value = batchSizeRunMobile.value;
+    const intervalRunMobile = document.getElementById('intervalRunMobile');
+    const interval = document.getElementById('interval');
+    if (intervalRunMobile && interval) interval.value = intervalRunMobile.value;
+    // Save batch size and interval to localStorage
+    if (batchSize) safeSetLocalStorage(BATCH_SIZE_KEY, batchSize.value, 'settingsModals');
+    if (interval) safeSetLocalStorage(INTERVAL_KEY, interval.value, 'settingsModals');
     // Set token limit BEFORE init calls – original order
     const tokenLimitRunMobile = document.getElementById('tokenLimitRunMobile');
     if (tokenLimitRunMobile) {
