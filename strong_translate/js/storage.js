@@ -158,26 +158,9 @@ export function cleanupOldBackups() {
 export function handleQuotaExceeded() {
   console.error('[Storage] QUOTA EXCEEDED — spouštím recovery');
   cleanupOldBackups();
-  try {
-    const minimal = {
-      translated: Object.fromEntries(
-        Object.entries(state.translated || {}).map(([k, v]) => [
-          k,
-          v && typeof v === 'object'
-            ? Object.fromEntries(Object.entries(v).filter(([kk]) => !kk.startsWith('raw') && kk !== 'pendingApi'))
-            : v
-        ])
-      ),
-      ts: Date.now(),
-      fileId: state.currentFileId
-    };
-    localStorage.setItem(storeKey(), JSON.stringify(minimal));
-    console.log('[Storage] Minimální stav uložen po recovery');
-    if (window.app?.toast) {
-      window.app.toast.show('⚠️ Storage nearly full — záloha vygenerována');
-    }
-  } catch (e) {
-    console.error('[Storage] Stále nelze uložit — localStorage je plný');
+  console.log('[Storage] Staré zálohy smazány (pokus o uvolnění místa)');
+  if (window.app?.toast) {
+    window.app.toast.show('⚠️ Storage téměř plný — vymažte nepotřebná data nebo exportujte nastavení');
   }
 }
 

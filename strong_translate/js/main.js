@@ -47,14 +47,14 @@
    import { sleepMs, sleep, debounce, formatAiResponseTime, escHtml } from './utils.js';
    import { createCallApi } from './ai/call.js';
    import { StorageStats } from './storageStats.js';
-   import {
-     computeFileId,
-     storeKey,
-     backupKey,
-     undoKey,
-     safeSetLocalStorage,
-     checkQuotaAndMaybeAutoBackup
-   } from './storage.js';
+import {
+  computeFileId,
+  storeKey,
+  backupKey,
+  undoKey,
+  checkQuotaAndMaybeAutoBackup
+} from './storage.js';
+import { setItem as idbSetItem, getItem as idbGetItem, removeItem as idbRemoveItem } from './idbStorage.js';
     import { cleanupOldBackups } from './storage.js';
    
    // UI a translation API moduly
@@ -1442,36 +1442,49 @@ function startApp() {
   });
 }
 
-function initApp(loadingEl) {
-  state.currentBatchSize = parseInt(document.getElementById('batchSize').value);
-  state.currentInterval  = parseInt(document.getElementById('interval').value);
+async function initApp(loadingEl) {
+   state.currentBatchSize = parseInt(document.getElementById('batchSize').value);
+   state.currentInterval  = parseInt(document.getElementById('interval').value);
 
-  // Obnov ulo�en� preklad � pro aktu�lne nacten� soubor
-  try {
-    const saved = localStorage.getItem(storeKey());
-    if (saved) {
-      const data = JSON.parse(saved);
-      state.translated = data.translated || {};
-      state.sourceEntryEdits = data.sourceEntryEdits || {};
-    } else if (state.currentFileId) {
-      // Pokus o migraci ze star�ho (legacy) slotu pri prvn�m pou�it� nov�ho prefixu
-      const legacy = localStorage.getItem(LEGACY_STORE_KEY);
-      if (legacy) {
-        const data = JSON.parse(legacy);
-        if (data && data.translated && Object.keys(data.translated).length > 0) {
-          state.translated = data.translated;
-          state.sourceEntryEdits = data.sourceEntryEdits || {};
-          // Ulo� pod nov�m kl�cem, legacy zachov�me � u�ivatel mu�e m�t v�c souboru
-          localStorage.setItem(storeKey(), JSON.stringify({ translated: state.translated, sourceEntryEdits: state.sourceEntryEdits, ts: Date.now(), fileId: state.currentFileId, migrated: true }));
-          logInfo('migrate', `Migrov�no ${Object.keys(state.translated).length} hesel z legacy slotu`);
-        }
-      }
-    }
+   // Obnov ulo�en� preklad � pro aktu�lne nacten� soubor
+   try {
+     let data = null;
+     // 1. Try IndexedDB
+     const idbSaved = await idbGetItem(storeKey());
+     if (idbSaved) {
+       data = idbSaved;
+     } else if (state.currentFileId) {
+       // 2. Try localStorage (current key)
+       const lsSaved = localStorage.getItem(storeKey());
+       if (lsSaved) {
+         data = JSON.parse(lsSaved);
+       } else {
+         // 3. Try legacy localStorage
+         const legacy = localStorage.getItem(LEGACY_STORE_KEY);
+         if (legacy) {
+           const legacyData = JSON.parse(legacy);
+           if (legacyData && legacyData.translated && Object.keys(legacyData.translated).length > 0) {
+             data = legacyData;
+             // Save to IndexedDB as migrated
+             await idbSetItem(storeKey(), { ...legacyData, migrated: true });
+             logInfo('migrate', `Migrov�no ${Object.keys(legacyData.translated).length} hesel z legacy slotu do IndexedDB`);
+           }
+         }
+       }
+     }
+     if (data) {
+       state.translated = data.translated || {};
+       state.sourceEntryEdits = data.sourceEntryEdits || {};
+       // If we loaded from localStorage (not IndexedDB) and not already migrated, save to IndexedDB
+       if (!idbSaved && lsSaved) {
+         await idbSetItem(storeKey(), { ...data, migrated: true });
+       }
+     }
    } catch(e) {
-      logWarn('startApp', 'Failed to load saved progress, starting fresh', { error: e.message });
-      state.translated = {};
-      state.sourceEntryEdits = {};
-    }
+       logWarn('startApp', 'Failed to load saved progress, starting fresh', { error: e.message });
+       state.translated = {};
+       state.sourceEntryEdits = {};
+     }
     
     // Kontrola kvóty localStorage hned po startu
     checkQuotaAndMaybeAutoBackup();

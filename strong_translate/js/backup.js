@@ -1,7 +1,7 @@
 ﻿import { state } from './state.js';
 import { storeKey, backupKey, undoKey, safeSetLocalStorage, safeRemoveLocalStorage, checkQuotaAndMaybeAutoBackup } from './storage.js';
 import { debounce } from './utils.js';
-import { setItem as idbSetItem } from './idbStorage.js';
+import { setItem as idbSetItem, getItem as idbGetItem, removeItem as idbRemoveItem } from './idbStorage.js';
 
 export function createBackupApi({ renderList, updateStats, showToast, showToastWithAction, t, logError, logWarn, logInfo, isTranslationComplete, updateBackupButtonVisibility, getUiLang, updateFailedCount, clearLog }) {
 
@@ -38,7 +38,8 @@ export function createBackupApi({ renderList, updateStats, showToast, showToastW
     const AUTO_BACKUP_EVERY_N_BATCHES = 10;
     function writeBackup(key, payload) {
         try {
-            safeSetLocalStorage(key, JSON.stringify(payload), 'backup');
+            // Uložit do IndexedDB místo localStorage
+            idbSetItem(key, JSON.stringify(payload));
             return true;
         } catch (e) {
             logWarn('writeBackup', `Nelze uložit backup (${key})`, { error: e.message });
@@ -65,14 +66,15 @@ export function createBackupApi({ renderList, updateStats, showToast, showToastW
     }
 
     function hasUndo() {
-        const raw = localStorage.getItem(undoKey());
+        // Číst z IndexedDB
+        const raw = idbGetItem(undoKey());
         if (!raw) return null;
         try {
             const d = JSON.parse(raw);
             if (!d || !d.translated) return null;
             // Undo je platné jen pár minut
             if (Date.now() - (d.ts || 0) > 10 * 60 * 1000) {
-                localStorage.removeItem(undoKey());
+                idbRemoveItem(undoKey());
                 return null;
             }
             return d;
@@ -91,7 +93,7 @@ export function createBackupApi({ renderList, updateStats, showToast, showToastW
         updateStats();
         renderList();
         updateFailedCount();
-        if (source === 'undo') localStorage.removeItem(undoKey());
+        if (source === 'undo') idbRemoveItem(undoKey());
         showToast(t('toast.restored.count', { count }));
     }
 
@@ -99,7 +101,8 @@ export function createBackupApi({ renderList, updateStats, showToast, showToastW
         if (!confirm(t('confirm.clearProgress'))) return;
         // Ulož snapshot jako undo
         writeBackup(undoKey(), { translated: state.translated, ts: Date.now(), fileId: state.currentFileId });
-        safeRemoveLocalStorage(storeKey());
+        // Odstranit hlavní stav z IndexedDB (nikoliv z localStorage)
+        idbRemoveItem(storeKey());
         state.translated = {};
         updateStats();
         renderList();
@@ -107,6 +110,17 @@ export function createBackupApi({ renderList, updateStats, showToast, showToastW
         const pane = document.getElementById('detailPane');
         if (pane) pane.innerHTML = `<div class="detail-empty">${t('detail.empty')}</div>`;
         showToastWithAction(t('toast.progressClearedRestore.message'), t('toast.progressClearedRestore.action'), () => restoreFromBackup('undo'));
+    }
+
+    // Funkce pro čtení zálohy (stejná jako hasUndo ale bez kontroly času)
+    function hasBackup() {
+        const raw = idbGetItem(backupKey());
+        if (!raw) return null;
+        try {
+            const d = JSON.parse(raw);
+            if (!d || !d.translated) return null;
+            return d;
+        } catch (e) { return null; }
     }
 
     return { saveProgress, saveProgressImmediate, writeBackup, maybeAutoBackup, hasUndo, restoreFromBackup, clearProgress };
