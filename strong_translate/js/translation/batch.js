@@ -209,13 +209,20 @@ function getNextBatch(size) {
   
   for (const e of state.entries) {
     if (result.length >= size) break;
-    if (!state.translated[e.key] || state.translated[e.key].skipped) {
-      const startsWithG = e.key.startsWith('G');
-      const startsWithH = e.key.startsWith('H');
-      
-      if ((includeG && startsWithG) || (includeH && startsWithH)) {
-        result.push(e.key);
+    const existing = state.translated[e.key];
+    // P?esko?it pokud existuje a není skipped, nebo pokud je ozna?eno jako _processing
+    if (existing && !existing.skipped) {
+      // Ve AUTO režimu respektovat i _processing flag (p?edchozí p?eklad ješt? nebyl dokon?en)
+      if (state.autoRunning && existing._processing) {
+        continue;
       }
+      continue;
+    }
+    const startsWithG = e.key.startsWith('G');
+    const startsWithH = e.key.startsWith('H');
+    
+    if ((includeG && startsWithG) || (includeH && startsWithH)) {
+      result.push(e.key);
     }
   }
   return result;
@@ -551,7 +558,7 @@ async function runParallelTopicFallback(keys, abortVersion) {
 
 function enqueueSideFallbackBackground(keys) {
   const keyList = Array.isArray(keys) ? keys.filter(Boolean) : [];
-  if (!keyList.length) return;
+  if (!keyList.length) return Promise.resolve();
   const abortVersion = state.sideFallbackAbortVersion;
   // Inicializace queue pokud neexistuje
   if (!state.sideFallbackBackgroundQueue) {
@@ -565,6 +572,7 @@ function enqueueSideFallbackBackground(keys) {
         await runParallelTopicFallback(keyList, abortVersion);
       } catch (e) {}
     });
+  return state.sideFallbackBackgroundQueue;
 }
 
 async function translateBatch(keys, depth = 0) {
@@ -586,6 +594,13 @@ async function translateBatch(keys, depth = 0) {
 
   const batch = keys.map(k => state.entryMap.get(k)).filter(Boolean);
   const messages = buildPromptMessages(batch);
+
+  // Ozna?it klí?e jako "p?ekládané" hned na za?átku, aby se nepoužily znovu
+  for (const key of keys) {
+    if (!state.translated[key]) {
+      state.translated[key] = { vyznam: null, _processing: true };
+    }
+  }
 
   const reqStart = performance.now();
   try {
@@ -659,28 +674,22 @@ if (missingKeys.length > 0) {
     }
     
     // Fallback strategie: pokud po retry chybí cást dávky, zkus menší dávku.
-    if (missingKeys.length > 0 && keys.length > 1 && depth < 4) {
+    // V AUTO režimu vypnuto - mohlo by zp?sobit p?ehnaný po?et API volání.
+    if (missingKeys.length > 0 && keys.length > 1 && depth < 4 && !state.autoRunning) {
       log(`? Fallback dávky: delím ${missingKeys.length} klícu na menší bloky (úroven ${depth + 1})`);
       const pivot = Math.ceil(missingKeys.length / 2);
       const chunks = [missingKeys.slice(0, pivot), missingKeys.slice(pivot)].filter(ch => ch.length > 0);
       for (const chunk of chunks) {
-        if (chunk.length === 1) {
-          await translateBatch(chunk, depth + 1);
-        } else {
-          await translateBatch(chunk, depth + 1);
-        }
+        await translateBatch(chunk, depth + 1);
       }
     }
 
     // Sekundární fallback spouštej až po dokoncení všech pokusu hlavního providera pro danou dávku
-    // (tj. pouze v top-level volání). Tím se vyhneme "strídání" provideru behem hlavního prekladu.
-    if (depth === 0) {
+    // V AUTO režimu vypnut - mohlo by zp?sobit p?ehnaný po?et API volání
+    if (depth === 0 && !state.autoRunning) {
       const keysBeforeSideFallback = keys.filter(k => !isTranslationComplete(state.translated[k]));
       if (keysBeforeSideFallback.length > 0) {
-        log(`? Analýza po ${prov}: ${keysBeforeSideFallback.length} hesel má chyby/neúplná témata; sekundární topic fallback beží na pozadí.`);
-        enqueueSideFallbackBackground(keysBeforeSideFallback);
-      } else {
-        log(`? Analýza po ${prov}: dávka kompletní, sekundární fallback není potreba.`);
+        log(`? Analýza po ${prov}: ${keysBeforeSideFallback.length} hesel má chyby/neúplná témata; sekundární topic fallback byl v AUTO režimu vypnut.`);
       }
     }
 
@@ -715,11 +724,20 @@ if (missingKeys.length > 0) {
       showToast(t('toast.translated.partial', { translated: translatedCount, total: keys.length }));
     }
     
-     saveProgress();
-     updateFailedCount();
-     // logEntry already called above after initial parse
-     log(`? Preloženo ${keys.length} hesel (${keys[0]}–${keys[keys.length-1]})`);
-     return { ok: true };
+saveProgress();
+      updateFailedCount();
+      // logEntry already called above after initial parse
+ log(`? Preloženo ${keys.length} hesel (${keys[0]}–${keys[keys.length-1]})`);
+      // Vy?istit _processing flagy po dokon?ení
+      for (const key of keys) {
+        if (state.translated[key] && state.translated[key]._processing) {
+          delete state.translated[key]._processing;
+        }
+      }
+      if (fallbackPromise) {
+        try { await fallbackPromise; } catch (e) {}
+      }
+      return { ok: true };
 } catch(e) {
       const reqMs = performance.now() - reqStart;
       const msg = (e?.message || '').toLowerCase();
@@ -775,6 +793,9 @@ if (missingKeys.length > 0) {
       });
       updateFailedCount();
       showToast(t('toast.error.withMessage', { message: e.message }));
+      if (fallbackPromise) {
+        try { await fallbackPromise; } catch (e) {}
+      }
       return { ok: false };
    }
 }
