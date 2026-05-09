@@ -4270,7 +4270,7 @@ const { download, exportTXT, exportJSON, exportRange, exportAllLocalStorage } = 
    state,
    t,
    showToast
-});
+ });
 
  function log(msg) {
    const el = document.getElementById('autoLog');

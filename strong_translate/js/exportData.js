@@ -86,49 +86,36 @@ export function createExportApi({ state, t, showToast }) {
     showToast(t('toast.exported.range', { count: done.length, from: `G${from}`, to: `G${to}` }));
   }
 
-  function exportAllLocalStorage() {
-    const prefix = 'strong_gr_cz_v3_';
-    const allTranslated = {};
-    let totalCount = 0;
-    const langTag = getUiTag();
+   async function exportAllLocalStorage() {
+     // Exportuje všechna přeložená hesla z aktuálně načteného souboru (state.entries + state.translated)
+     const langTag = getUiTag();
+     const done = state.entries.filter(e => {
+       const tr = state.translated[e.key];
+       return tr && tr.vyznam && tr.vyznam !== '—' && !tr.skipped;
+     });
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith(prefix)) continue;
-      try {
-        const data = JSON.parse(localStorage.getItem(key));
-        if (data && typeof data === 'object') {
-          if (data.translated) {
-            for (const k of Object.keys(data.translated)) {
-              if (!allTranslated[k]) {
-                allTranslated[k] = data.translated[k];
-                totalCount++;
-              }
-            }
-          }
-        }
-      } catch (e) {}
-    }
+     if (done.length === 0) {
+       showToast(t('toast.noTranslatedEntry'));
+       return;
+     }
 
-    if (totalCount === 0) {
-      showToast(t('toast.noTranslatedEntry'));
-      return;
-    }
+     const lines = done.map(e => {
+       const tr = state.translated[e.key];
+       return [
+         `${e.key} | ${e.greek}`,
+         `${t('export.field.meaning', { lang: langTag })}: ${tr.vyznam || '—'}`,
+         `${t('export.field.definitionEn')}: ${tr.def || '—'}`,
+         `${t('export.field.definition', { lang: langTag })}: ${tr.definice || '—'}`,
+         `${t('export.field.kjv', { lang: langTag })}: ${tr.kjv || '—'}`,
+         `${t('export.field.origin')}: ${tr.puvod || '—'}`,
+         `${t('export.field.specialist')}: ${tr.specialista || '—'}`,
+         ''
+       ].join('\n');
+     });
 
-    const lines = Object.entries(allTranslated).map(([key, tr]) => [
-      `${key} | ${tr.greek || '—'}`,
-      `${t('export.field.meaning', { lang: langTag })}: ${tr.vyznam || '—'}`,
-      `${t('export.field.definitionEn')}: ${tr.def || '—'}`,
-      `${t('export.field.definition', { lang: langTag })}: ${tr.definice || '—'}`,
-      `${t('export.field.kjv', { lang: langTag })}: ${tr.kjv || '—'}`,
-      `${t('export.field.origin')}: ${tr.puvod || '—'}`,
-      `${t('export.field.specialist')}: ${tr.specialista || '—'}`,
-      ''
-    ].join('\n'));
-
-    download('strong_gr_cz_all_translations.txt', lines.join('\n'), 'text/plain');
-    showToast(t('toast.exported.count', { count: totalCount }));
-  }
+     download('strong_gr_cz_all_translations.txt', lines.join('\n'), 'text/plain');
+     showToast(t('toast.exported.count', { count: done.length }));
+   }
 
   return { download, exportTXT, exportJSON, exportRange, exportAllLocalStorage };
 }
