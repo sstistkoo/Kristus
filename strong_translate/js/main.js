@@ -652,16 +652,9 @@ function getModelTestPromptCatalog() {
   // Use core functions, but override prompt handling for custom prompt modes
    const buildRetryMessages = buildRetryMessagesCore;
    
-  function enforceSpecialistaFormat(promptText) {
-    if (!isPromptAutoModeEnabled()) return String(promptText || '');
-    const text = String(promptText || '');
-    const hasSpecialista = /SPECIALISTA|VYKLAD|EXEGEZE|COMMENTARY/i.test(text);
-    const systemHasSpecialista = /SPECIALISTA|VYKLAD|EXEGEZE|COMMENTARY/i.test(getResolvedSystemMessage() || '');
-    if (hasSpecialista || systemHasSpecialista) return text;
-    return `${text}
-
-${t('aiPrompts.enforceSpecialistaExtra')}`;
-  }
+function enforceSpecialistaFormat(promptText) {
+    return String(promptText || '');
+}
 
   function getActiveMainPromptTemplate(context = 'batch') {
     const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
