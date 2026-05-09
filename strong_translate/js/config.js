@@ -43,6 +43,7 @@ export const LEGACY_STORE_KEY = 'strong_gr_cz_v2';
 export const STORE_KEY_PREFIX = 'strong_gr_cz_v3__';
 
 export const AUTO_PROVIDER_ENABLED_KEY = 'strong_auto_provider_enabled_';
+export const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
 export const AUTO_TOKEN_LIMIT_KEY = 'strong_auto_token_limit';
 export const TEST_HISTORY_KEY = 'strong_test_history_v1';
 export const MODEL_TEST_OUTPUT_KEY = 'strong_model_test_output_v1';

@@ -57,10 +57,9 @@ export function setItem(key, value) {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
       const request = store.put(value, key);
-
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
-      tx.oncomplete = () => db.close();
+      // Nezavíráme db po každé transakci – necháme otevřenou
     })
   );
 }
@@ -82,7 +81,6 @@ export function getItem(key) {
         resolve(result !== undefined ? result : undefined);
       };
       request.onerror = () => reject(request.error);
-      tx.oncomplete = () => db.close();
     })
   );
 }
@@ -101,7 +99,6 @@ export function removeItem(key) {
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
-      tx.oncomplete = () => db.close();
     })
   );
 }
@@ -116,10 +113,8 @@ export function clear() {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
       const request = store.clear();
-
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
-      tx.oncomplete = () => db.close();
     })
   );
 }

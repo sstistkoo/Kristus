@@ -8,29 +8,30 @@
     getStaticFallbackModels
   } from '../strong_translator_ai.js';
   import { state } from './state.js';
-  import {
-    CONFIG,
-    ITEM_HEIGHT,
-    BUFFER_ITEMS,
-    PROVIDERS,
-    GEMINI_SYSTEM_MODEL,
-    LEGACY_STORE_KEY,
-    AUTO_PROVIDER_ENABLED_KEY,
-    AUTO_TOKEN_LIMIT_KEY,
-    TEST_HISTORY_KEY,
-    MODEL_TEST_OUTPUT_KEY,
-    MODEL_TEST_STATS_KEY,
-    MODEL_TEST_PROMPT_TYPE_KEY,
-    MODEL_TEST_PROMPT_COMPARE_TYPE_KEY,
-    MODEL_TEST_PROMPT_COMPARE_ENABLE_KEY,
-    MODEL_TEST_CUSTOM_PROMPT_KEY,
-    MODEL_TEST_ENABLE_PROMPT_KEY,
-    MODEL_TEST_RAW_OUTPUT_KEY,
-    MODEL_TEST_MODEL_STORAGE_KEY,
-    MODEL_TEST_PINNED_MODELS,
-    API_KEY_PROFILES_PREFIX,
-    API_KEY_ACTIVE_PROFILE_PREFIX
-   } from './config.js';
+   import {
+     CONFIG,
+     ITEM_HEIGHT,
+     BUFFER_ITEMS,
+     PROVIDERS,
+     GEMINI_SYSTEM_MODEL,
+     LEGACY_STORE_KEY,
+     AUTO_PROVIDER_ENABLED_KEY,
+     AUTO_TOKEN_LIMIT_KEY,
+     PIPELINE_SECONDARY_ENABLED_KEY,
+     TEST_HISTORY_KEY,
+     MODEL_TEST_OUTPUT_KEY,
+     MODEL_TEST_STATS_KEY,
+     MODEL_TEST_PROMPT_TYPE_KEY,
+     MODEL_TEST_PROMPT_COMPARE_TYPE_KEY,
+     MODEL_TEST_PROMPT_COMPARE_ENABLE_KEY,
+     MODEL_TEST_CUSTOM_PROMPT_KEY,
+     MODEL_TEST_ENABLE_PROMPT_KEY,
+     MODEL_TEST_RAW_OUTPUT_KEY,
+     MODEL_TEST_MODEL_STORAGE_KEY,
+     MODEL_TEST_PINNED_MODELS,
+     API_KEY_PROFILES_PREFIX,
+     API_KEY_ACTIVE_PROFILE_PREFIX
+    } from './config.js';
    import {
      UI_LANG_KEY,
      DEFAULT_UI_LANG,
@@ -104,7 +105,7 @@ const { MODEL_TEST_PROMPT_CATALOG: modelTestPromptCatalogFallback } = prompts;
 function getModelTestPromptCatalog() {
   return getResolvedModelTestCatalog(modelTestPromptCatalogFallback);
 }
-const PIPELINE_SECONDARY_ENABLED_KEY = 'strong_pipeline_secondary_enabled_';
+
 
   function formatAppTitleWithTargetLang(rawText, targetLang) {
     const text = String(rawText || '');
@@ -1358,19 +1359,25 @@ function updateAutoBtn() {
   }
 
 // -- RESUME -------------------------------------------------------
-function checkResume() {
+async function checkResume() {
   try {
     const box = document.getElementById('resumeBox');
     if (box) box.style.display = 'none';
-    let saved = localStorage.getItem(storeKey());
-    let source = t('resume.source.currentSlot');
-    // Pokud nem�me nic pod aktu�ln�m fileId, ale m�me legacy data, nab�dneme je
-    if (!saved && state.currentFileId) {
+    let data = null;
+    let source = t('resume.source.indexedDB');
+    // 1. Try IndexedDB
+    const idbSaved = await idbGetItem(storeKey());
+    if (idbSaved) {
+      data = idbSaved;
+    } else if (state.currentFileId) {
+      // 2. Try localStorage legacy
       const legacy = localStorage.getItem(LEGACY_STORE_KEY);
-      if (legacy) { saved = legacy; source = t('resume.source.legacySlot'); }
+      if (legacy) { 
+        data = JSON.parse(legacy); 
+        source = t('resume.source.legacySlot');
+      }
     }
-    if (!saved) return;
-    const data = JSON.parse(saved);
+    if (!data) return;
     const count = Object.keys(data.translated || {}).filter(k => {
       const t = data.translated[k];
       return t && t.vyznam && t.vyznam !== '�' && !t.skipped;
@@ -1380,9 +1387,9 @@ function checkResume() {
       const ts = data.ts ? new Date(data.ts).toLocaleString('cs') : '?';
       box.innerHTML = t('resume.found', { source, count, ts });
     }
-   } catch(e) {
-     logWarn('checkResume', 'Failed to parse saved progress', { error: e.message });
-   }
+  } catch(e) {
+    logWarn('checkResume', 'Failed to parse saved progress', { error: e.message });
+  }
 }
 
 function showSetup() {
@@ -1436,7 +1443,8 @@ function startApp() {
   
   // Deffered init
   requestAnimationFrame(() => {
-    setTimeout(() => {
+    setTimeout(async () => {
+      await checkResume();
       initApp(loadingEl);
     }, 10);
   });
@@ -1460,26 +1468,30 @@ async function initApp(loadingEl) {
          data = JSON.parse(lsSaved);
        } else {
          // 3. Try legacy localStorage
-         const legacy = localStorage.getItem(LEGACY_STORE_KEY);
-         if (legacy) {
-           const legacyData = JSON.parse(legacy);
-           if (legacyData && legacyData.translated && Object.keys(legacyData.translated).length > 0) {
-             data = legacyData;
-             // Save to IndexedDB as migrated
-             await idbSetItem(storeKey(), { ...legacyData, migrated: true });
-             logInfo('migrate', `Migrov�no ${Object.keys(legacyData.translated).length} hesel z legacy slotu do IndexedDB`);
-           }
-         }
+          const legacy = localStorage.getItem(LEGACY_STORE_KEY);
+          if (legacy) {
+            const legacyData = JSON.parse(legacy);
+            if (legacyData && legacyData.translated && Object.keys(legacyData.translated).length > 0) {
+              data = legacyData;
+              // Save to IndexedDB as migrated
+              await idbSetItem(storeKey(), { ...legacyData, migrated: true });
+              logInfo('migrate', `Migrováno ${Object.keys(legacyData.translated).length} hesel z legacy slotu do IndexedDB`);
+              // Remove legacy localStorage to free space
+              localStorage.removeItem(LEGACY_STORE_KEY);
+            }
+          }
        }
      }
-     if (data) {
-       state.translated = data.translated || {};
-       state.sourceEntryEdits = data.sourceEntryEdits || {};
-       // If we loaded from localStorage (not IndexedDB) and not already migrated, save to IndexedDB
-       if (!idbSaved && lsSaved) {
-         await idbSetItem(storeKey(), { ...data, migrated: true });
-       }
-     }
+      if (data) {
+        state.translated = data.translated || {};
+        state.sourceEntryEdits = data.sourceEntryEdits || {};
+        // If we loaded from localStorage (not IndexedDB) and not already migrated, save to IndexedDB
+        if (!idbSaved && lsSaved) {
+          await idbSetItem(storeKey(), { ...data, migrated: true });
+          // Remove from localStorage to free space
+          localStorage.removeItem(storeKey());
+        }
+      }
    } catch(e) {
        logWarn('startApp', 'Failed to load saved progress, starting fresh', { error: e.message });
        state.translated = {};
@@ -1745,7 +1757,7 @@ const autoApi = createAutoApi({
   PIPELINE_SECONDARY_ENABLED_KEY,
   setPipelineSecondaryEnabled: (...a) => setPipelineSecondaryEnabled(...a),
   syncSecondaryProviderToggles: (...a) => syncSecondaryProviderToggles(...a),
-  getSecondaryNextOperationState,
+  getSecondaryNextOperationState: batchApi.getSecondaryNextOperationState,
   stopElapsedTimer,
   showToast,
   log,
