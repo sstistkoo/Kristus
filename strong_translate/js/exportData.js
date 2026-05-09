@@ -95,11 +95,11 @@ async function exportAllLocalStorage() {
       const entryKeys = state.entries.map(e => e.key);
       const withTranslation = entryKeys.filter(k => {
         const tr = state.translated[k];
-        return tr && tr.vyznam && tr.vyznam !== '—' && !tr.skipped;
+        return tr && !tr.skipped && (tr.vyznam || tr.definice || tr.def || tr.kjv || tr.puvod);
       });
       const withoutTranslation = entryKeys.filter(k => {
         const tr = state.translated[k];
-        return !tr || !tr.vyznam || tr.vyznam === '—' || tr.skipped;
+        return !tr || tr.skipped || !tr.vyznam && !tr.definice && !tr.def && !tr.kjv && !tr.puvod;
       });
       const orphanKeys = translatedKeys.filter(k => !entryKeys.includes(k));
       
@@ -107,20 +107,34 @@ async function exportAllLocalStorage() {
       console.log(`Entries: ${entryKeys.length} | Translated keys: ${translatedKeys.length}`);
       console.log(`S překladem: ${withTranslation.length} | Bez překladu: ${withoutTranslation.length}`);
       console.log(`Orphan klíče (v translated, ne v entries): ${orphanKeys.length}`);
-      if (withTranslation.length > 0) {
-        console.log('Příklady S překladem:', withTranslation.slice(0, 5));
+      
+      // Detail: ukázat prvních 3 importované klíče a jejich obsah
+      const sampleKeys = translatedKeys.slice(0, 3);
+      sampleKeys.forEach(k => {
+        const tr = state.translated[k];
+        const existsInEntries = entryKeys.includes(k);
+        console.log(`  ${k}: existsInEntries=${existsInEntries} vyznam="${tr?.vyznam}" skipped=${tr?.skipped}`);
+      });
+      
+      // Kontrola: existují importované klíče ve entries?
+      const firstImportedKey = translatedKeys[0];
+      const entryForFirst = state.entries.find(e => e.key === firstImportedKey);
+      console.log(`Kontrola prvního importovaného klíče (${firstImportedKey}): entry nalezen=${!!entryForFirst}`);
+      if (entryForFirst) {
+        console.log(`  entry key="${entryForFirst.key}" greek="${entryForFirst.greek}"`);
       }
-      if (withoutTranslation.length > 0) {
-        console.log('Příklady BEZ překladu:', withoutTranslation.slice(0, 5));
+      
+      if (withoutTranslation.length > 0 && withoutTranslation.length < 10) {
+        console.log('VŠECHNY bez překladu:', withoutTranslation.slice(0, 10));
       }
-      if (orphanKeys.length > 0) {
-        console.log('Orphan klíče (prvních 5):', orphanKeys.slice(0, 5));
-      }
+      
       console.groupEnd();
       
       const done = state.entries.filter(e => {
         const tr = state.translated[e.key];
-        return tr && tr.vyznam && tr.vyznam !== '—' && !tr.skipped;
+        // Přijmi jako přeložený pokud existuje záznam a není přeskořen
+        // (vyznam může být prázdný při importu z TXT)
+        return tr && !tr.skipped && (tr.vyznam || tr.definice || tr.def || tr.kjv || tr.puvod);
       });
 
      if (done.length === 0) {
