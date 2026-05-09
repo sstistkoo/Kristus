@@ -135,8 +135,16 @@ function acceptPreview() {
       if (changed) { state.translated[key] = merged; applied++; }
       else skippedConflicts++;
     }
-  });
+});
 
+  const savedKeysCount = Object.keys(state.translated).length;
+  console.group('acceptPreview DEBUG');
+  console.log(`Uloženo ${applied} klíčů (applied)`);
+  console.log(`Celkem v state.translated: ${savedKeysCount} klíčů`);
+  if (skippedConflicts > 0) console.log(`Přeskočeno kvůli kolizi: ${skippedConflicts}`);
+  if (mode === 'fillgaps' && mergedFields > 0) console.log(`Doplněno polí: ${mergedFields}`);
+  console.groupEnd();
+  
   saveProgress();
   renderList();
   updateStats();

@@ -86,13 +86,42 @@ export function createExportApi({ state, t, showToast }) {
     showToast(t('toast.exported.range', { count: done.length, from: `G${from}`, to: `G${to}` }));
   }
 
-   async function exportAllLocalStorage() {
-     // Exportuje všechna přeložená hesla z aktuálně načteného souboru (state.entries + state.translated)
-     const langTag = getUiTag();
-     const done = state.entries.filter(e => {
-       const tr = state.translated[e.key];
-       return tr && tr.vyznam && tr.vyznam !== '—' && !tr.skipped;
-     });
+async function exportAllLocalStorage() {
+      // Exportuje všechna přeložená hesla z aktuálně načteného souboru (state.entries + state.translated)
+      const langTag = getUiTag();
+      
+      // DEBUG: Analýza state.translated vs state.entries
+      const translatedKeys = Object.keys(state.translated);
+      const entryKeys = state.entries.map(e => e.key);
+      const withTranslation = entryKeys.filter(k => {
+        const tr = state.translated[k];
+        return tr && tr.vyznam && tr.vyznam !== '—' && !tr.skipped;
+      });
+      const withoutTranslation = entryKeys.filter(k => {
+        const tr = state.translated[k];
+        return !tr || !tr.vyznam || tr.vyznam === '—' || tr.skipped;
+      });
+      const orphanKeys = translatedKeys.filter(k => !entryKeys.includes(k));
+      
+      console.group('exportAllLocalStorage DEBUG');
+      console.log(`Entries: ${entryKeys.length} | Translated keys: ${translatedKeys.length}`);
+      console.log(`S překladem: ${withTranslation.length} | Bez překladu: ${withoutTranslation.length}`);
+      console.log(`Orphan klíče (v translated, ne v entries): ${orphanKeys.length}`);
+      if (withTranslation.length > 0) {
+        console.log('Příklady S překladem:', withTranslation.slice(0, 5));
+      }
+      if (withoutTranslation.length > 0) {
+        console.log('Příklady BEZ překladu:', withoutTranslation.slice(0, 5));
+      }
+      if (orphanKeys.length > 0) {
+        console.log('Orphan klíče (prvních 5):', orphanKeys.slice(0, 5));
+      }
+      console.groupEnd();
+      
+      const done = state.entries.filter(e => {
+        const tr = state.translated[e.key];
+        return tr && tr.vyznam && tr.vyznam !== '—' && !tr.skipped;
+      });
 
      if (done.length === 0) {
        showToast(t('toast.noTranslatedEntry'));
