@@ -367,11 +367,23 @@ function renderTopicRepairModal() {
   if (!topicRepairState) return;
   if (!state.bulkListTopicFilter) state.bulkListTopicFilter = defaultBulkListTopicFilter();
   if (!state.bulkTopicId) state.bulkTopicId = 'all';
-  closeTopicRepairModalSafe();
-  const modal = document.createElement('div');
-  modal.id = 'topicRepairModal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10025;overflow-y:auto;padding:16px';
-  modal.innerHTML = `
+closeTopicRepairModalSafe();
+   const modal = document.createElement('div');
+   modal.id = 'topicRepairModal';
+   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10025;overflow-y:auto;padding:16px';
+   
+   // Vypočítání počtů pro zobrazení
+   const allTasks = topicRepairState.tasks.filter(t => !t.hidden);
+   const waitingCount = allTasks.filter(t => t.status === 'waiting').length;
+   const topicCounts = {
+     definice: allTasks.filter(t => t.topicId === 'definice').length,
+     vyznam: allTasks.filter(t => t.topicId === 'vyznam').length,
+     kjv: allTasks.filter(t => t.topicId === 'kjv').length,
+     puvod: allTasks.filter(t => t.topicId === 'puvod').length,
+     specialista: allTasks.filter(t => t.topicId === 'specialista').length
+   };
+   
+   modal.innerHTML = `
     <div style="max-width:980px;margin:0 auto;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
          <h2 style="color:var(--acc);margin:0">🗔 ${t('topicRepair.modal.title', { count: topicRepairState.tasks.length })}</h2>
@@ -448,14 +460,14 @@ function renderTopicRepairModal() {
         <div style="font-size:12px;color:var(--txt);margin-bottom:6px"><b>${t('topicRepair.modal.topicInListTitle')}</b> — ${t('topicRepair.modal.topicInListHint')}</div>
         <label style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--txt2);flex-wrap:wrap">
           <span style="white-space:nowrap">${t('topicRepair.modal.select')}</span>
-           <select id="topicRepairBulkTopicSelect" onchange="refreshTopicRepairBatchPromptEditor()" style="min-width:240px;flex:1;max-width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:6px;font-size:12px">
-             <option value="all" ${state.bulkTopicId === 'all' ? 'selected' : ''}>${t('topicRepair.modal.all')}</option>
-             <option value="definice" ${state.bulkTopicId === 'definice' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.definice)}</option>
-             <option value="vyznam" ${state.bulkTopicId === 'vyznam' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.vyznam)}</option>
-             <option value="kjv" ${state.bulkTopicId === 'kjv' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.kjv)}</option>
-             <option value="puvod" ${state.bulkTopicId === 'puvod' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.puvod)}</option>
-             <option value="specialista" ${state.bulkTopicId === 'specialista' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.specialista)}</option>
-           </select>
+<select id="topicRepairBulkTopicSelect" onchange="refreshTopicRepairBatchPromptEditor()" style="min-width:240px;flex:1;max-width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:6px;font-size:12px">
+              <option value="all" ${state.bulkTopicId === 'all' ? 'selected' : ''}>${t('topicRepair.modal.all')} (${allTasks.length})</option>
+              <option value="definice" ${state.bulkTopicId === 'definice' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.definice)} (${topicCounts.definice})</option>
+              <option value="vyznam" ${state.bulkTopicId === 'vyznam' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.vyznam)} (${topicCounts.vyznam})</option>
+              <option value="kjv" ${state.bulkTopicId === 'kjv' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.kjv)} (${topicCounts.kjv})</option>
+              <option value="puvod" ${state.bulkTopicId === 'puvod' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.puvod)} (${topicCounts.puvod})</option>
+              <option value="specialista" ${state.bulkTopicId === 'specialista' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.specialista)} (${topicCounts.specialista})</option>
+            </select>
         </label>
         <div id="topicRepairBulkListFilterRow" style="display:${state.bulkTopicId === 'all' ? 'flex' : 'none'};flex-wrap:wrap;gap:10px 14px;align-items:center;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);font-size:11px;color:var(--txt2)">
           <span style="width:100%;margin-bottom:2px">${t('topicRepair.modal.allLimitTypes')}</span>
@@ -466,11 +478,12 @@ function renderTopicRepairModal() {
         </div>
         <div style="font-size:10px;color:var(--txt3);margin-top:8px">${t('topicRepair.modal.batchPromptSectionHint')}</div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
-        <button class="hbtn grn" id="topicRepairStartSequentialBtn" type="button" onclick="startTopicRepairSequentialWorker()">${t('topicRepair.modal.startSequential')}</button>
-        <button class="hbtn grn" id="topicRepairToggleBtn" onclick="toggleTopicRepairRun()">${t('topicRepair.pause')}</button>
-        <button class="hbtn grn" id="topicRepairApplyBtn" onclick="applyTopicRepairSelected()">${t('topicRepair.applyOverwrite', { count: 0 })}</button>
-      </div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+         <button class="hbtn grn" id="topicRepairStartSequentialBtn" type="button" onclick="startTopicRepairSequentialWorker()">${t('topicRepair.modal.startSequential')}</button>
+         <span style="font-size:11px;color:var(--txt3);margin-left:4px">(${waitingCount} ${t('topicRepair.modal.waiting')})</span>
+         <button class="hbtn grn" id="topicRepairToggleBtn" onclick="toggleTopicRepairRun()">${t('topicRepair.pause')}</button>
+         <button class="hbtn grn" id="topicRepairApplyBtn" onclick="applyTopicRepairSelected()">${t('topicRepair.applyOverwrite', { count: 0 })}</button>
+       </div>
       <div id="topicRepairList"></div>
     </div>
   `;

@@ -1010,5 +1010,6 @@
   "systemPrompt.translator.status.requirementEmpty": "Dole napiš požadavek, ze kterého se má vytvořit prompt.",
   "systemPrompt.translator.status.aiBuildRunning": "AI generuje prompt ({provider} | {model})...",
   "systemPrompt.translator.status.aiBuildDone": "Hotovo: prompt vytvořen ({provider} | {model}).",
-  "systemPrompt.translator.status.aiBuildError": "Chyba generování promptu: {message}"
+  "systemPrompt.translator.status.aiBuildError": "Chyba generování promptu: {message}",
+  "topicRepair.modal.waiting": "čeká"
 }
