@@ -978,6 +978,20 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
 .translate-btn:hover { background: var(--acc2); }
 .translate-btn:disabled { opacity: .4; cursor: default; }
 
+/* Detail header – tlačítka v řádku */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.detail-header .translate-btn {
+  width: auto;
+  margin-left: 0;
+  margin-bottom: 0;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }

@@ -766,6 +766,7 @@
   "apiKey.profile.unnamed": "unnamed",
   "detail.refillButton": "✅¨ Refill",
   "detail.refillButton.aria": "Refill {label} via AI",
+  "detail.fillAllTopics": "✨ Fill all",
   "detail.saveButton": "Save",
   "detail.saveButton.aria": "Save {label}",
   "detail.source.edit": "✅Ž Edit",

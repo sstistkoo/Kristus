@@ -155,15 +155,16 @@ export function createDetailApi({
         ${studyLinks}`;
     }
 
-    const translateBtn = !hasTranslation
-      ? `<button class="translate-btn" type="button" onclick="openSystemPromptModal('${state.activeKey}')" title="${escHtml(t('translate.single.titlePrompt'))}">${t('translate.single.button')}</button>`
+    const translateBtn = `<button class="translate-btn" type="button" onclick="openSystemPromptModal('${state.activeKey}')">${t('translate.single.button')}</button>`;
+    const fillAllBtn = !hasTranslation
+      ? `<button class="translate-btn" type="button" onclick="fillAllTopics('${state.activeKey}')">${t('detail.fillAllTopics')}</button>`
       : '';
 
     pane.innerHTML = `
       <div class="detail-header">
         <span class="detail-key">${state.activeKey}</span>
         <span class="detail-greek">${escHtml(e.greek || '')}</span>
-        ${translateBtn}
+        ${translateBtn}${fillAllBtn}
       </div>
       <div class="detail-sections">${sections}</div>
       ${hasTranslation || tr ? `<div class="translation-section">${renderTranslation(state.activeKey, tr)}</div>` : ''}

@@ -4476,6 +4476,57 @@ function clearTranslations() {
 
 window.clearTranslations = clearTranslations;
 
+/**
+ * Automaticky doplní všechny chybějící témata pro jedno heslo.
+ * Odešle AI batch prompt, zpracuje odpověď a uloží výsledek.
+ */
+async function fillAllTopics(key) {
+  const entry = state.entryMap.get(key);
+  if (!entry) {
+    showToast(t('toast.entry.notFound'));
+    return;
+  }
+
+  // Kontrola, zda jsou všechna témata již přeložena
+  const tr = state.translated[key];
+  if (isTranslationComplete(tr || {})) {
+    showToast(t('toast.allTranslated'));
+    return;
+  }
+
+  const prov = resolveProviderForInteractiveAction(document.getElementById('provider').value);
+  const model = prov === (document.getElementById('provider').value || '')
+    ? document.getElementById('model').value
+    : getPipelineModelForProvider(prov);
+  const apiKey = getCurrentApiKey(prov);
+  if (!apiKey) {
+    showToast(t('toast.apiKey.enter'));
+    return;
+  }
+
+  try {
+    const messages = buildPromptMessages([entry]);
+    const raw = await callAIWithRetry(prov, apiKey, model, messages);
+    const parsed = {};
+    parseWithOpenRouterNormalization(raw?.content || '', [key], parsed);
+    applyFallbacksToParsedMap([key], parsed);
+    if (parsed[key]) {
+      state.translated[key] = { ...(state.translated[key] || {}), ...parsed[key], raw: raw?.content };
+      fillMissingVyznamFromSource([key]);
+      fillMissingKjvFromSource([key]);
+      annotateEnglishDefinitionsInTranslated([key]);
+      saveProgress();
+      renderList();
+      updateStats();
+      showToast(t('toast.translatedSystem.key', { key }));
+    } else {
+      showToast(t('toast.aiResponse.unmatched'));
+    }
+  } catch (e) {
+    showToast(t('toast.error.withMessage', { message: e.message }));
+  }
+}
+
 // Expose for debugging
 window.PROVIDERS = PROVIDERS;
 window.populateOpenRouterModels = populateOpenRouterModels;
@@ -4498,6 +4549,7 @@ window.translateNext = translateNext;
 window.translateSingle = translateSingle;
 window.retranslateSingle = retranslateSingle;
 window.jumpToStart = jumpToStart;
+window.fillAllTopics = fillAllTopics;
 
 // Z listApi
 window.translateSelected = translateSelected;
