@@ -1837,10 +1837,10 @@ function openSystemPromptModal(key) {
   modal.id = 'systemPromptModal';
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10020;padding:16px';
   modal.innerHTML = `
-    <div style="width:min(980px,95vw);max-height:92vh;overflow:auto;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:16px">
+    <div style="width:min(980px,95vw);max-height:92vh;display:flex;flex-direction:column;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:16px;overflow:hidden">
       <h3 style="margin:0 0 10px 0;color:var(--acc)">${escHtml(t('systemPrompt.title', { key }))}</h3>
       <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">${t('systemPrompt.editBeforeSend')}</div>
-      <textarea id="systemPromptInput" style="width:100%;min-height:240px;background:var(--bg3);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:10px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.5"></textarea>
+      <textarea id="systemPromptInput" style="width:100%;min-height:240px;background:var(--bg3);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:10px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.5;resize:vertical"></textarea>
       <details style="margin-top:10px;border:1px solid var(--brd);border-radius:6px;padding:8px;background:var(--bg3)">
         <summary style="cursor:pointer;color:var(--txt2);font-size:12px">${t('systemPrompt.translator.summary')}</summary>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
@@ -1867,13 +1867,15 @@ function openSystemPromptModal(key) {
         </div>
         <div id="systemPromptTranslateStatus" style="margin-top:6px;font-size:11px;color:var(--txt3)"></div>
       </details>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;flex-shrink:0">
         <button class="hbtn grn" id="systemPromptRunBtn" onclick="runSystemPromptAI()">${t('systemPrompt.send')}</button>
+        <button class="hbtn" id="systemPromptConfirmBtn" onclick="runSystemPromptConfirm()" style="display:none">✅ ${t('systemPrompt.confirmAndSave')}</button>
         <button class="hbtn" onclick="closeSystemPromptModal()">${t('systemPrompt.close')}</button>
       </div>
-      <div style="margin-top:14px">
-        <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">${t('systemPrompt.result')}</div>
-        <textarea id="systemPromptResult" style="width:100%;min-height:180px;background:var(--bg3);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:10px;font-family:inherit;font-size:13px;line-height:1.5" placeholder="${escHtml(t('systemPrompt.resultPlaceholder'))}"></textarea>
+      <div style="margin-top:10px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:4px;flex-shrink:0">${t('systemPrompt.result')}</div>
+        <div style="flex:1;min-height:0;overflow:auto;border:1px solid var(--brd);border-radius:4px;background:var(--bg3)">
+        <textarea id="systemPromptResult" style="width:100%;min-height:180px;background:transparent;border:none;border-radius:4px;color:var(--txt);padding:10px;font-family:inherit;font-size:13px;line-height:1.5;resize:none" placeholder="${escHtml(t('systemPrompt.resultPlaceholder'))}"></textarea>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -2109,6 +2111,42 @@ async function runSystemPromptAI() {
   } finally {
     runBtn.disabled = false;
     runBtn.textContent = t('systemPrompt.send');
+    // Show confirm button after successful result so user can review before saving
+    const confirmBtn = document.getElementById('systemPromptConfirmBtn');
+    if (confirmBtn) {
+      confirmBtn.style.display = '';
+    }
+  }
+}
+
+function runSystemPromptConfirm() {
+  if (!state.systemPromptState) return;
+  const { key } = state.systemPromptState;
+  const resultInput = document.getElementById('systemPromptResult');
+  if (!resultInput) return;
+  const rawText = String(resultInput.value || '').trim();
+  if (!rawText) {
+    showToast(t('toast.prompt.empty'));
+    return;
+  }
+  const parsed = {};
+  parseWithOpenRouterNormalization(rawText, [key], parsed);
+  applyFallbacksToParsedMap([key], parsed);
+  if (parsed[key]) {
+    state.translated[key] = { ...(state.translated[key] || {}), ...parsed[key], raw: rawText };
+    fillMissingVyznamFromSource([key]);
+    fillMissingKjvFromSource([key]);
+    annotateEnglishDefinitionsInTranslated([key]);
+    saveProgress();
+    renderDetail();
+    renderList();
+    updateStats();
+    showToast(t('toast.translatedSystem.key', { key }));
+    // Hide confirm button after saving
+    const confirmBtn = document.getElementById('systemPromptConfirmBtn');
+    if (confirmBtn) confirmBtn.style.display = 'none';
+  } else {
+    showToast(t('toast.aiResponse.unmatched'));
   }
 }
 
@@ -2417,6 +2455,7 @@ syncTopicPromptTemplatesReport,
       closeTopicPromptModal,
       openSystemPromptModal,
       runSystemPromptAI,
+      runSystemPromptConfirm,
       closeSystemPromptModal,
       translateSystemPromptText,
       translateSystemPromptBackToEnglish,

@@ -259,6 +259,7 @@
   "systemPrompt.send": "▶️ Send to AI",
   "systemPrompt.sending": "â³ Sending...",
   "systemPrompt.close": "✅• Close",
+  "systemPrompt.confirmAndSave": "✓ Confirm & Save",
   "systemPrompt.result": "AI result:",
   "systemPrompt.resultPlaceholder": "AI response will appear here after sending...",
   "customModal.title": "Entry range",

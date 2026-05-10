@@ -260,6 +260,7 @@
   "systemPrompt.send": "▶ Odeslat AI",
   "systemPrompt.sending": "⏳ Odesílám...",
   "systemPrompt.close": "✕ Zavřít",
+  "systemPrompt.confirmAndSave": "✓ Potvrdit a uložit",
   "systemPrompt.result": "Výsledek AI:",
   "systemPrompt.resultPlaceholder": "Po odeslání se sem vloží odpověď...",
   "customModal.title": "Rozsah hesel",

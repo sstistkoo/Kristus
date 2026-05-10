@@ -1821,7 +1821,7 @@ const {
   getTopicPromptTemplateByPromptType, syncTopicPromptTemplatesReport,
   buildTopicPrompt, openTopicPromptModal, runTopicPromptAI,
   applyTopicPromptResult, shouldReplaceSpecialista, closeTopicPromptModal,
-  openSystemPromptModal, runSystemPromptAI, closeSystemPromptModal,
+  openSystemPromptModal, runSystemPromptAI, runSystemPromptConfirm, closeSystemPromptModal,
   translateSystemPromptText, translateSystemPromptBackToEnglish, reviewSystemPromptWithAI, buildSystemPromptFromRequirement,
   getTopicRepairSystemPrompt, getTopicRepairUserPrompt, buildTopicRepairBatchHeslaText,
   extractTopicValueFromAI,
@@ -4547,6 +4547,7 @@ window.shouldReplaceSpecialista = shouldReplaceSpecialista;
 window.closeTopicPromptModal = closeTopicPromptModal;
 window.openSystemPromptModal = openSystemPromptModal;
 window.runSystemPromptAI = runSystemPromptAI;
+window.runSystemPromptConfirm = runSystemPromptConfirm;
 window.closeSystemPromptModal = closeSystemPromptModal;
 window.translateSystemPromptText = translateSystemPromptText;
 window.toggleTopicRepairManualApproval = toggleTopicRepairManualApproval;
@@ -4564,6 +4565,7 @@ window.shouldReplaceSpecialista = shouldReplaceSpecialista;
 window.closeTopicPromptModal = closeTopicPromptModal;
 window.openSystemPromptModal = openSystemPromptModal;
 window.runSystemPromptAI = runSystemPromptAI;
+window.runSystemPromptConfirm = runSystemPromptConfirm;
 window.closeSystemPromptModal = closeSystemPromptModal;
 window.translateSystemPromptText = translateSystemPromptText;
 window.translateSystemPromptBackToEnglish = translateSystemPromptBackToEnglish;
