@@ -892,7 +892,7 @@ function applyTopicRepairSelected() {
    }
    // Update UI if modal is still open (not closed)
    if (state.topicRepairState) {
-     updateTopicRepairModalUI();
+     renderTopicRepairModal();
    }
    syncTopicRepairMinimizeBusyIndicator();
  }
