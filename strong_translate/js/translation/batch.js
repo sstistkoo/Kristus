@@ -729,56 +729,43 @@ if (missingKeys.length > 0) {
       }
     }
 
-     // Sekundární fallback spouštej až po dokoncení všech pokusu hlavního providera pro danou dávku
-     // V AUTO režimu zapnut podle požadavku - OpenRouter jede paraleln? i v AUTO
-     if (depth === 0 && isPipelineSecondaryEnabled('openrouter')) {
-       const keysBeforeSideFallback = keys.filter(k => !isTranslationComplete(state.translated[k]));
-       
-       // Filtrování podle omezení
-       const filteredKeys = keysBeforeSideFallback.filter(key => {
-         const entry = state.translated[key];
-         if (!entry) return false;
-         
-         // Omezení 1: Musí chyb?t alespo? 3 témata
-         const failedTopics = getFailedTopicsForFallback(entry);
-         if (failedTopics.length < 3) {
-           return false;
-         }
-         
-         // Omezení 3: Heslo nebylo opraveno OpenRouter více než dvakrát
-         const repairCount = entry.openrouterRepairCount || 0;
-         if (repairCount >= 2) {
-           return false;
-         }
-         
-         return true;
-       });
-       
-       // Omezení 2: Kontrola intervalu od posledního OpenRouter batch fallback
-       const now = Date.now();
-       const lastRun = state.lastOpenRouterBatchFallbackTime || 0;
-       const minIntervalMs = state.currentInterval * 1000; // p?evést sekundy na milisekundy
-       
-       if (now - lastRun < minIntervalMs) {
-         // P?íliš brzy od posledního b?hu, p?esko?it
-         return { ok: true };
-       }
-       
-       if (filteredKeys.length > 0) {
-         log(`? Spouštím OpenRouter batch fallback pro ${filteredKeys.length} hesel (z p?vodních ${keysBeforeSideFallback.length})`);
-         
-         // Ozna?it, že tyto hesla jsou opravována (pro po?ítání)
-         for (const key of filteredKeys) {
-           if (!state.translated[key]) {
-             state.translated[key] = {};
-           }
-           state.translated[key].openrouterRepairCount = (state.translated[key].openrouterRepairCount || 0) + 1;
-         }
-         
-         // Aktualizovat ?as posledního b?hu
-         state.lastOpenRouterBatchFallbackTime = now;
-         
-          await runOpenRouterBatchFallbackTranslation(filteredKeys);
+      // Sekundární fallback spouštej až po dokoncení všech pokusu hlavního providera pro danou dávku
+      // V AUTO režimu zapnut podle požadavku - OpenRouter jede paraleln? i v AUTO
+      if (depth === 0) {
+        const keysBeforeSideFallback = keys.filter(k => !isTranslationComplete(state.translated[k]));
+        if (keysBeforeSideFallback.length > 0) {
+          // Spustit Gemini paraleln? (background, ne?ekat)
+          if (isPipelineSecondaryEnabled('gemini')) {
+            runGeminiTopicRotationFallback(keysBeforeSideFallback).catch(err => {
+              logError('GeminiRotation', err, { keys: keysBeforeSideFallback });
+            });
+          }
+          // OpenRouter m?že z?stat batch (seriáln?) nebo taky paraleln?
+          if (isPipelineSecondaryEnabled('openrouter')) {
+            const filteredKeys = keysBeforeSideFallback.filter(k => {
+              const entry = state.translated[k];
+              if (!entry) return false;
+              const failed = getFailedTopicsForFallback(entry);
+              if (failed.length < 3) return false;
+              const repairCount = entry.openrouterRepairCount || 0;
+              if (repairCount >= 2) return false;
+              return true;
+            });
+            if (filteredKeys.length > 0) {
+              const now = Date.now();
+              const lastRun = state.lastOpenRouterBatchFallbackTime || 0;
+              const minIntervalMs = state.currentInterval * 1000;
+              
+              if (now - lastRun >= minIntervalMs) {
+                for (const key of filteredKeys) {
+                  if (!state.translated[key]) state.translated[key] = {};
+                  state.translated[key].openrouterRepairCount = (state.translated[key].openrouterRepairCount || 0) + 1;
+                }
+                state.lastOpenRouterBatchFallbackTime = now;
+                await runOpenRouterBatchFallbackTranslation(filteredKeys);
+              }
+            }
+          }
         }
       }
 
