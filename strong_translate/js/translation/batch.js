@@ -9,6 +9,11 @@ import {
 import {
   hasMeaningfulValue, isDefinitionLowQuality, isTranslationComplete
 } from './utils.js';
+import { sleepMs } from '../utils.js';
+import {
+  getDefaultBatchTopicSystemPrompt,
+  getDefaultBatchTopicUserPrompt
+} from './topicRepair.js';
 import core from '../../strong_translator_core_new.js';
 
 const { buildRetryMessages } = core;
@@ -50,6 +55,115 @@ function formatPreviewRawTranslation(rawDef) {
     .replace(/(POUŽIT[ÍI]:|Použit[íi]:)/g, '<br><b>$1</b>')
     .replace(/(SPECIALISTA:|Specialista:|VÝKLAD:|Výklad:)/g, '<br><b>$1</b>');
   return formatted.replace(/^<br>/, '');
+}
+
+// ----- Utilities for Gemini topic rotation fallback -----
+function buildTopicRepairBatchHeslaText(keys, topicId) {
+  const list = Array.isArray(keys) ? keys : [];
+  return list.map(key => {
+    const e = state.entryMap.get(key) || {};
+    const lines = [];
+    const idPart = e.key || key;
+    const wordPart = e.greek || '';
+    const tvarPart = e.tvaroslovi ? ` (${e.tvaroslovi})` : '';
+    lines.push(`${idPart} | ${wordPart}${tvarPart}`);
+    switch (topicId) {
+      case 'definice':
+        if (e.definice || e.def) lines.push(`DEF: ${e.definice || e.def || ''}`);
+        break;
+      case 'vyznam':
+        const curMean = String(e.vyznamCz || e.cz || '').trim();
+        if (curMean) lines.push(`V: ${curMean}`);
+        break;
+      case 'kjv':
+        if (e.kjv) lines.push(`K: ${e.kjv}`);
+        break;
+      case 'puvod':
+        break;
+      case 'specialista':
+        break;
+    }
+    return lines.join('\n');
+  }).join('\n\n---\n\n');
+}
+function normalizeAiTopicRawText(s) {
+  return String(s || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\u0085/g, '\n')
+    .replace(/\u2028/g, '\n')
+    .replace(/\u2029/g, '\n')
+    .replace(/\uFEFF/g, '')
+    .replace(/[\u200B-\u200D\u2060]/g, '')
+    .replace(/\uFF1A/g, ':')
+    .replace(/\uFF1F/g, '?')
+    .normalize('NFKC');
+}
+function parseTopicRepairBatchResponse(rawText, topicId) {
+  const text = normalizeAiTopicRawText(rawText).trim();
+  if (!text) return {};
+  const blocks = text.split(/\n(?=#{1,6}\s*[gGhH]?\d+)/i);
+  const out = {};
+  const headerRe = /^#{2,6}\s*([gGhH]?)(\d+)\s*(?:#+\s*)?(?=\n|$|\r)/im;
+  for (const block of blocks) {
+    const b = String(block || '').trim();
+    if (!b) continue;
+    const header = b.match(headerRe);
+    if (!header) continue;
+    const letter = (header[1] || 'G').toUpperCase();
+    const num = header[2];
+    const key = letter + num;
+    const rest = b.slice(header.index + header[0].length).trim();
+    let val = String(extractTopicValueFromAI(rest, topicId, 'strict') || '').trim();
+    if (!hasMeaningfulValue(val)) {
+      val = String(extractTopicValueFromAI(rest, topicId, 'loose') || '').trim();
+    }
+    if (hasMeaningfulValue(val)) out[key] = val;
+  }
+  return out;
+}
+function applyPromptLanguageTokens(promptText) {
+  const targetLang = localStorage.getItem('strong_target_lang') || 'cz';
+  const sourceLang = localStorage.getItem('strong_source_lang') || 'gr';
+  const keyMap = {
+    cz: 'lang.name.genitive.cz', cs: 'lang.name.genitive.cz',
+    en: 'lang.name.genitive.en', bg: 'lang.name.genitive.bg',
+    ch: 'lang.name.genitive.ch', sp: 'lang.name.genitive.sp',
+    sk: 'lang.name.genitive.sk', pl: 'lang.name.genitive.pl',
+    gr: 'lang.name.genitive.gr', he: 'lang.name.genitive.he',
+    both: 'lang.name.genitive.both'
+  };
+  const targetName = t(keyMap[String(targetLang || '').toLowerCase()] || 'lang.name.genitive.cz');
+  const sourceName = t(keyMap[String(sourceLang || '').toLowerCase()] || 'lang.name.genitive.gr');
+  return String(promptText || '')
+    .replace(/{TARGET_LANG}/g, targetName)
+    .replace(/{SOURCE_LANG}/g, sourceName);
+}
+const TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX = 'strong_topic_repair_batch_prompt_v1_';
+const TOPIC_REPAIR_BATCH_SYSTEM_PROMPT_SUFFIX = '_sys';
+const TOPIC_REPAIR_BATCH_USER_PROMPT_SUFFIX = '_usr';
+function getTopicRepairSystemPromptStorageKey(topicId) {
+  return `${TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX}${topicId}${TOPIC_REPAIR_BATCH_SYSTEM_PROMPT_SUFFIX}`;
+}
+function getTopicRepairUserPromptStorageKey(topicId) {
+  return `${TOPIC_REPAIR_BATCH_PROMPT_STORAGE_PREFIX}${topicId}${TOPIC_REPAIR_BATCH_USER_PROMPT_SUFFIX}`;
+}
+function enforceSpecialistaFormat(promptText) {
+  return String(promptText || '');
+}
+function syncTopicRepairTaskSpecialistaFromRaw(task, rawText) {
+  if (!task || !task.key) return;
+  const key = task.key;
+  const baseline = state.translated[key] || {};
+  const prevSpecialista = String(baseline.specialista || '').trim();
+  let candidate = String(extractTopicValueFromAI(rawText, 'specialista', 'strict') || '').trim();
+  if (!hasMeaningfulValue(candidate)) {
+    candidate = String(extractTopicValueFromAI(rawText, 'specialista', 'loose') || '').trim();
+  }
+  if (hasMeaningfulValue(candidate) && shouldReplaceSpecialista(prevSpecialista, candidate)) {
+    state.translated[key] = state.translated[key] || {};
+    state.translated[key].specialista = candidate;
+  }
 }
 
 // -- PREKLAD — SINGLE --------------------------------------------
@@ -734,14 +848,16 @@ if (missingKeys.length > 0) {
       if (depth === 0) {
         const keysBeforeSideFallback = keys.filter(k => !isTranslationComplete(state.translated[k]));
         if (keysBeforeSideFallback.length > 0) {
-          // Spustit Gemini paraleln? (background, ne?ekat)
+           // Spustit Gemini paraleln? (background, ne?ekat)
           if (isPipelineSecondaryEnabled('gemini')) {
             runGeminiTopicRotationFallback(keysBeforeSideFallback).catch(err => {
               logError('GeminiRotation', err, { keys: keysBeforeSideFallback });
             });
           }
-          // OpenRouter m?že z?stat batch (seriáln?) nebo taky paraleln?
-          if (isPipelineSecondaryEnabled('openrouter')) {
+           // OpenRouter m?že z?stat batch (seriáln?) nebo taky paraleln?
+           // ZP?TNA KOMPATIBILITA: pokud chceš i OpenRouter paraleln?, zm?? na
+           // runOpenRouterTopicRotationFallback(keysBeforeSideFallback)
+           if (isPipelineSecondaryEnabled('openrouter')) {
             const filteredKeys = keysBeforeSideFallback.filter(k => {
               const entry = state.translated[k];
               if (!entry) return false;
@@ -868,6 +984,123 @@ saveProgress();
       showToast(t('toast.error.withMessage', { message: e.message }));
       return { ok: false };
    }
+}
+
+async function runGeminiTopicRotationFallback(keys, abortVersion) {
+  const prov = 'gemini';
+  const apiKey = getApiKeyForModelTest(prov);
+  const model = getPipelineModelForProvider(prov) || 'gemini-3.1-flash-lite-preview';
+  if (!apiKey) return;
+
+  // Seskupit keys podle chyb?jících témat
+  const topicMap = new Map();
+  for (const key of keys) {
+    const t = state.translated[key] || {};
+    const failed = getFailedTopicsForFallback(t);
+    for (const topicId of failed) {
+      if (!topicMap.has(topicId)) topicMap.set(topicId, []);
+      topicMap.get(topicId).push(key);
+    }
+  }
+  if (!topicMap.size) return;
+
+  // Po?adí témat
+  const topicOrder = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
+  let topicIdx = 0;
+  while (topicIdx < topicOrder.length) {
+    if (isSideFallbackAborted(abortVersion)) return;
+    const topicId = topicOrder[topicIdx];
+    const keysForTopic = topicMap.get(topicId) || [];
+    if (keysForTopic.length === 0) {
+      topicIdx++;
+      continue;
+    }
+
+    // Kontrola cooldownu
+    if (getProviderCooldownLeftSec(prov) > 0) {
+      await sleepMs(5000);
+      continue;
+    }
+
+    // Vezmi dávku
+    const batchKeys = keysForTopic.slice(0, state.currentBatchSize);
+    const remaining = keysForTopic.slice(state.currentBatchSize);
+    if (remaining.length > 0) {
+      topicMap.set(topicId, remaining);
+    } else {
+      topicMap.delete(topicId);
+      topicIdx++;
+    }
+
+    // P?eklad dávky
+    await translateTopicBatchWithGemini(batchKeys, topicId);
+
+    // Interval mezi dávkami
+    const intervalSec = state.currentInterval || 20;
+    if (intervalSec > 0) {
+      await sleepMs(intervalSec * 1000);
+    }
+  }
+}
+
+async function addTopicBatchResult(key, topicId, value, provider, model) {
+  if (hasMeaningfulValue(value)) {
+    state.translated[key] = state.translated[key] || {};
+    state.translated[key][topicId] = value;
+    log(`? Gemini rotation: ${key}.${topicId} ? ${provider}/${model}`);
+  }
+}
+
+async function translateTopicBatchWithGemini(keys, topicId) {
+  const prov = 'gemini';
+  const apiKey = getApiKeyForModelTest(prov);
+  const model = getPipelineModelForProvider(prov) || 'gemini-3.1-flash-lite-preview';
+  if (!apiKey) return;
+
+  // Na?íst batch prompty z localStorage
+  const sysPrompt = localStorage.getItem(getTopicRepairSystemPromptStorageKey(topicId)) ||
+                    getDefaultBatchTopicSystemPrompt(topicId);
+  const usrPromptTemplate = localStorage.getItem(getTopicRepairUserPromptStorageKey(topicId)) ||
+                            applyPromptLanguageTokens(getDefaultBatchTopicUserPrompt(topicId));
+
+  // Sestavit batch hesla
+  const heslaText = buildTopicRepairBatchHeslaText(keys, topicId);
+  const userContent = usrPromptTemplate.includes('{HESLA}')
+    ? usrPromptTemplate.replace(/{HESLA}/g, heslaText)
+    : `${usrPromptTemplate}\n\n${heslaText}`;
+
+  const messages = [
+    { role: 'system', content: sysPrompt },
+    { role: 'user', content: enforceSpecialistaFormat(userContent) }
+  ];
+
+  try {
+    const raw = await callAIWithRetry(prov, apiKey, model, messages);
+    const rawText = raw.content;
+
+    // Parse odpov?di
+    const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
+
+    for (const key of keys) {
+      const val = String(parsedMap[key] || parsedMap[key.replace(/^[GH]/, '')] || '').trim();
+      await addTopicBatchResult(key, topicId, val, prov, model);
+
+      // Specialista navíc
+      if (topicId === 'specialista') {
+        syncTopicRepairTaskSpecialistaFromRaw({ key }, rawText);
+      }
+    }
+
+    saveProgress();
+    updateStats();
+    renderList();
+  } catch (e) {
+    logError('translateTopicBatchWithGemini', e, { keys, topicId });
+    for (const key of keys) {
+      state.translated[key] = state.translated[key] || {};
+      state.translated[key][topicId] = '—';
+    }
+  }
 }
   return {
     translateSingle,
