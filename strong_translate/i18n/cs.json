@@ -768,6 +768,7 @@
   "apiKey.profile.unnamed": "bez názvu",
   "detail.refillButton": "✨ Doplnit",
   "detail.refillButton.aria": "Doplnit {label} přes AI",
+  "detail.fillAllTopics": "✨ doplnit",
   "mobile.fillAll": "✨ Doplnit",
   "mobile.fillAll.title": "Doplnit témata aktuálního hesla",
   "detail.saveButton": "Uložit",
