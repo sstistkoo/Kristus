@@ -4580,7 +4580,6 @@ window.translateNext = translateNext;
 window.translateSingle = translateSingle;
 window.retranslateSingle = retranslateSingle;
 window.jumpToStart = jumpToStart;
-window.fillAllTopics = fillAllTopics;
 
 // Z listApi
 window.translateSelected = translateSelected;

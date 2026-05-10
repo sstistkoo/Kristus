@@ -767,6 +767,8 @@
   "detail.refillButton": "✅¨ Refill",
   "detail.refillButton.aria": "Refill {label} via AI",
   "detail.fillAllTopics": "✨ Fill all",
+  "mobile.fillAll": "✨ Fill all",
+  "mobile.fillAll.title": "Fill all topics for current entry",
   "detail.saveButton": "Save",
   "detail.saveButton.aria": "Save {label}",
   "detail.source.edit": "✅Ž Edit",

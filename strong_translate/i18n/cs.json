@@ -769,6 +769,7 @@
   "detail.refillButton": "✨ Doplnit",
   "detail.refillButton.aria": "Doplnit {label} přes AI",
   "mobile.fillAll": "✨ Doplnit",
+  "mobile.fillAll.title": "Doplnit témata aktuálního hesla",
   "detail.saveButton": "Uložit",
   "detail.saveButton.aria": "Uložit {label}",
   "detail.source.edit": "✎ Upravit",
