@@ -178,7 +178,8 @@
        <button class="hbtn" id="btnEditPrompt" onclick="showPromptEditModal()" title="Zobrazit a upravit AI prompt" aria-label="Upravit AI prompt">📝 Prompt</button>
         <button class="hbtn" id="btnToggleList" onclick="toggleListPane()" title="Skrýt/ukázat seznam" aria-label="Skrýt/ukázat seznam">≡ Seznam</button>
        <button class="hbtn" id="btnDebugAICalls" onclick="printRecentAICalls()" aria-label="Vypsat AI logy do konzole">📋 AI Log</button>
-       <button class="hbtn" id="btnStep" onclick="translateNext()" aria-label="Přeložit další dávku">⚡ Dávka</button>
+        <button class="hbtn" id="btnStep" onclick="translateNext()" aria-label="Přeložit další dávku">⚡ Dávka</button>
+        <button class="hbtn" id="btnFillAllHeader" onclick="const k = getActiveKey(); if (k) fillAllTopics(k);" title="Doplnit témata aktuálního hesla" aria-label="Doplnit témata aktuálního hesla">✨ Doplnit</button>
       <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů (nejdřív modal, pak ▶ Test provideru)" aria-label="Test modelů — otevře nastavení">🧪 Test modelů</button>
       <button class="hbtn" id="btnI18nHelpTop" onclick="openI18nToolHelpModal()" title="Nápověda">❓</button>
 <button class="hbtn grn" id="btnExportTxt" onclick="exportTXT()" aria-label="Exportovat do TXT">⬇ TXT</button>
@@ -339,6 +340,7 @@
       <div class="mobl-modal-title" id="mobileActionsTitle">Akce</div>
       <button class="mobl-btn" id="btnMobileImport" onclick="closeMobileModal(); document.getElementById('importFileInput').click()" aria-label="Importovat TXT soubor">⬆ Import TXT</button>
       <button class="mobl-btn" id="btnMobileBatch" onclick="closeMobileModal(); translateNext()" aria-label="Přeložit další dávku">⚡ Dávka k překladu</button>
+      <button class="mobl-btn" id="btnMobileFillAll" onclick="closeMobileModal(); const k = getActiveKey(); if (k) fillAllTopics(k);" aria-label="Doplnit témata aktuálního hesla">✨ Doplnit</button>
       <button class="mobl-btn" id="btnMobileSelectRange" onclick="closeMobileModal(); selectRange()" aria-label="Označit rozsah">☑ Výběr do překladače</button>
       <button class="mobl-btn" id="btnMobileMissingTopic" onclick="closeMobileModal(); filterMissingTopicsList()" aria-label="Filtrovat hesla s chybějícími tématy">⚠ Chybí téma</button>
       <button class="mobl-btn grn" id="btnMobileExportTxt" onclick="closeMobileModal(); exportTXT()" aria-label="Exportovat do TXT">⬇ Export TXT</button>

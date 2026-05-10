@@ -4507,22 +4507,53 @@ async function fillAllTopics(key) {
   try {
     const messages = buildPromptMessages([entry]);
     const raw = await callAIWithRetry(prov, apiKey, model, messages);
-    const parsed = {};
-    parseWithOpenRouterNormalization(raw?.content || '', [key], parsed);
-    applyFallbacksToParsedMap([key], parsed);
-    if (parsed[key]) {
-      state.translated[key] = { ...(state.translated[key] || {}), ...parsed[key], raw: raw?.content };
-      fillMissingVyznamFromSource([key]);
-      fillMissingKjvFromSource([key]);
-      annotateEnglishDefinitionsInTranslated([key]);
-      saveProgress();
-      renderList();
-      updateStats();
-      showToast(t('toast.translatedSystem.key', { key }));
-    } else {
+    const content = raw?.content || '';
+
+    // Najdi blok pro current key: ###G1234### ... ###G...### nebo konec
+    const keyRegex = new RegExp(`###\\s*${key}\\s*###`);
+    const match = content.match(keyRegex);
+    if (!match) {
       showToast(t('toast.aiResponse.unmatched'));
+      return;
     }
+
+    const start = match.index + match[0].length;
+    // Najdi začátek dalšího bloku ###...### (jiného klíče), pokud existuje
+    const rest = content.slice(start);
+    const nextBlockMatch = rest.match(/###\s*[GH]\d+\s*###/);
+    const end = nextBlockMatch ? start + nextBlockMatch.index : content.length;
+    const blockText = content.slice(start, end).trim();
+
+    // Parsování řádků V:, D:, P:, K:, S:
+    const entryData = {};
+    const lines = blockText.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('V:')) entryData.vyznam = trimmed.slice(2).trim();
+      else if (trimmed.startsWith('D:')) entryData.definice = trimmed.slice(2).trim();
+      else if (trimmed.startsWith('P:')) entryData.puvod = trimmed.slice(2).trim();
+      else if (trimmed.startsWith('K:')) entryData.kjv = trimmed.slice(2).trim();
+      else if (trimmed.startsWith('S:')) entryData.specialista = trimmed.slice(2).trim();
+    }
+
+    if (Object.keys(entryData).length === 0) {
+      showToast(t('toast.aiResponse.unmatched'));
+      return;
+    }
+
+    state.translated[key] = { ...(state.translated[key] || {}), ...entryData, raw: content };
+    fillMissingVyznamFromSource([key]);
+    fillMissingKjvFromSource([key]);
+    annotateEnglishDefinitionsInTranslated([key]);
+    saveProgress();
+    renderList();
+    updateStats();
+    if (state.activeKey === key) {
+      renderDetail();
+    }
+    showToast(t('toast.translatedSystem.key', { key }));
   } catch (e) {
+    console.error('fillAllTopics error:', e);
     showToast(t('toast.error.withMessage', { message: e.message }));
   }
 }
@@ -4642,6 +4673,8 @@ window.syncTopicRepairBulkRunInputsToHidden = syncTopicRepairBulkRunInputsToHidd
 window.runTopicRepairBulkTranslation = runTopicRepairBulkTranslation;
 window.toggleTopicRepairBulkInclude = toggleTopicRepairBulkInclude;
 window.setTopicRepairBulkIncludeAll = setTopicRepairBulkIncludeAll;
+window.fillAllTopics = fillAllTopics;
+window.getActiveKey = () => state.activeKey;
 
 // Z modelTestUiApi
 window.cancelModelTest = cancelModelTest;
