@@ -574,6 +574,52 @@ function enqueueSideFallbackBackground(keys) {
   return state.sideFallbackBackgroundQueue;
 }
 
+async function runOpenRouterBatchFallbackTranslation(keys) {
+  const prov = 'openrouter';
+  const apiKey = getApiKeyForModelTest(prov);
+  const modelQueue = getSecondaryProviderModelQueue(prov);
+  
+  if (!apiKey || !modelQueue.length) {
+    log('? OpenRouter fallback: chybí API klí? nebo modely');
+    return;
+  }
+  
+  const batch = keys.map(k => state.entryMap.get(k)).filter(Boolean);
+  if (!batch.length) return;
+  
+  const messages = buildPromptMessages(batch);
+  
+  for (let i = 0; i < modelQueue.length; i++) {
+    const model = modelQueue[i];
+    if (getModelCooldownLeftSec(prov, model) > 0) continue;
+    
+try {
+      log(`? OpenRouter fallback: ${keys.length} hesel p?es ${model}`);
+      const raw = await callOnce(prov, apiKey, model, messages);
+      
+      // Nejd?ív parsovat odpov?? do state.translated
+      parseTranslations(raw.content, keys);
+      fillMissingVyznamFromSource(keys);
+      fillMissingKjvFromSource(keys);
+      annotateEnglishDefinitionsInTranslated(keys);
+      
+      const translatedCount = keys.filter(k => isTranslationComplete(state.translated[k])).length;
+      if (translatedCount > 0) {
+        log(`? OpenRouter fallback: úsp?šn? p?eloženo ${translatedCount}/${keys.length} hesel`);
+        break;
+      }
+    } catch (e) {
+      const msg = String(e?.message || '');
+      const modelCooldownSec = getSecondaryModelCooldownSecByError(prov, msg);
+      if (modelCooldownSec > 0) setModelCooldown(prov, model, modelCooldownSec);
+      log(`? OpenRouter fallback chyba (${model}): ${e.message}`);
+    }
+  }
+  
+  saveProgress();
+  updateFailedCount();
+}
+
 async function translateBatch(keys, depth = 0) {
   const preferredProvider = document.getElementById('provider')?.value || '';
   const prov   = resolveMainBatchProvider(preferredProvider);
@@ -685,10 +731,11 @@ if (missingKeys.length > 0) {
 
     // Sekundární fallback spouštej až po dokoncení všech pokusu hlavního providera pro danou dávku
     // V AUTO režimu vypnut - mohlo by zp?sobit p?ehnaný po?et API volání
-    if (depth === 0 && !state.autoRunning) {
+    if (depth === 0 && !state.autoRunning && isPipelineSecondaryEnabled('openrouter')) {
       const keysBeforeSideFallback = keys.filter(k => !isTranslationComplete(state.translated[k]));
       if (keysBeforeSideFallback.length > 0) {
-        log(`? Analýza po ${prov}: ${keysBeforeSideFallback.length} hesel má chyby/neúplná témata; sekundární topic fallback byl v AUTO režimu vypnut.`);
+        log(`? Spouštím OpenRouter batch fallback pro ${keysBeforeSideFallback.length} hesel`);
+        await runOpenRouterBatchFallbackTranslation(keysBeforeSideFallback);
       }
     }
 
@@ -806,5 +853,6 @@ saveProgress();
     shouldReplaceTopicValue,
     getProviderCooldownLeftSec,
     formatPreviewRawTranslation,
+    runOpenRouterBatchFallbackTranslation,
   };
 }
