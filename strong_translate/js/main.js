@@ -2451,14 +2451,12 @@ function getI18nToolLanguageDisplayName(code) {
 }
 
 const i18nToolSelectedLanguages = new Set();
-const I18N_TOOL_PLACEHOLDER = '__ST_TAG_';
-const I18N_TOOL_WORD_PLACEHOLDER = '__ST_WORD_';
+// Použijeme Private Use Area znaky (U+E000) – Google Translate je nechá nedotčené
+const I18N_TOOL_PLACEHOLDER = '\uE000';
 const I18N_TOOL_IMMUTABLE_TOKEN_PREFIX = 'PHX';
 const I18N_TOOL_IMMUTABLE_TOKEN_SUFFIX = 'XHP';
 // Regex pro jazykové tagy – chráníme pouze závorkové značky (CZ), (EN), …
-// standalone kódy (CZ, EN, …) nechráníme, aby se přeložily přirozeně (např. cs/en/sk/pl zůstanou nezměněny)
 const I18N_TOOL_TAG_REGEX = /\((CZ|EN|SK|PL|DE|FR|ES|IT|PT|RU|UK|BG|RO|HU|NL|SV|DA|NO|FI|EL|TR|AR|JA|KO|HE|zh-CN|ZH-CN)\)/gi;
-const I18N_TOOL_LANGUAGE_WORD_REGEX = /\b(Czech|English|Slovak|Polish)\b/gi;
 const I18N_TOOL_JSON_PLACEHOLDER_REGEX = /\{[A-Za-z0-9_]+\}/g;
 const I18N_TOOL_HTML_TAG_REGEX = /<[^>]+>/g;
 const I18N_TOOL_DEEPL_LANG_MAP = {
@@ -3430,17 +3428,13 @@ async function loadI18nToolSourceCsData() {
 }
 
 function i18nToolProtectTagsAndWords(str) {
-  // Chráníme pouze závorkové tagy – nahradí (CZ), (EN), … za __ST_TAG_P
-  const protectedTags = str.replace(I18N_TOOL_TAG_REGEX, I18N_TOOL_PLACEHOLDER + 'P');
-  // Chráníme jazyková slova (Czech, English, Slovak, Polish) – nahradí za __ST_TAG_W
-  return protectedTags.replace(I18N_TOOL_LANGUAGE_WORD_REGEX, I18N_TOOL_WORD_PLACEHOLDER + 'W');
+  // Chráníme pouze závorkové tagy – nahradí (CZ), (EN), … za I18N_TOOL_PLACEHOLDER
+  return str.replace(I18N_TOOL_TAG_REGEX, I18N_TOOL_PLACEHOLDER);
 }
 
-function i18nToolRestoreTagsAndWords(str, targetTag, targetLanguageName) {
-  return str
-    .replace(new RegExp(`${I18N_TOOL_PLACEHOLDER}P`, 'g'), `(${targetTag})`)
-    .replace(new RegExp(`${I18N_TOOL_PLACEHOLDER}S`, 'g'), targetTag)
-    .replace(new RegExp(`${I18N_TOOL_WORD_PLACEHOLDER}W`, 'g'), targetLanguageName || targetTag);
+function i18nToolRestoreTagsAndWords(str, targetTag) {
+  // Nahrazení I18N_TOOL_PLACEHOLDER za (targetTag)
+  return str.split(I18N_TOOL_PLACEHOLDER).join(`(${targetTag})`);
 }
 
 function i18nToolProtectImmutableSegments(str) {
@@ -3598,15 +3592,15 @@ async function i18nToolTranslateValue(value, targetLang, targetTag, targetLangua
     let translated = await i18nToolTranslateText(textToTranslate, targetLang);
     await new Promise((resolve) => setTimeout(resolve, 25));
     if (typeof onProgress === 'function') onProgress(path);
-    let withRestoredTags = i18nToolRestoreTagsAndWords(translated, targetTag, targetLanguageName);
-    let restored = i18nToolRestoreImmutableSegments(withRestoredTags, protectedValue.immutableSegments);
-    // Kdy� engine vr�t� useknut� text a ztrat� placeholdery, zkus�me preklad je�te 2x.
-    for (let retry = 0; retry < 2 && !i18nToolHasSamePlaceholderSet(value, restored); retry++) {
-      translated = await i18nToolTranslateText(textToTranslate, targetLang);
-      await new Promise((resolve) => setTimeout(resolve, 25));
-      withRestoredTags = i18nToolRestoreTagsAndWords(translated, targetTag, targetLanguageName);
-      restored = i18nToolRestoreImmutableSegments(withRestoredTags, protectedValue.immutableSegments);
-    }
+     let withRestoredTags = i18nToolRestoreTagsAndWords(translated, targetTag);
+     let restored = i18nToolRestoreImmutableSegments(withRestoredTags, protectedValue.immutableSegments);
+     // Kdy� engine vr�t� useknut� text a ztrat� placeholdery, zkus�me preklad je�te 2x.
+     for (let retry = 0; retry < 2 && !i18nToolHasSamePlaceholderSet(value, restored); retry++) {
+       translated = await i18nToolTranslateText(textToTranslate, targetLang);
+       await new Promise((resolve) => setTimeout(resolve, 25));
+       withRestoredTags = i18nToolRestoreTagsAndWords(translated, targetTag);
+       restored = i18nToolRestoreImmutableSegments(withRestoredTags, protectedValue.immutableSegments);
+     }
     if (!i18nToolHasSamePlaceholderSet(value, restored)) {
       i18nToolStrictFallbackCount++;
       return value;
