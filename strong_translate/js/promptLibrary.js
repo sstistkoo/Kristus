@@ -1,3 +1,5 @@
+import { getDefaultBatchTopicSystemPrompt, getDefaultBatchTopicUserPrompt } from './translation/topicRepair.js';
+
 export function createPromptLibraryApi(deps) {
   const {
     state,
@@ -95,14 +97,8 @@ export function createPromptLibraryApi(deps) {
   }
 
   function getDefaultTopicPrompt(topicId) {
-    const promptType = ({
-      definice: 'preset_topic_definice_batch',
-      vyznam: 'preset_topic_vyznam_batch',
-      kjv: 'preset_topic_kjv_batch',
-      puvod: 'preset_topic_puvod_batch',
-      specialista: 'preset_topic_specialista_batch'
-    })[topicId];
-    return getModelTestPromptCatalog?.()[promptType]?.template || '';
+    // Use the same topic-specific prompts as in Topic Repair modal
+    return getDefaultBatchTopicUserPrompt(topicId);
   }
 
   function getStoredTopicSpecificSecondaryPrompt(topicId) {
@@ -133,15 +129,16 @@ export function createPromptLibraryApi(deps) {
 
   function getTopicSpecificPromptForEdit(topicId) {
     const stored = getStoredTopicSpecificSecondaryPrompt(topicId);
-    const defaultPrompt = getDefaultTopicPrompt(topicId);
+    const defaultSystem = getDefaultBatchTopicSystemPrompt(topicId);
+    const defaultPrompt = getDefaultBatchTopicUserPrompt(topicId);
     if (stored) {
       return {
-        system: stored.system || getActiveSystemMessage(),
+        system: stored.system || defaultSystem,
         user: stored.user || defaultPrompt
       };
     }
     return {
-      system: getActiveSystemMessage(),
+      system: defaultSystem,
       user: defaultPrompt
     };
   }
