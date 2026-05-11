@@ -2455,7 +2455,9 @@ const I18N_TOOL_PLACEHOLDER = '__ST_TAG_';
 const I18N_TOOL_WORD_PLACEHOLDER = '__ST_WORD_';
 const I18N_TOOL_IMMUTABLE_TOKEN_PREFIX = 'PHX';
 const I18N_TOOL_IMMUTABLE_TOKEN_SUFFIX = 'XHP';
-const I18N_TOOL_TAG_REGEX = /\b(CZ|EN|SK|PL|DE|FR|ES|IT|PT|RU|UK|BG|RO|HU|NL|SV|DA|NO|FI|EL|TR|AR|JA|KO|HE|zh-CN|ZH-CN)\b|\((CZ|EN|SK|PL|DE|FR|ES|IT|PT|RU|UK|BG|RO|HU|NL|SV|DA|NO|FI|EL|TR|AR|JA|KO|HE|zh-CN|ZH-CN)\)/gi;
+// Regex pro jazykové tagy – chráníme pouze závorkové značky (CZ), (EN), …
+// standalone kódy (CZ, EN, …) nechráníme, aby se přeložily přirozeně (např. cs/en/sk/pl zůstanou nezměněny)
+const I18N_TOOL_TAG_REGEX = /\((CZ|EN|SK|PL|DE|FR|ES|IT|PT|RU|UK|BG|RO|HU|NL|SV|DA|NO|FI|EL|TR|AR|JA|KO|HE|zh-CN|ZH-CN)\)/gi;
 const I18N_TOOL_LANGUAGE_WORD_REGEX = /\b(Czech|English|Slovak|Polish)\b/gi;
 const I18N_TOOL_JSON_PLACEHOLDER_REGEX = /\{[A-Za-z0-9_]+\}/g;
 const I18N_TOOL_HTML_TAG_REGEX = /<[^>]+>/g;
@@ -3428,10 +3430,10 @@ async function loadI18nToolSourceCsData() {
 }
 
 function i18nToolProtectTagsAndWords(str) {
-  const protectedTags = str.replace(I18N_TOOL_TAG_REGEX, (match, standalone, inParens) => (
-    inParens ? `${I18N_TOOL_PLACEHOLDER}P` : `${I18N_TOOL_PLACEHOLDER}S`
-  ));
-  return protectedTags.replace(I18N_TOOL_LANGUAGE_WORD_REGEX, `${I18N_TOOL_WORD_PLACEHOLDER}W`);
+  // Chráníme pouze závorkové tagy – nahradí (CZ), (EN), … za __ST_TAG_P
+  const protectedTags = str.replace(I18N_TOOL_TAG_REGEX, I18N_TOOL_PLACEHOLDER + 'P');
+  // Chráníme jazyková slova (Czech, English, Slovak, Polish) – nahradí za __ST_TAG_W
+  return protectedTags.replace(I18N_TOOL_LANGUAGE_WORD_REGEX, I18N_TOOL_WORD_PLACEHOLDER + 'W');
 }
 
 function i18nToolRestoreTagsAndWords(str, targetTag, targetLanguageName) {
