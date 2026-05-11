@@ -1951,6 +1951,25 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Scrollbar styling */
+.i18n-tool-language-grid::-webkit-scrollbar {
+  width: 8px;
+}
+.i18n-tool-language-grid::-webkit-scrollbar-track {
+  background: var(--bg3);
+  border-radius: 4px;
+}
+.i18n-tool-language-grid::-webkit-scrollbar-thumb {
+  background: var(--brd2);
+  border-radius: 4px;
+}
+.i18n-tool-language-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--acc);
 }
 
 .i18n-tool-lang-card {
