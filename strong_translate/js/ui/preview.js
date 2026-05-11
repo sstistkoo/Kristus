@@ -213,7 +213,7 @@ function showFailedEntries() {
   const failed = [];
   for (const key of Object.keys(state.translated)) {
     const translationState = getTranslationStateForKey(key);
-    if (state === 'failed' || state === 'failed_partial') {
+    if (translationState === 'failed' || translationState === 'failed_partial') {
       const tr = state.translated[key];
       failed.push({ key, raw: tr.raw, greek: state.entryMap.get(key)?.greek });
     }
