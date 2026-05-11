@@ -72,7 +72,8 @@ import { createListApi } from './ui/list.js';
     import { createBatchApi } from './translation/batch.js';
     import { getDefaultBatchTopicSystemPrompt, getDefaultBatchTopicUserPrompt } from './translation/topicRepair.js';
     import { createTopicRepairApi } from './translation/topicRepair.js';
-   import { createLimitsApi } from './ui/limits.js';
+    import { createLimitsApi } from './ui/limits.js';
+    import { BAD_TRANSLATIONS, exportBadTranslationsJSON } from './badTranslations.js';
    import { createPreviewApi } from './ui/preview.js';
    import { createSettingsApi } from './settings.js';
    import { createModelTestOutputApi } from './modelTestOutput.js';
@@ -1844,7 +1845,15 @@ const limitsApi = createLimitsApi({
   getModelTestSelectedModelForProvider: (...a) => getModelTestSelectedModelForProvider(...a),
   showToast,
 });
-const { showLimitsModal, closeLimitsModal, showHelpModal, closeHelpModal, fetchLimits } = limitsApi;
+
+const showLimitsModal = limitsApi.showLimitsModal;
+const closeLimitsModal = limitsApi.closeLimitsModal;
+const showHelpModal = limitsApi.showHelpModal;
+const closeHelpModal = limitsApi.closeHelpModal;
+const showBadTranslationsModal = limitsApi.showBadTranslationsModal;
+const closeBadTranslationsModal = limitsApi.closeBadTranslationsModal;
+const filterBadTranslations = limitsApi.filterBadTranslations;
+const fetchLimits = limitsApi.fetchLimits;
 
 const previewApi = createPreviewApi({
   showToast,
@@ -4337,6 +4346,9 @@ window.showLimitsModal = showLimitsModal;
 window.closeLimitsModal = closeLimitsModal;
 window.showHelpModal = showHelpModal;
 window.closeHelpModal = closeHelpModal;
+window.showBadTranslationsModal = showBadTranslationsModal;
+window.closeBadTranslationsModal = closeBadTranslationsModal;
+window.filterBadTranslations = filterBadTranslations;
 window.toggleAllPreview = toggleAllPreview;
 window.acceptPreview = acceptPreview;
 window.discardPreview = discardPreview;
@@ -4717,6 +4729,9 @@ window.exportJSON = exportJSON;
 window.exportRange = exportRange;
 window.exportAllLocalStorage = exportAllLocalStorage;
 window.cleanupOldBackups = cleanupOldBackups;
+
+// Bad translations
+window.exportBadTranslationsJSON = exportBadTranslationsJSON;
 
 // Z modalsApi + modelTestUiApi + main.js funkce
 window.closeModal = closeModal;

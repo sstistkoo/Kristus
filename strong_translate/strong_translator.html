@@ -180,8 +180,10 @@
        <button class="hbtn" id="btnDebugAICalls" onclick="printRecentAICalls()" aria-label="Vypsat AI logy do konzole">📋 AI Log</button>
         <button class="hbtn" id="btnStep" onclick="translateNext()" aria-label="Přeložit další dávku">⚡ Dávka</button>
         <button class="hbtn" id="btnFillAllHeader" onclick="const k = getActiveKey(); if (k) fillAllTopics(k);" title="Doplnit témata aktuálního hesla" aria-label="Doplnit témata aktuálního hesla">✨ Doplnit</button>
-      <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů (nejdřív modal, pak ▶ Test provideru)" aria-label="Test modelů — otevře nastavení">🧪 Test modelů</button>
-      <button class="hbtn" id="btnI18nHelpTop" onclick="openI18nToolHelpModal()" title="Nápověda">❓</button>
+       <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů (nejdřív modal, pak ▶ Test provideru)" aria-label="Test modelů — otevře nastavení">🧪 Test modelů</button>
+       <button class="hbtn" id="btnI18nHelpTop" onclick="openI18nToolHelpModal()" title="Nápověda">❓</button>
+       <button class="hbtn" id="btnBadTranslations" onclick="showBadTranslationsModal()" title="Seznam špatných překladů (angličtina → čeština)" aria-label="Zobrazit seznam špatných překladů">📖 Špatné překlady</button>
+       <button class="hbtn" id="btnExportBadTranslations" onclick="exportBadTranslationsJSON()" title="Exportovat seznam špatných překladů do JSON" aria-label="Exportovat špatné překlady">⬇ Export JSON</button>
 <button class="hbtn grn" id="btnExportTxt" onclick="exportTXT()" aria-label="Exportovat do TXT">⬇ TXT</button>
        <button class="hbtn grn" id="btnExportJson" onclick="exportJSON()" aria-label="Exportovat do JSON">⬇ JSON</button>
        <button class="hbtn grn" id="btnExportAll" onclick="exportAllLocalStorage()" title="Exportovat všechny překlady z localStorage" aria-label="Exportovat všechny překlady">⬇ Vše</button>
@@ -466,7 +468,29 @@
     </div>
   </div>
 
-   <!-- Model Test Output Modal -->
+  <!-- Bad Translations Modal -->
+  <div id="badTranslationsModal">
+    <div class="bad-translations-modal-box">
+      <button class="close-modal-btn" onclick="closeBadTranslationsModal()" aria-label="Zavřít seznam špatných překladů">×</button>
+      <div class="bad-translations-title" id="badTranslationsTitle">📖 Seznam špatných překladů (EN → CS)</div>
+      <div class="bad-translations-intro" id="badTranslationsIntro">
+        Tento seznam obsahuje anglická slova, která jsou často špatně přeložena do češtiny.
+        Doporučené české ekvivalenty pomáhají zachovat přesnost a konzistenci překladu.
+      </div>
+      <div class="bad-translations-search-row">
+        <input type="text" id="badTransSearchInput" class="bad-translations-search" placeholder="Hledat slovo..." oninput="filterBadTranslations()" aria-label="Hledat v seznamu špatných překladů">
+      </div>
+      <div class="bad-translations-list" id="badTranslationsList">
+        <!-- Naplní se dynamicky pomocí JavaScriptu -->
+      </div>
+      <div class="bad-translations-info">
+        <span id="badTranslationsCount">0</span> položek
+      </div>
+      <button class="modal-btn cancel modal-btn-full modal-btn-top-gap" id="btnBadTranslationsClose" onclick="closeBadTranslationsModal()">✕ Zavřít</button>
+    </div>
+  </div>
+
+    <!-- Model Test Output Modal -->
    <div id="modelTestModal">
      <div class="limits-modal-box model-test-modal-box">
        <button class="close-modal-btn" onclick="closeModelTestModal()" aria-label="Zavřít test modelů">×</button>

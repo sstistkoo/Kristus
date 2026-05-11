@@ -1,6 +1,7 @@
 import { PROVIDERS } from '../config.js';
 import { t } from '../i18n.js';
 import { escHtml } from '../utils.js';
+import { BAD_TRANSLATIONS } from '../badTranslations.js';
 
 export function createLimitsApi({ getCurrentApiKey, getModelTestSelectedModelForProvider, showToast }) {
 function showLimitsModal() {
@@ -23,13 +24,73 @@ function showHelpModal() {
   document.getElementById('helpModal').classList.add('show');
 }
 
-function closeHelpModal() {
-  document.getElementById('helpModal').classList.remove('show');
-}
+  function closeHelpModal() {
+    document.getElementById('helpModal').classList.remove('show');
+  }
 
-function closeLimitsModal() {
-  document.getElementById('limitsModal').classList.remove('show');
-}
+  function closeLimitsModal() {
+    document.getElementById('limitsModal').classList.remove('show');
+  }
+
+  // ─── Bad Translations Modal ──────────────────────────────────────────────
+  function showBadTranslationsModal() {
+    const listEl = document.getElementById('badTranslationsList');
+    listEl.innerHTML = '';
+    
+    BAD_TRANSLATIONS.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'bad-translations-item';
+      div.dataset.en = item.en.toLowerCase();
+      div.innerHTML = `
+        <div class="bad-translations-word-row">
+          <span class="bad-translations-en">${escHtml(item.en)}</span>
+          <span class="bad-translations-arrow">→</span>
+          <span class="bad-translations-cs">${escHtml(item.cs)}</span>
+        </div>
+        ${item.note ? `<div class="bad-translations-note">${escHtml(item.note)}</div>` : ''}
+      `;
+      listEl.appendChild(div);
+    });
+    
+    document.getElementById('badTranslationsCount').textContent = BAD_TRANSLATIONS.length;
+    document.getElementById('badTranslationsModal').classList.add('show');
+
+    // Escape key closes modal
+    function onKey(e) {
+      if (e.key === 'Escape') closeBadTranslationsModal();
+    }
+    document.addEventListener('keydown', onKey);
+    // Store handler for removal
+    document.getElementById('badTranslationsModal')._escHandler = onKey;
+  }
+
+  function closeBadTranslationsModal() {
+    const modal = document.getElementById('badTranslationsModal');
+    modal.classList.remove('show');
+    const handler = modal._escHandler;
+    if (handler) {
+      document.removeEventListener('keydown', handler);
+      delete modal._escHandler;
+    }
+  }
+
+  function filterBadTranslations() {
+    const query = document.getElementById('badTransSearchInput').value.toLowerCase().trim();
+    const items = document.querySelectorAll('.bad-translations-item');
+    let visibleCount = 0;
+    
+    items.forEach(item => {
+      const en = item.dataset.en || '';
+      const cs = item.textContent.toLowerCase();
+      const matches = en.includes(query) || cs.includes(query);
+      item.style.display = matches ? '' : 'none';
+      if (matches) visibleCount++;
+    });
+    
+    document.getElementById('badTranslationsCount').textContent = 
+      `${visibleCount} / ${BAD_TRANSLATIONS.length}`;
+  }
+
 
 async function fetchLimits(prov, model) {
   const content = document.getElementById('limitsContent');
@@ -335,11 +396,14 @@ function getOpenRouterRateLimits(keyData) {
   rows.push(`<div class="limits-row"><span class="limits-label">${t('limits.paidModels')}</span><span class="limits-value ok">${t('limits.unlimited')}</span></div>`);
   
   return rows.join('');
- }
+  }
+
+  console.log('createLimitsApi: filterBadTranslations type:', typeof filterBadTranslations);
 
   return {
     showLimitsModal, closeLimitsModal,
     showHelpModal, closeHelpModal,
+    showBadTranslationsModal, closeBadTranslationsModal, filterBadTranslations,
     fetchLimits,
   };
 }

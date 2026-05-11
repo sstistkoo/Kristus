@@ -1234,9 +1234,123 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   }
   .help-block b { color: var(--acc); }
   .help-block a { color: var(--acc); text-decoration: none; }
-  .help-block a:hover { text-decoration: underline; }
+   .help-block a:hover { text-decoration: underline; }
 
-  /* Mobile Actions Modal */
+   /* Bad Translations Modal */
+   #badTranslationsModal {
+     position: fixed;
+     top: 0; left: 0; right: 0; bottom: 0;
+     background: rgba(0,0,0,0.82);
+     display: none;
+     align-items: flex-start;
+     justify-content: center;
+     z-index: 1003;
+     padding: 16px 0;
+     overflow-y: auto;
+   }
+   #badTranslationsModal.show { display: flex; }
+   .bad-translations-modal-box {
+     background: var(--bg2);
+     border: 1px solid var(--brd);
+     border-radius: 8px;
+     padding: 18px;
+     max-width: 700px;
+     width: 92%;
+     max-height: calc(100vh - 32px);
+     overflow-y: auto;
+     position: relative;
+   }
+   .bad-translations-title {
+     font-family: 'JetBrains Mono', monospace;
+     font-size: 13px;
+     color: var(--acc);
+     margin-bottom: 10px;
+     display: flex;
+     align-items: center;
+     gap: 8px;
+   }
+   .bad-translations-intro {
+     font-size: 11px;
+     color: var(--txt2);
+     margin-bottom: 12px;
+     padding: 8px 10px;
+     background: var(--bg3);
+     border-radius: 4px;
+     line-height: 1.5;
+   }
+   .bad-translations-search-row {
+     margin-bottom: 10px;
+   }
+   .bad-translations-search {
+     width: 100%;
+     background: var(--bg3);
+     border: 1px solid var(--brd);
+     border-radius: 6px;
+     padding: 8px 10px;
+     color: var(--txt);
+     font-family: 'JetBrains Mono', monospace;
+     font-size: 11px;
+     outline: none;
+     transition: border-color .2s;
+   }
+   .bad-translations-search:focus {
+     border-color: var(--acc);
+   }
+   .bad-translations-list {
+     display: flex;
+     flex-direction: column;
+     gap: 6px;
+     max-height: 60vh;
+     overflow-y: auto;
+     padding-right: 4px;
+   }
+   .bad-translations-item {
+     display: grid;
+     grid-template-columns: 1fr 1fr auto;
+     gap: 8px;
+     align-items: start;
+     padding: 10px 12px;
+     background: var(--bg3);
+     border: 1px solid var(--brd);
+     border-radius: 6px;
+     font-size: 11px;
+   }
+   .bad-translations-word-row {
+     display: flex;
+     flex-wrap: wrap;
+     align-items: baseline;
+     gap: 4px;
+   }
+   .bad-translations-en {
+     font-family: 'JetBrains Mono', monospace;
+     font-weight: 600;
+     color: var(--blue);
+   }
+   .bad-translations-arrow {
+     color: var(--txt3);
+   }
+   .bad-translations-cs {
+     font-family: 'JetBrains Mono', monospace;
+     font-weight: 600;
+     color: var(--grn);
+   }
+   .bad-translations-note {
+     font-size: 10px;
+     color: var(--txt2);
+     font-style: italic;
+     grid-column: 1 / -1;
+     margin-top: 4px;
+     line-height: 1.4;
+   }
+   .bad-translations-info {
+     font-family: 'JetBrains Mono', monospace;
+     font-size: 10px;
+     color: var(--txt3);
+     text-align: right;
+     margin-top: 8px;
+   }
+
+   /* Mobile Actions Modal */
  #mobileActionsModal {
    position: fixed;
    top: 0; left: 0; right: 0; bottom: 0;
