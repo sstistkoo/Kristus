@@ -1813,8 +1813,8 @@ const {
   startTopicRepairSequentialWorker, toggleTopicRepairTask, toggleTopicRepairRun,
   setTopicRepairSpecialistaDecision, setTopicRepairDetectedTopicDecision,
   applyTopicRepairSelected, closeTopicRepairModalOnly,
-  minimizeTopicRepairModal, restoreTopicRepairModal,
-  saveTopicRepairBatchPromptDraft, resetTopicRepairBatchPromptToDefault,
+   minimizeTopicRepairModal, restoreTopicRepairModal, toggleShowApproved,
+   saveTopicRepairBatchPromptDraft, resetTopicRepairBatchPromptToDefault,
   refreshTopicRepairBatchPromptEditor, toggleTopicRepairBulkListFilter,
   syncTopicRepairBulkRunInputsToHidden, runTopicRepairBulkTranslation,
   toggleTopicRepairBulkInclude, setTopicRepairBulkIncludeAll,
@@ -4611,6 +4611,7 @@ window.applyTopicRepairSelected = applyTopicRepairSelected;
 window.closeTopicRepairModalOnly = closeTopicRepairModalOnly;
 window.minimizeTopicRepairModal = minimizeTopicRepairModal;
 window.restoreTopicRepairModal = restoreTopicRepairModal;
+window.toggleShowApproved = toggleShowApproved;
 window.saveTopicRepairBatchPromptDraft = saveTopicRepairBatchPromptDraft;
 window.resetTopicRepairBatchPromptToDefault = resetTopicRepairBatchPromptToDefault;
 window.refreshTopicRepairBatchPromptEditor = refreshTopicRepairBatchPromptEditor;

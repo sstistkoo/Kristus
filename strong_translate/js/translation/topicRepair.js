@@ -222,11 +222,18 @@ function updateTopicRepairModalUI() {
   if (rBulk) rBulk.checked = state.repairStrategy === 'bulk';
   const bulkHint = document.getElementById('topicRepairBulkStrategyHint');
   if (bulkHint) bulkHint.style.display = state.repairStrategy === 'bulk' ? 'block' : 'none';
-  const bulkRunBtn = document.getElementById('topicRepairBulkRunBtn');
-  if (bulkRunBtn) {
-    bulkRunBtn.disabled = false;
-    bulkRunBtn.textContent = state.topicRepairBulkRunning ? t('topicRepair.bulk.stop') : t('topicRepair.bulk.button');
-  }
+   const bulkRunBtn = document.getElementById('topicRepairBulkRunBtn');
+   if (bulkRunBtn) {
+     bulkRunBtn.disabled = false;
+     bulkRunBtn.textContent = state.topicRepairBulkRunning ? t('topicRepair.bulk.stop') : t('topicRepair.bulk.button');
+   }
+   const toggleShowBtn = document.getElementById('btnToggleShowApproved');
+   if (toggleShowBtn) {
+     const approvedCount = state.topicRepairState.tasks.filter(t => t.hidden).length;
+     toggleShowBtn.textContent = state.showApproved
+       ? t('topicRepair.hideApproved')
+       : t('topicRepair.showApproved', { count: approvedCount });
+   }
   const rows = vis.map(task => {
     const idx = topicRepairState.tasks.indexOf(task);
     const extraTopicsForUi = (Array.isArray(task.detectedTopics) ? task.detectedTopics : [])
@@ -250,12 +257,12 @@ function updateTopicRepairModalUI() {
                <input type="checkbox" ${task.includeBulk !== false ? 'checked' : ''} onchange="toggleTopicRepairBulkInclude(${idx}, this.checked)" style="accent-color:var(--acc)">
                ${t('topicRepair.batchLabel')}
              </label>
-             <span style="font-size:11px;color:${statusColor}">${statusText}${task.provider ? ` · ${task.provider}` : ''}</span>
-             ${!task.hidden ? `
-               <button class="hbtn" style="font-size:10px;padding:4px 8px" onclick="toggleTopicRepairManualApproval(${idx})" title="${escHtml(t('topicRepair.manualApproval.title') || 'Označit jako v pořádku')}">
-                 ${task.manuallyApproved ? '✓ ' : ''}${t('topicRepair.manualApproval.label') || 'V pořádku'}
-               </button>
-             ` : ''}
+              <span style="font-size:11px;color:${statusColor}">${statusText}${task.provider ? ` · ${task.provider}` : ''}</span>
+               ${(!task.hidden || state.showApproved) ? `
+                 <button class="hbtn ${task.manuallyApproved ? 'red' : ''}" style="font-size:10px;padding:4px 8px" onclick="toggleTopicRepairManualApproval(${idx})" title="${escHtml(task.manuallyApproved ? (t('topicRepair.unapprove.title') || 'Zrušit označení v pořádku') : (t('topicRepair.manualApproval.title') || 'Označit jako v pořádku'))}">
+                   ${task.manuallyApproved ? (t('topicRepair.unapprove') || 'Zrušit') : (t('topicRepair.manualApproval.label') || 'V pořádku')}
+                 </button>
+               ` : ''}
            </div>
          </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -478,8 +485,13 @@ closeTopicRepairModalSafe();
         </div>
         <div style="font-size:10px;color:var(--txt3);margin-top:8px">${t('topicRepair.modal.batchPromptSectionHint')}</div>
       </div>
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
-         <button class="hbtn grn" id="topicRepairStartSequentialBtn" type="button" onclick="startTopicRepairSequentialWorker()">${t('topicRepair.modal.startSequential')}</button>
+<div style="margin:10px 0;display:flex;align-items:center;gap:8px">
+        <button class="hbtn" id="btnToggleShowApproved" onclick="toggleShowApproved()">
+          ${state.showApproved ? t('topicRepair.hideApproved') : t('topicRepair.showApproved', { count: state.topicRepairState.tasks.filter(t=>t.hidden).length })}
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+        <button class="hbtn grn" id="topicRepairStartSequentialBtn" type="button" onclick="startTopicRepairSequentialWorker()">${t('topicRepair.modal.startSequential')}</button>
          <span style="font-size:11px;color:var(--txt3);margin-left:4px">(${waitingCount} ${t('topicRepair.modal.waiting')})</span>
          <button class="hbtn grn" id="topicRepairToggleBtn" onclick="toggleTopicRepairRun()">${t('topicRepair.pause')}</button>
          <button class="hbtn grn" id="topicRepairApplyBtn" onclick="applyTopicRepairSelected()">${t('topicRepair.applyOverwrite', { count: 0 })}</button>
@@ -522,6 +534,7 @@ function startTopicRepairFlow(keys) {
       openrouter: isAutoProviderEnabled('openrouter')
     }
   };
+  state.showApproved = false;
   renderTopicRepairModal();
   const miniBtn = document.getElementById('btnTopicRepairMini');
   if (miniBtn) miniBtn.style.display = 'none';
@@ -917,9 +930,12 @@ function restoreTopicRepairModal() {
   const miniBtn = document.getElementById('btnTopicRepairMini');
   if (miniBtn) miniBtn.style.display = 'none';
   syncTopicRepairMinimizeBusyIndicator();
-  if (!state.topicRepairWorkerRunning && !state.topicRepairState.paused && state.topicRepairState.sequentialEverStarted && state.topicRepairState.repairStrategy === 'sequential') {
-    processTopicRepairQueue();
-  }
+}
+
+function toggleShowApproved() {
+  if (!state.topicRepairState) return;
+  state.showApproved = !state.showApproved;
+  updateTopicRepairModalUI();
 }
 
 
@@ -943,11 +959,17 @@ function getTopicRepairModalVisibleTasks(state) {
   const topicRepairState = state.topicRepairState;
   if (!topicRepairState || !Array.isArray(topicRepairState.tasks)) return [];
   const bid = state.bulkTopicId || 'all';
+  let tasks = topicRepairState.tasks;
   if (bid === 'all') {
     const m = state.bulkListTopicFilter || defaultBulkListTopicFilter();
-    return topicRepairState.tasks.filter(t => m[t.topicId] !== false && !t.hidden);
+    tasks = tasks.filter(t => m[t.topicId] !== false);
+  } else {
+    tasks = tasks.filter(t => t.topicId === bid);
   }
-  return topicRepairState.tasks.filter(t => t.topicId === bid && !t.hidden);
+  if (!state.showApproved) {
+    tasks = tasks.filter(t => !t.hidden);
+  }
+  return tasks;
 }
 
 /** Další čekající úloha v pořadí `topicRepairState.tasks`, ale jen pokud spadá do aktuálního filtru tématu. */
@@ -2467,8 +2489,9 @@ return {
      applyTopicRepairSelected,
      closeTopicRepairModalOnly,
      minimizeTopicRepairModal,
-     restoreTopicRepairModal,
-     saveTopicRepairBatchPromptDraft,
+      restoreTopicRepairModal,
+      toggleShowApproved,
+      saveTopicRepairBatchPromptDraft,
      resetTopicRepairBatchPromptToDefault,
      refreshTopicRepairBatchPromptEditor,
      toggleTopicRepairBulkListFilter,
