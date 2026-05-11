@@ -809,12 +809,16 @@
       <div class="prompt-modal-box prompt-lang-modal-box" style="max-height: calc(100vh - 32px);">
         <button class="close-modal-btn" onclick="closePromptLangModal()" aria-label="Zavřít nastavení jazyků">×</button>
         <div class="prompt-modal-title" id="promptLangModalTitle">🌐 Nastavení jazyků</div>
- <div class="mobl-set-row">
-  <label id="uiLanguageLabel">Jazyk rozhraní</label>
+<div class="mobl-set-row">
+   <label id="uiLanguageLabel">Jazyk rozhraní</label>
 <select id="uiLanguage" class="prompt-ai-select" aria-label="Jazyk rozhraní" title="Jazyk rozhraní">
-     <option value="cs">Čeština</option>
-     <option value="en">English</option>
-   </select>
+      <option value="cs">Čeština</option>
+      <option value="en">English</option>
+    </select>
+</div>
+<div class="mobl-set-row prompt-lang-load-file-row">
+   <button type="button" class="prompt-btn" id="btnLoadCustomLangFile" onclick="document.getElementById('loadCustomLangFileInput').click()">📂 Načíst vlastní jazyk (JSON)</button>
+   <input type="file" id="loadCustomLangFileInput" class="is-hidden" accept=".json,application/json" onchange="loadCustomLangFile(event)" aria-label="Načíst vlastní jazykový soubor JSON" title="Načíst vlastní jazykový soubor JSON">
 </div>
  <div class="mobl-set-row">
    <label id="targetLanguageLabel">Překlad do</label>

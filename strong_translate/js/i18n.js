@@ -281,13 +281,17 @@ export function loadUiMessages(force = false) {
 }
 
 export function getUiLang() {
-  const raw = String(localStorage.getItem(UI_LANG_KEY) || DEFAULT_UI_LANG).toLowerCase();
-  if (UI_LANGS.has(raw)) return raw;
-  if (raw && raw !== DEFAULT_UI_LANG) {
-    lastUiLangFallback = { requested: raw, fallback: DEFAULT_UI_LANG };
-  }
-  return DEFAULT_UI_LANG;
-}
+   const raw = String(localStorage.getItem(UI_LANG_KEY) || DEFAULT_UI_LANG).toLowerCase();
+   if (UI_LANGS.has(raw)) return raw;
+   // Allow custom languages (stored in localStorage with prefix)
+   if (raw && raw !== DEFAULT_UI_LANG && typeof window !== 'undefined' && window.__CUSTOM_UI_MESSAGES__?.[raw]) {
+     return raw;
+   }
+   if (raw && raw !== DEFAULT_UI_LANG) {
+     lastUiLangFallback = { requested: raw, fallback: DEFAULT_UI_LANG };
+   }
+   return DEFAULT_UI_LANG;
+ }
 
 export function consumeUiLangFallback() {
   const info = lastUiLangFallback;
@@ -296,18 +300,20 @@ export function consumeUiLangFallback() {
 }
 
 export function t(key, params = {}) {
-  const lang = getUiLang();
-  const source = UI_MESSAGES[lang] || UI_MESSAGES[DEFAULT_UI_LANG];
-  const fallback = UI_MESSAGES[DEFAULT_UI_LANG];
-  let text = source?.[key] ?? fallback?.[key] ?? key;
-  for (const [name, value] of Object.entries(params || {})) {
-    text = text.replaceAll(`{${name}}`, String(value));
-  }
-  if (!FIXED_EN_KEYS.has(key)) return text;
-  if (/\(EN\)/.test(text)) return text;
-  if (/\([A-Za-z-]+\)/.test(text)) return text.replace(/\([A-Za-z-]+\)/, '(EN)');
-  return `${text} (EN)`;
-}
+   const lang = getUiLang();
+   const customMessages = typeof window !== 'undefined' ? window.__CUSTOM_UI_MESSAGES__ : null;
+   const source = customMessages?.[lang] || UI_MESSAGES[lang] || UI_MESSAGES[DEFAULT_UI_LANG];
+   const fallback = UI_MESSAGES[DEFAULT_UI_LANG];
+   // For custom languages, fallback should also check custom first, then default
+   let text = source?.[key] ?? fallback?.[key] ?? key;
+   for (const [name, value] of Object.entries(params || {})) {
+     text = text.replaceAll(`{${name}}`, String(value));
+   }
+   if (!FIXED_EN_KEYS.has(key)) return text;
+   if (/\(EN\)/.test(text)) return text;
+   if (/\([A-Za-z-]+\)/.test(text)) return text.replace(/\([A-Za-z-]+\)/, '(EN)');
+   return `${text} (EN)`;
+ }
 
 export function uiLabel(labelOrKey) {
   const raw = String(labelOrKey || '').trim();

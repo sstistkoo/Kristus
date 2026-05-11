@@ -117,33 +117,60 @@ function bindUiLanguageSelectBehavior() {
 }
 
 async function populateUiLanguageSelect() {
-  const select = document.getElementById('uiLanguage');
-  if (!select) return;
-  const current = String(localStorage.getItem(UI_LANG_KEY) || DEFAULT_UI_LANG).toLowerCase();
-  const checked = await detectUiLangAvailability();
-  const available = checked.filter((x) => x.available);
-  const missing = checked.filter((x) => !x.available);
+   const select = document.getElementById('uiLanguage');
+   if (!select) return;
+   const current = String(localStorage.getItem(UI_LANG_KEY) || DEFAULT_UI_LANG).toLowerCase();
+   const checked = await detectUiLangAvailability();
+   const available = checked.filter((x) => x.available);
+   const missing = checked.filter((x) => !x.available);
 
-  available.forEach((lang) => UI_LANGS.add(lang.code));
+   available.forEach((lang) => UI_LANGS.add(lang.code));
 
-  const fragment = document.createDocumentFragment();
-  available.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
-  if (available.length && missing.length) {
-    const separator = document.createElement('option');
-    separator.disabled = true;
-    separator.textContent = t('uiLanguage.separator');
-    fragment.appendChild(separator);
-  }
-  missing.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
+   // Load custom languages from localStorage
+   const customLangs = [];
+   for (let i = 0; i < localStorage.length; i++) {
+     const key = localStorage.key(i);
+     if (key && key.startsWith('strong_ui_lang_custom_')) {
+       const code = key.replace('strong_ui_lang_custom_', '');
+       if (code !== 'active') {
+         customLangs.push({ code, name: `Vlastní: ${code}` });
+       }
+     }
+   }
 
-  select.innerHTML = '';
-  select.appendChild(fragment);
-  bindUiLanguageSelectBehavior();
-  const canKeepCurrent = Array.from(select.options).some((opt) => opt.value === current);
-  if (canKeepCurrent) select.value = current;
-  else if (available.length) select.value = available[0].code;
-  else select.value = DEFAULT_UI_LANG;
-}
+   const fragment = document.createDocumentFragment();
+   available.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
+   if (available.length && missing.length) {
+     const separator = document.createElement('option');
+     separator.disabled = true;
+     separator.textContent = t('uiLanguage.separator');
+     fragment.appendChild(separator);
+   }
+   missing.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
+
+   // Add custom languages section
+   if (customLangs.length) {
+     const customSeparator = document.createElement('option');
+     customSeparator.disabled = true;
+     customSeparator.textContent = '— Vlastní jazyky —';
+     fragment.appendChild(customSeparator);
+     customLangs.forEach((lang) => {
+       const option = document.createElement('option');
+       option.value = lang.code;
+       option.dataset.customUiLang = '1';
+       option.textContent = lang.name;
+       fragment.appendChild(option);
+     });
+   }
+
+   select.innerHTML = '';
+   select.appendChild(fragment);
+   bindUiLanguageSelectBehavior();
+   const canKeepCurrent = Array.from(select.options).some((opt) => opt.value === current);
+   if (canKeepCurrent) select.value = current;
+   else if (available.length) select.value = available[0].code;
+   else select.value = DEFAULT_UI_LANG;
+ }
 
 function getDefaultContentTagForTarget(targetRaw) {
   let target = String(targetRaw || 'cz').toLowerCase();
@@ -293,8 +320,29 @@ async function showPromptLangModal() {
 }
 
 function closePromptLangModal() {
-  document.getElementById('promptLangModal').style.display = 'none';
-}
+   document.getElementById('promptLangModal').style.display = 'none';
+ }
+
+async function loadCustomLangFile(event) {
+   const file = event.target.files[0];
+   if (!file) return;
+   try {
+     const text = await file.text();
+     const langData = JSON.parse(text);
+     const langCode = file.name.replace('.json', '').toLowerCase();
+     safeSetLocalStorage(`strong_ui_lang_custom_${langCode}`, JSON.stringify(langData), 'settingsModals');
+     safeSetLocalStorage('strong_ui_lang_custom_active', langCode, 'settingsModals');
+     safeSetLocalStorage(UI_LANG_KEY, langCode, 'settingsModals');
+     if (!window.__CUSTOM_UI_MESSAGES__) window.__CUSTOM_UI_MESSAGES__ = {};
+     window.__CUSTOM_UI_MESSAGES__[langCode] = langData;
+     applyUiLanguage();
+     updatePromptLangButtonLabel();
+     showToast(t('toast.lang.custom.loaded', { lang: langCode }));
+   } catch (err) {
+     showToast(t('toast.lang.custom.error', { error: String(err.message || err) }));
+   }
+   event.target.value = '';
+ }
 
 function updatePromptLangButtonLabel() {
   const btn = document.getElementById('btnPromptLang');
@@ -307,23 +355,26 @@ function updatePromptLangButtonLabel() {
 }
 
 function saveLangSettings() {
-  const prevTarget = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
-  const target = document.getElementById('targetLanguage').value;
-  const source = document.getElementById('sourceLanguage').value;
-  const uiRaw = String(document.getElementById('uiLanguage')?.value || DEFAULT_UI_LANG).toLowerCase();
-  const ui = UI_LANGS.has(uiRaw) ? uiRaw : DEFAULT_UI_LANG;
-  safeSetLocalStorage('strong_target_lang', target, 'settingsModals');
-  safeSetLocalStorage('strong_source_lang', source, 'settingsModals');
-  safeSetLocalStorage(UI_LANG_KEY, ui, 'settingsModals');
-  safeRemoveLocalStorage(CONTENT_TAG_LANG_KEY, 'settingsModals');
-  safeRemoveLocalStorage(CONTENT_TAG_LANG_MANUAL_KEY, 'settingsModals');
-  refreshLanguageAwarePromptOptionLabels();
-  applySystemPromptForCurrentTask();
-  applyUiLanguage();
-  updatePromptLangButtonLabel();
-  closePromptLangModal();
-  showToast(t('toast.lang.settings.saved'));
-}
+   const prevTarget = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+   const target = document.getElementById('targetLanguage').value;
+   const source = document.getElementById('sourceLanguage').value;
+   const uiRaw = String(document.getElementById('uiLanguage')?.value || DEFAULT_UI_LANG).toLowerCase();
+   // Allow custom languages too (not just UI_LANGS whitelist)
+   const customMessages = typeof window !== 'undefined' ? window.__CUSTOM_UI_MESSAGES__ : null;
+   const ui = (UI_LANGS.has(uiRaw) || customMessages?.[uiRaw]) ? uiRaw : DEFAULT_UI_LANG;
+   console.log('[saveLangSettings] uiRaw:', uiRaw, 'ui:', ui, 'isCustom:', !!customMessages?.[uiRaw]);
+   safeSetLocalStorage('strong_target_lang', target, 'settingsModals');
+   safeSetLocalStorage('strong_source_lang', source, 'settingsModals');
+   safeSetLocalStorage(UI_LANG_KEY, ui, 'settingsModals');
+   safeRemoveLocalStorage(CONTENT_TAG_LANG_KEY, 'settingsModals');
+   safeRemoveLocalStorage(CONTENT_TAG_LANG_MANUAL_KEY, 'settingsModals');
+   refreshLanguageAwarePromptOptionLabels();
+   applySystemPromptForCurrentTask();
+   applyUiLanguage();
+   updatePromptLangButtonLabel();
+   closePromptLangModal();
+   showToast(t('toast.lang.settings.saved'));
+ }
 
-  return { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings };
+  return { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile };
 }

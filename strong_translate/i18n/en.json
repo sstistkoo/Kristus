@@ -319,6 +319,8 @@
   "openrouter.error": "Loading failed ” check your connection",
   "toast.ai.settings.saved": "✅ AI settings (main + secondary) saved",
   "toast.lang.settings.saved": "✅ Language settings saved + system prompt activated",
+  "toast.lang.custom.loaded": "✓ Custom language loaded: {lang}",
+  "toast.lang.custom.error": "✗ Error loading language: {error}",
   "toast.loaded.github": "✅ Loaded from GitHub",
   "toast.loaded.fallback": "✅  Loaded fallback file",
   "toast.openrouter.cache": "✅  OpenRouter API unavailable, using cached model list",

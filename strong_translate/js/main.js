@@ -125,8 +125,19 @@ function getModelTestPromptCatalog() {
     return map[ui] || 'CZ';
   }
 
-  function applyUiLanguage() {
-    refreshTopicLabels();
+function applyUiLanguage() {
+    // Load custom language from localStorage if active
+    try {
+      const customLangCode = localStorage.getItem('strong_ui_lang_custom_active');
+      if (customLangCode && (!window.__CUSTOM_UI_MESSAGES__ || !window.__CUSTOM_UI_MESSAGES__[customLangCode])) {
+        const customLangData = localStorage.getItem(`strong_ui_lang_custom_${customLangCode}`);
+        if (customLangData) {
+          window.__CUSTOM_UI_MESSAGES__ = window.__CUSTOM_UI_MESSAGES__ || {};
+          window.__CUSTOM_UI_MESSAGES__[customLangCode] = JSON.parse(customLangData);
+        }
+      }
+    } catch (e) { /* ignore */ }
+     refreshTopicLabels();
     const setText = (id, value) => {
       const el = document.getElementById(id);
       if (el) el.textContent = value;
@@ -2049,7 +2060,7 @@ const settingsModalsApi = createSettingsModalsApi({
   syncSecondaryProviderToggles: (...a) => syncSecondaryProviderToggles(...a),
   updateAutoProviderCountdowns: (...a) => updateAutoProviderCountdowns(...a),
 });
-const { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings } = settingsModalsApi;
+const { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile } = settingsModalsApi;
 
 const promptLibraryApi = createPromptLibraryApi({
     state,
@@ -2319,9 +2330,10 @@ window.importPromptLibraryFromFile = promptLibraryApi.importPromptLibraryFromFil
  window.showPromptAIModal = showPromptAIModal;
  window.closePromptAIModal = closePromptAIModal;
  window.saveAISettings = saveAISettings;
- window.showPromptLangModal = showPromptLangModal;
- window.closePromptLangModal = closePromptLangModal;
- window.saveLangSettings = saveLangSettings;
+window.showPromptLangModal = showPromptLangModal;
+  window.closePromptLangModal = closePromptLangModal;
+  window.saveLangSettings = saveLangSettings;
+  window.loadCustomLangFile = loadCustomLangFile;
 // Secondary prompts
  window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
   window.closeSecondaryPromptsModal = promptLibraryApi.closeSecondaryPromptsModal;
@@ -4829,7 +4841,20 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('provider')?.addEventListener('change', onProviderChange);
+   // Load custom UI language if exists
+   try {
+     const customLangCode = localStorage.getItem('strong_ui_lang_custom_active');
+     if (customLangCode) {
+       const customLangData = localStorage.getItem(`strong_ui_lang_custom_${customLangCode}`);
+       if (customLangData) {
+         window.__CUSTOM_UI_MESSAGES__ = window.__CUSTOM_UI_MESSAGES__ || {};
+         window.__CUSTOM_UI_MESSAGES__[customLangCode] = JSON.parse(customLangData);
+       }
+     }
+   } catch (e) {
+     console.warn('Failed to load custom UI language:', e);
+   }
+   document.getElementById('provider')?.addEventListener('change', onProviderChange);
   document.getElementById('apiKey')?.addEventListener('change', saveApiKey);
   document.getElementById('apiKeyProfile')?.addEventListener('change', onApiKeyProfileChange);
   document.getElementById('btnSaveApiKeyProfile')?.addEventListener('click', saveCurrentApiKeyAsProfile);

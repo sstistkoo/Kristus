@@ -320,6 +320,8 @@
   "openrouter.error": "Chyba načítání — zkontroluj připojení",
   "toast.ai.settings.saved": "✓ AI nastavení (hlavní + sekundární) uložena",
   "toast.lang.settings.saved": "✓ Jazyková nastavení uložena + aktivován systémový prompt",
+  "toast.lang.custom.loaded": "✓ Vlastní jazyk načten: {lang}",
+  "toast.lang.custom.error": "✗ Chyba načítání jazyka: {error}",
   "toast.loaded.github": "✓ Načteno z GitHubu",
   "toast.loaded.fallback": "⚠ Načten fallback soubor",
   "toast.openrouter.cache": "⚠ OpenRouter API nedostupné, používám uložený seznam modelů",
