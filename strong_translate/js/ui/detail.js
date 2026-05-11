@@ -10,7 +10,7 @@
  *       getDefaultBatchTopicUserPrompt, getDefaultBatchTopicSystemPrompt,
  *       isTopicValueProblematic
  */
-import { hasMeaningfulValue, isTranslationComplete, isTopicValueProblematic } from '../translation/utils.js';
+import { hasMeaningfulValue, isTranslationComplete, isTopicValueProblematic, hasCzechWord, autoCorrectEnglishWords } from '../translation/utils.js';
 
 // Storage klíče pro topic-specific prompty (zjednodušená verze z topicRepair.js)
 const TOPIC_REPAIR_PROMPT_PREFIX = 'strong_topic_repair_batch_prompt_v1_';
@@ -40,7 +40,7 @@ export function createDetailApi({
     const e = state.entryMap.get(key) || {};
     const sourceCzDef = String(e.czDef || '').trim();
     const translatedDef = String(tr?.definice || '').trim();
-    const looksEnglish = /(\bin general\b|\bused of\b|\bin itself\b|\bthat which\b|\bopposite to\b|\bwhere it is contrasted\b|\bsee word\b|\bSYN\.:|\b chiefly for\b|\bwhich\b|\bsee\b|\bthe\b|\band\b|\bor\b|\bthat\b|\bthose\b|\bthese\b|\balso\b|\bfiguratively\b|\bespecially\b|\ba\b|\ban\b|\bis\b|\bare\b|\bwas\b|\bwere\b)/i.test(translatedDef);
+    const looksEnglish = /(\bin general\b|\bused of\b|\bin itself\b|\bthat which\b|\bopposite to\b|\bwhere it is contrasted\b|\bsee word\b|\bSYN\.:|\b chiefly for\b|\bwhich\b|\bsee\b|\bthe\b|\band\b|\bor\b|\bthat\b|\bthose\b|\bthese\b|\balso\b|\bfiguratively\b|\bespecially\b|\ba\b|\ban\b|\bis\b|\bare\b|\bwas\b|\bwere\b)/i.test(translatedDef) && !hasCzechWord(translatedDef);
     const hasDetailedTranslatedDef = translatedDef.length >= 80 && /(\b1\.\b|\b2\.\b|[a-z]\)|\(|\[)/i.test(translatedDef);
     const shouldPreferSourceDef = hasMeaningfulValue(sourceCzDef) && (looksEnglish || !hasDetailedTranslatedDef);
     const definitionDisplay = shouldPreferSourceDef ? sourceCzDef : translatedDef;
@@ -184,13 +184,22 @@ export function createDetailApi({
     `;
   }
 
-  function toggleEditSection(key, id) {
-    const el = document.getElementById(`tedit-${key}-${id}`);
-    el.classList.toggle('show');
-    if (el.classList.contains('show')) {
-      document.getElementById(`tinput-${key}-${id}`).focus();
-    }
-  }
+   function toggleEditSection(key, id) {
+     const el = document.getElementById(`tedit-${key}-${id}`);
+     el.classList.toggle('show');
+     if (el.classList.contains('show')) {
+       const textarea = document.getElementById(`tinput-${key}-${id}`);
+       if (textarea) {
+         // Automaticky opravit anglická problemová slova při otevření editoru
+         const original = textarea.value;
+         const corrected = autoCorrectEnglishWords(original);
+         if (corrected !== original) {
+           textarea.value = corrected;
+         }
+         textarea.focus();
+       }
+     }
+   }
 
   function saveSection(key, id) {
     const val = document.getElementById(`tinput-${key}-${id}`).value;

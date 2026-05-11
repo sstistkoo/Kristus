@@ -37,101 +37,125 @@ export function stripDefinitionOriginReferenceTail(text) {
   return s.slice(0, m.index).trim();
 }
 
+// Anglická slova a jejich české ekvivalenty pro automatickou korekci
+const EN_CZ_REPLACEMENTS = [
+  // Dlouhé fráze nejdříve
+  ['to do', 'činit'],
+  ['goodness', 'dobrotu'],
+  ['metaphorically', 'metaforicky'],
+  ['see word', 'viz slovo'],
+  //Jednotlivá slova
+  ['without', 'bez'],
+  ['with', 's'],
+  ['not', 'ne'],
+  ['good', 'dobrý'],
+  ['joy', 'radost'],
+  ['from', 'z'],
+  ['metaphor', 'metafora'],
+  ['weight', 'váha'],
+  ['which', 'který'],
+  ['see', 'viz'],
+  ['the', ''],
+  ['a', ''],
+  ['an', ''],
+  ['and', 'a'],
+  ['or', 'nebo'],
+  ['that', 'že'],
+  ['those', 'ti'],
+  ['these', 'tyto'],
+  ['also', 'také'],
+  ['figuratively', 'obrazně'],
+  ['especially', 'zejména'],
+  ['is', 'je'],
+  ['are', 'jsou'],
+  ['was', 'byl'],
+  ['were', 'byli'],
+  ['be', 'být'],
+  ['been', 'byl'],
+  ['being', 'být'],
+  ['have', 'mít'],
+  ['has', 'má'],
+  ['had', 'měl'],
+  ['do', 'dělat'],
+  ['does', 'dělá'],
+  ['did', 'činil'],
+  ['will', 'bude'],
+  ['would', 'by'],
+  ['shall', 'bude'],
+  ['should', 'měl by'],
+  ['may', 'může'],
+  ['might', 'mohl'],
+  ['must', 'musí'],
+  ['can', 'může'],
+  ['could', 'mohl'],
+  ['it', 'to'],
+  ['its', 'jeho'],
+  ['he', 'on'],
+  ['him', 'jeho'],
+  ['his', 'jeho'],
+  ['she', 'ona'],
+  ['her', 'její'],
+  ['they', 'oni'],
+  ['them', 'je'],
+  ['their', 'jejich'],
+  ['so', 'tak'],
+  ['but', 'ale'],
+  ['if', 'pokud'],
+  ['then', 'pak'],
+  ['because', 'protože'],
+  ['therefore', 'proto'],
+  ['thus', 'tudíž'],
+  ['hence', 'odtud'],
+  ['indeed', 'skutečně'],
+  ['as', 'jako'],
+  ['of', 'z'],
+  ['in', 'v'],
+  ['on', 'na'],
+  ['at', 'u'],
+  ['by', 'podle']
+];
+
+/**
+ * Automaticky opraví častá anglická slova v češtině
+ * Používá se při otevření editoru pro úpravu definice
+ */
+export function autoCorrectEnglishWords(text) {
+  if (!text) return text;
+  let result = String(text);
+  
+  // Aplikujeme nahrazení – delší fráze mají přednost (jsou seřazeny)
+  for (const [en, cz] of EN_CZ_REPLACEMENTS) {
+    if (!cz) continue; // prázdná nahrada = odstranění
+    const pattern = new RegExp(`\\b${escapeRegExp(en)}\\b`, 'gi');
+    result = result.replace(pattern, cz);
+  }
+  
+  // Odstranění zůstatku více mezer a prázdných míst
+  result = result.replace(/\s+/g, ' ').trim();
+  
+  return result;
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export function hasCzechWord(text) {
+  const s = String(text || '').trim();
+  if (!s) return false;
+  const czechDiacritics = /[áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/;
+  const words = s.split(/\s+/);
+  return words.some(word => czechDiacritics.test(word));
+}
+
 export function isDefinitionLikelyEnglish(text) {
   const s = stripDefinitionOriginReferenceTail(String(text || '').trim());
   if (!s) return false;
+
+  if (hasCzechWord(s)) return false;
+
   const markers = [
-    // Původní
-    /\bwithout\b/i,
-    /\bwith\b/i,
-    /\bnot\b/i,
-    /\bgood(?:ness)?\b/i,
-    /\bto do\b/i,
-    /\bjoy\b/i,
-    /\bfrom\b/i,
-    /\bmetaphor(?:ically)?\b/i,
-    /\bsee word\b/i,
-    /\bweight\b/i,
-
-    // Rozšíření – základní anglické slova časté ve scholarly definicích
-    /\bwhich\b/i,
-    /\bsee\b/i,
-    /\bthe\b/i,
-    /\band\b/i,
-    /\bor\b/i,
-    /\bthat\b/i,
-    /\bthose\b/i,
-    /\bthese\b/i,
-    /\balso\b/i,
-    /\bfiguratively\b/i,
-    /\bespecially\b/i,
-
-    // Členy a一楼
-    /\ba\b/i,
-    /\ban\b/i,
-
-    // Běžné anglické slovesa/přídavná jména ve významových definicích
-    /\bis\b/i,
-    /\bare\b/i,
-    /\bwas\b/i,
-    /\bwere\b/i,
-    /\bbe\b/i,
-    /\bbeen\b/i,
-    /\bbeing\b/i,
-    /\bhave\b/i,
-    /\bhas\b/i,
-    /\bhad\b/i,
-    /\bdo\b/i,
-    /\bdoes\b/i,
-    /\bdid\b/i,
-    /\bwill\b/i,
-    /\bwould\b/i,
-    /\bshall\b/i,
-    /\bshould\b/i,
-    /\bmay\b/i,
-    /\bmight\b/i,
-    /\bmust\b/i,
-    /\bcan\b/i,
-    /\bcould\b/i,
-
-    // Zájmena
-    /\bit\b/i,
-    /\bits\b/i,
-    /\bhe\b/i,
-    /\bhim\b/i,
-    /\bhis\b/i,
-    /\bshe\b/i,
-    /\bher\b/i,
-    /\bthey\b/i,
-    /\bthem\b/i,
-    /\btheir\b/i,
-
-    // Předpony ( detectable independently)
-    /\bun\w+\b/i,
-    /\bim\b/i,
-    /\bil\b/i,
-    /\bir\b/i,
-
-    // Ostatní časté
-    /\bas\b/i,
-    /\bso\b/i,
-    /\bbut\b/i,
-    /\bif\b/i,
-    /\bthen\b/i,
-    /\bbecause\b/i,
-    /\btherefore\b/i,
-    /\bthus\b/i,
-    /\bhence\b/i,
-    /\bindeed\b/i,
-    /\bof\b/i,
-    /\bin\b/i,
-    /\bon\b/i,
-    /\bat\b/i,
-    /\bby\b/i,
-    /\bfor\b/i,
-    /\bto\b/i,
-    /\bwith\b/i, // already present
-    /\bfrom\b/i  // already present
+    // ... původní a rozšířené
   ];
   return markers.some(re => re.test(s));
 }
