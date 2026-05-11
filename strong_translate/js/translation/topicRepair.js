@@ -244,8 +244,8 @@ function updateTopicRepairModalUI() {
       : '';
     const statusColor = task.status === 'done' ? 'var(--acc3)' : (task.status === 'failed' ? 'var(--red)' : (task.status === 'running' ? 'var(--ylw)' : 'var(--txt3)'));
     const statusText = task.status === 'done' ? t('topicRepair.taskStatus.done') : (task.status === 'failed' ? t('topicRepair.taskStatus.failed') : (task.status === 'running' ? t('topicRepair.taskStatus.running') : t('topicRepair.taskStatus.waiting')));
-     return `
-       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin:0 0 10px 0${task.hidden ? ';display:none' : ''}">
+      return `
+        <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin:0 0 10px 0${task.hidden && !state.showApproved ? ';display:none' : ''}">
          <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
              <input type="checkbox" ${task.checked ? 'checked' : ''} ${!hasMeaningfulValue(task.candidateValue) ? 'disabled' : ''} onchange="toggleTopicRepairTask(${idx}, this.checked)" style="accent-color:var(--acc)">
@@ -374,7 +374,8 @@ function renderTopicRepairModal() {
   if (!topicRepairState) return;
   if (!state.bulkListTopicFilter) state.bulkListTopicFilter = defaultBulkListTopicFilter();
   if (!state.bulkTopicId) state.bulkTopicId = 'all';
-closeTopicRepairModalSafe();
+  if (state.showApproved === undefined) state.showApproved = false;
+  closeTopicRepairModalSafe();
    const modal = document.createElement('div');
    modal.id = 'topicRepairModal';
    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10025;overflow-y:auto;padding:16px';
@@ -935,6 +936,7 @@ function restoreTopicRepairModal() {
 function toggleShowApproved() {
   if (!state.topicRepairState) return;
   state.showApproved = !state.showApproved;
+  console.log('[DEBUG] toggleShowApproved →', state.showApproved, 'hidden tasks:', state.topicRepairState.tasks.filter(t => t.hidden).length);
   updateTopicRepairModalUI();
 }
 
@@ -957,18 +959,30 @@ function defaultBulkListTopicFilter() {
 
 function getTopicRepairModalVisibleTasks(state) {
   const topicRepairState = state.topicRepairState;
-  if (!topicRepairState || !Array.isArray(topicRepairState.tasks)) return [];
+  if (!topicRepairState || !Array.isArray(topicRepairState.tasks)) {
+    console.log('[DEBUG] getTopicRepairModalVisibleTasks: no state or tasks');
+    return [];
+  }
+  
+  console.log('[DEBUG] getTopicRepairModalVisibleTasks: showApproved=', state.showApproved, 'total=', topicRepairState.tasks.length, 'hidden=', topicRepairState.tasks.filter(t => t.hidden).length);
+  
+  // Režim "zobrazit schválené" – ignoruj všechny filtry
+  if (state.showApproved) {
+    const res = topicRepairState.tasks.filter(t => t.hidden);
+    console.log('[DEBUG] → returning hidden tasks:', res.length);
+    return res;
+  }
+  
+  // Běžné filtrování (dropdown téma + filtry)
   const bid = state.bulkTopicId || 'all';
   let tasks = topicRepairState.tasks;
   if (bid === 'all') {
     const m = state.bulkListTopicFilter || defaultBulkListTopicFilter();
-    tasks = tasks.filter(t => m[t.topicId] !== false);
+    tasks = tasks.filter(t => m[t.topicId] !== false && !t.hidden);
   } else {
-    tasks = tasks.filter(t => t.topicId === bid);
+    tasks = tasks.filter(t => t.topicId === bid && !t.hidden);
   }
-  if (!state.showApproved) {
-    tasks = tasks.filter(t => !t.hidden);
-  }
+  console.log('[DEBUG] → returning normal tasks:', tasks.length);
   return tasks;
 }
 
