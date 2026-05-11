@@ -1279,7 +1279,11 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
          ? userPromptTemplate.replace(/{HESLA}/g, hesla)
          : `${userPromptTemplate}\n\n${hesla}`;
 
-       const prov = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
+        const enabledProviders = ['groq', 'gemini', 'openrouter'].filter(p => state.topicRepairState?.providerEnabled?.[p]);
+        if (!enabledProviders.length) {
+          throw new Error(t('toast.topicRepair.enableProvider') || 'No provider enabled for topic repair');
+        }
+        const prov = enabledProviders[0];
        const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
        const apiKey = getCurrentApiKey(prov);
        if (!apiKey) {
@@ -1368,9 +1372,9 @@ async function runTopicRepairBulkTranslation() {
   const onlyFailed = !!document.getElementById('topicRepairBulkOnlyFailed')?.checked;
   const bs = parseInt(document.getElementById('batchSizeRun')?.value, 10) || 10;
 
-  const activeProvider = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
-  if (!isAutoProviderEnabled(activeProvider)) {
-    showToast(t('toast.provider.enableOne'));
+  const enabledProviders = ['groq', 'gemini', 'openrouter'].filter(p => topicRepairState.providerEnabled[p]);
+  if (!enabledProviders.length) {
+    showToast(t('toast.topicRepair.enableProvider'));
     return;
   }
 
