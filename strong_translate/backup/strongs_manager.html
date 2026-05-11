@@ -1,63 +1,605 @@
-/* ================================================================
-   Strong's Manager Plugin v2.1
-   Zasuvný modul pro strong_translator.html
-   Použití: <script src="strongs-manager-plugin.js"></script>
-            SM.open()   // otevře Manager
-            SM.close()  // zavře Manager
-            SM.onSelect(cb)  // callback kdy uživatel klikne "← Vložit"
-   ================================================================ */
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strong's Manager</title>
+<style>
 
-(function() {
-'use strict';
 
-// ── Inicializace: inject CSS + HTML ───────────────────────
-function injectPlugin() {
-  if (document.getElementById('sm-overlay')) return; // už vloženo
-
-  // CSS
-  const style = document.createElement('style');
-  style.id = 'sm-plugin-style';
-  style.textContent = SM_CSS;
-  document.head.appendChild(style);
-
-  // HTML
-  const tmp = document.createElement('div');
-  tmp.innerHTML = SM_HTML;
-  document.body.appendChild(tmp.firstElementChild);
-
-  // Init JS
-  SM_INIT();
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e26;
+  --bg4:     #222733;
+  --border:  #2a3040;
+  --border2: #3a4560;
+  --text:    #c8d0e0;
+  --text2:   #7a8899;
+  --text3:   #4a5566;
+  --accent:  #4a90d9;
+  --accent2: #2a6aad;
+  --gold:    #c9a84c;
+  --gold2:   #7a6020;
+  --green:   #4a9e6a;
+  --red:     #c04a4a;
+  --cyan:    #3ab0c0;
+  --mono:    'Consolas', 'Cascadia Code', 'Courier New', monospace;
+  --serif:   'Palatino Linotype', 'Palatino', 'Book Antiqua', Georgia, serif;
+  --list-w:  280px;
+  --right-w: 290px;
 }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-// ── Veřejné API ───────────────────────────────────────────
-window.SM = {
-  open() {
-    injectPlugin();
-    document.getElementById('sm-overlay').classList.remove('h');
-    document.getElementById('sm-overlay').style.display = 'flex';
-  },
-  close() {
-    const el = document.getElementById('sm-overlay');
-    if (el) { el.classList.add('h'); el.style.display = 'none'; }
-  },
-  _selectCallback: null,
-  onSelect(cb) { this._selectCallback = cb; },
-  triggerSelect(entry) {
-    if (this._selectCallback) this._selectCallback(entry);
-    this.close();
-  }
-};
+/* HEADER */
+header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 14px; display: flex; align-items: center; gap: 16px; height: 46px; flex-shrink: 0; }
+.logo { font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--gold); white-space: nowrap; }
+.logo em { font-style: normal; color: var(--text3); font-size: 12px; margin-left: 6px; font-family: var(--mono); }
+.hdr-stats { display: flex; gap: 14px; font-size: 11px; color: var(--text3); }
+.hdr-stat b { color: var(--accent); font-weight: 600; }
+.hdr-stat.gold b { color: var(--gold); }
+.hdr-stat.green b { color: var(--green); }
 
-// ── CSS ───────────────────────────────────────────────────
-const SM_CSS = "\n\n\n#sm-overlay {\n  /* SM Plugin vars */\n  --bg:      #0d0f12;\n  --bg2:     #13161b;\n  --bg3:     #1a1e26;\n  --bg4:     #222733;\n  --border:  #2a3040;\n  --border2: #3a4560;\n  --text:    #c8d0e0;\n  --text2:   #7a8899;\n  --text3:   #4a5566;\n  --accent:  #4a90d9;\n  --accent2: #2a6aad;\n  --gold:    #c9a84c;\n  --gold2:   #7a6020;\n  --green:   #4a9e6a;\n  --red:     #c04a4a;\n  --cyan:    #3ab0c0;\n  --mono:    'Consolas', 'Cascadia Code', 'Courier New', monospace;\n  --serif:   'Palatino Linotype', 'Palatino', 'Book Antiqua', Georgia, serif;\n  --list-w:  280px;\n  --right-w: 290px;\n}\n* { box-sizing: border-box; margin: 0; padding: 0; }\n#sm-overlay { background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }\n\n/* HEADER */\n#sm-overlay header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 14px; display: flex; align-items: center; gap: 16px; height: 46px; flex-shrink: 0; }\n#sm-overlay .logo { font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--gold); white-space: nowrap; }\n#sm-overlay .logo em { font-style: normal; color: var(--text3); font-size: 12px; margin-left: 6px; font-family: var(--mono); }\n#sm-overlay .hdr-stats { display: flex; gap: 14px; font-size: 11px; color: var(--text3); }\n#sm-overlay .hdr-stat b { color: var(--accent); font-weight: 600; }\n#sm-overlay .hdr-stat.gold b { color: var(--gold); }\n#sm-overlay .hdr-stat.green b { color: var(--green); }\n\n/* TOOLBAR */\n#sm-overlay .toolbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 6px 14px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }\n#sm-overlay .tg { display: flex; gap: 4px; align-items: center; padding-right: 10px; border-right: 1px solid var(--border); }\n#sm-overlay .tg:last-child { border-right: none; }\n#sm-overlay .tg-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; margin-right: 2px; }\n\n/* BUTTONS */\n#sm-overlay button { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 9px; border-radius: 4px; cursor: pointer; font-family: var(--mono); font-size: 11px; display: inline-flex; align-items: center; gap: 4px; transition: background .12s, border-color .12s, color .12s; white-space: nowrap; line-height: 1.4; }\n#sm-overlay button:hover { background: var(--bg4); border-color: var(--border2); color: #fff; }\n#sm-overlay .bp { background: var(--accent2); border-color: var(--accent); color: #fff; }\n#sm-overlay .bp:hover { background: var(--accent) !important; }\n#sm-overlay .bs { background: #153a25; border-color: var(--green); color: var(--green); }\n#sm-overlay .bs:hover { background: var(--green) !important; color: #fff !important; }\n#sm-overlay .bd { background: #3a1515; border-color: var(--red); color: var(--red); }\n#sm-overlay .bd:hover { background: var(--red) !important; color: #fff !important; }\n#sm-overlay .bg { background: #2a2010; border-color: var(--gold2); color: var(--gold); }\n#sm-overlay .bg:hover { background: var(--gold2) !important; color: #fff !important; }\n#sm-overlay .bi { background: none; border: none; cursor: pointer; color: var(--text3); padding: 2px 5px; border-radius: 3px; font-size: 13px; }\n#sm-overlay .bi:hover { color: #fff !important; background: var(--bg4) !important; border: none !important; }\n#sm-overlay button:disabled { opacity: .35; cursor: not-allowed; }\n\n/* INPUTS */\n#sm-overlay input[type=text], #sm-overlay input[type=search], #sm-overlay input[type=number], #sm-overlay select, #sm-overlay textarea { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 7px; border-radius: 4px; font-family: var(--mono); font-size: 12px; outline: none; transition: border-color .12s; }\n#sm-overlay input:focus, #sm-overlay select:focus, #sm-overlay textarea:focus { border-color: var(--accent); }\n#sm-overlay select { cursor: pointer; }\n#sm-overlay textarea { resize: vertical; }\n\n/* LAYOUT */\n#sm-overlay .main { display: flex; flex: 1; min-height: 0; overflow: hidden; }\n\n/* LEFT PANEL */\n#sm-overlay .panel-list { width: var(--list-w); flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }\n#sm-overlay .list-hdr { padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }\n#sm-overlay .ltabs { display: flex; gap: 3px; }\n#sm-overlay .ltab { flex: 1; padding: 3px 0; text-align: center; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text2); transition: all .12s; }\n#sm-overlay .ltab.a-all { background: #1a2a4a; border-color: var(--accent); color: var(--accent); }\n#sm-overlay .ltab.a-G { background: #1a2a4a; border-color: #4a80c9; color: #6ab0ff; }\n#sm-overlay .ltab.a-H { background: #2a1f0a; border-color: var(--gold2); color: var(--gold); }\n#sm-overlay .ltab.a-Gs { background: #1a2a4a; border-color: #4a80c9; color: #6ab0ff; }\n\n/* Dropdown pro řecké podskupiny */\n#sm-overlay .ltab-wrap { position: relative; flex: 1; }\n#sm-overlay .ltab-wrap .ltab { width: 100%; }\n#sm-overlay .ltab-drop {\n  display: block;\n  position: absolute;\n  top: 100%; left: 0; right: 0;\n  margin-top: 3px;\n  background: var(--bg2);\n  border: 1px solid var(--border2);\n  border-radius: 5px;\n  overflow: hidden;\n  z-index: 50;\n  box-shadow: 0 4px 12px rgba(0,0,0,.5);\n  min-width: 140px;\n}\n#sm-overlay .ltab-drop.h { display: none !important; }\n#sm-overlay .ltab-drop-item {\n  padding: 6px 10px;\n  font-size: 11px;\n  cursor: pointer;\n  color: var(--text2);\n  border-bottom: 1px solid var(--border);\n  transition: background .1s;\n  display: flex; justify-content: space-between; align-items: center;\n}\n#sm-overlay .ltab-drop-item:last-child { border-bottom: none; }\n#sm-overlay .ltab-drop-item:hover { background: var(--bg4); color: #fff; }\n#sm-overlay .ltab-drop-item.active { background: #1a2a4a; color: var(--accent); }\n#sm-overlay .ltab-drop-item .di-cnt { font-size: 10px; color: var(--text3); }\n#sm-overlay .lsrow { display: flex; gap: 4px; }\n#sm-overlay .lsrow input { flex: 1; width: 0; }\n#sm-overlay .lcnt { font-size: 10px; color: var(--text3); }\n#sm-overlay .lscroll { flex: 1; overflow-y: auto; position: relative; }\n#sm-overlay .lscroll::-webkit-scrollbar { width: 5px; }\n#sm-overlay .lscroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }\n#sm-overlay .vsp { position: relative; }\n#sm-overlay .vit { position: absolute; top: 0; left: 0; right: 0; }\n#sm-overlay .litem { padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 7px; align-items: flex-start; transition: background .09s; user-select: none; }\n#sm-overlay .litem:hover { background: var(--bg3); }\n#sm-overlay .litem.sel { background: var(--bg4); border-left: 2px solid var(--accent); padding-left: 8px; }\n#sm-overlay .litem.cust { border-left: 2px solid var(--gold2); padding-left: 8px; }\n#sm-overlay .litem.sel.cust { border-left: 2px solid var(--gold); }\n#sm-overlay .lid { font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; margin-top: 2px; }\n#sm-overlay .lid.G { background: #1a2a4a; color: var(--accent); }\n#sm-overlay .lid.H { background: #2a1f0a; color: var(--gold); }\n#sm-overlay .lbody { flex: 1; min-width: 0; }\n#sm-overlay .lword { font-family: var(--serif); font-size: 15px; line-height: 1.2; }\n#sm-overlay .ltrans { font-size: 10px; color: var(--text2); }\n#sm-overlay .lcz { font-size: 11px; color: var(--text3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n\n/* RESIZER */\n#sm-overlay .resizer { width: 4px; flex-shrink: 0; background: var(--border); cursor: col-resize; transition: background .15s; z-index: 10; }\n#sm-overlay .resizer:hover, #sm-overlay .resizer.drag { background: var(--accent); }\n\n/* CENTER PANEL */\n#sm-overlay .panel-center { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }\n#sm-overlay .det-hdr { padding: 10px 18px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; gap: 14px; align-items: flex-start; flex-shrink: 0; }\n#sm-overlay .det-word { font-family: var(--serif); font-size: 34px; line-height: 1; color: #fff; margin-right: 4px; }\n#sm-overlay .det-meta { flex: 1; min-width: 0; }\n#sm-overlay .det-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 4px; margin-bottom: 4px; }\n#sm-overlay .det-badge.G { background: #1a2a4a; color: var(--accent); border: 1px solid var(--accent2); }\n#sm-overlay .det-badge.H { background: #2a1f0a; color: var(--gold); border: 1px solid var(--gold2); }\n#sm-overlay .det-translit { color: var(--text2); font-size: 13px; }\n#sm-overlay .det-gram { font-size: 10px; color: var(--text3); margin-top: 3px; }\n#sm-overlay .det-nav { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-shrink: 0; }\n#sm-overlay .det-body { flex: 1; overflow-y: auto; padding: 14px 18px; }\n#sm-overlay .det-body::-webkit-scrollbar { width: 5px; }\n#sm-overlay .det-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }\n\n#sm-overlay .fb { margin-bottom: 10px; padding: 9px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 5px; }\n#sm-overlay .fl { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 5px; font-weight: 600; }\n#sm-overlay .fv { font-family: var(--serif); font-size: 15px; line-height: 1.55; white-space: pre-wrap; }\n#sm-overlay .fv.cz { color: var(--cyan); }\n#sm-overlay .fv.kjv { color: var(--green); }\n#sm-overlay .fv.sm { font-size: 13px; }\n#sm-overlay .fv.mn { font-family: var(--mono); font-size: 11px; color: var(--text2); }\n#sm-overlay .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }\n\n/* Custom fields */\n#sm-overlay .cshdr { display: flex; align-items: center; gap: 8px; margin: 12px 0 8px; padding-top: 12px; border-top: 1px solid var(--border); }\n#sm-overlay .cstitle { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); font-weight: 600; flex: 1; }\n#sm-overlay .cfield { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 7px; padding: 8px 11px; background: #181510; border: 1px solid var(--gold2); border-radius: 5px; }\n#sm-overlay .cfname { font-size: 10px; color: var(--gold2); text-transform: uppercase; letter-spacing: .05em; min-width: 90px; padding-top: 2px; flex-shrink: 0; word-break: break-all; }\n#sm-overlay .cfval { flex: 1; font-family: var(--serif); font-size: 14px; line-height: 1.5; white-space: pre-wrap; }\n#sm-overlay .cfbtns { display: flex; gap: 2px; }\n#sm-overlay .nocf { font-size: 11px; color: var(--text3); padding: 6px 0; font-style: italic; }\n\n/* RIGHT PANEL */\n#sm-overlay .panel-right { width: var(--right-w); flex-shrink: 0; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }\n#sm-overlay .rtabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }\n#sm-overlay .rtab { flex: 1; padding: 8px 4px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; color: var(--text3); background: none; border: none; border-bottom: 2px solid transparent; transition: all .12s; font-family: var(--mono); }\n#sm-overlay .rtab.active { color: var(--accent); border-bottom-color: var(--accent); }\n#sm-overlay .rtab:hover:not(.active) { color: var(--text); background: var(--bg3); }\n#sm-overlay .rpanel { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }\n#sm-overlay .rpanel::-webkit-scrollbar { width: 5px; }\n#sm-overlay .rpanel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }\n#sm-overlay .rsec { display: none; flex-direction: column; gap: 8px; }\n#sm-overlay .rsec.active { display: flex; }\n#sm-overlay .rshdr { font-size: 10px; text-transform: uppercase; letter-spacing: .09em; color: var(--text3); padding-bottom: 6px; border-bottom: 1px solid var(--border); }\n\n/* File item */\n#sm-overlay .fitem { padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; display: flex; gap: 7px; align-items: center; }\n#sm-overlay .fitem-ico { font-size: 15px; flex-shrink: 0; }\n#sm-overlay .fitem-inf { flex: 1; min-width: 0; }\n#sm-overlay .fitem-n { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n#sm-overlay .fitem-m { font-size: 10px; color: var(--text3); }\n#sm-overlay .fitem-b { display: flex; gap: 3px; }\n\n/* Drop zone */\n#sm-overlay .dz { border: 2px dashed var(--border2); border-radius: 6px; padding: 18px 12px; text-align: center; color: var(--text3); font-size: 11px; cursor: pointer; transition: all .15s; }\n#sm-overlay .dz:hover, #sm-overlay .dz.over { border-color: var(--accent); background: rgba(74,144,217,.05); color: var(--accent); }\n#sm-overlay .dz-ico { font-size: 26px; margin-bottom: 6px; }\n\n/* Export card */\n#sm-overlay .ec { padding: 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; }\n#sm-overlay .ec-t { font-size: 11px; font-weight: 600; margin-bottom: 5px; }\n#sm-overlay .ec p { font-size: 10px; color: var(--text2); margin-bottom: 7px; line-height: 1.5; }\n#sm-overlay .er { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }\n#sm-overlay .er label { font-size: 10px; color: var(--text2); }\n#sm-overlay .er input[type=number] { width: 70px; }\n\n/* Stats */\n#sm-overlay .sg { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }\n#sm-overlay .sc { padding: 10px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; text-align: center; }\n#sm-overlay .sc-v { font-size: 18px; font-weight: 600; color: var(--accent); }\n#sm-overlay .sc-l { font-size: 9px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: .05em; }\n#sm-overlay .pb { height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; margin: 6px 0; }\n#sm-overlay .pf { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }\n\n/* Empty state */\n#sm-overlay .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text3); gap: 10px; padding: 40px; text-align: center; }\n#sm-overlay .empty-ico { font-size: 44px; }\n#sm-overlay .empty-t { font-family: var(--serif); font-size: 22px; color: var(--text2); }\n#sm-overlay .empty-s { font-size: 12px; line-height: 1.7; max-width: 340px; }\n\n/* Loading */\n#sm-overlay #ov { position: fixed; inset: 0; background: rgba(13,15,18,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; gap: 14px; }\n#sm-overlay #ov.h { display: none; }\n#sm-overlay .spin { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .75s linear infinite; }\n@keyframes spin { to { transform: rotate(360deg); } }\n#ov-t { font-size: 13px; color: var(--text2); }\n#ov-s { font-size: 11px; color: var(--text3); }\n#ov-p { width: 260px; height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; }\n#ov-pf { height: 100%; background: var(--accent); border-radius: 2px; transition: width .1s; }\n\n/* Modal */\n.mbg { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; display: flex; align-items: center; justify-content: center; }\n.mbg.h { display: none; }\n.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 20px; width: 480px; max-width: 94vw; max-height: 85vh; overflow-y: auto; }\n.modal h3 { font-family: var(--serif); font-size: 18px; margin-bottom: 14px; }\n.fr { margin-bottom: 11px; }\n.fr label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 4px; }\n.fr input, .fr textarea, .fr select { width: 100%; }\n.fr textarea { min-height: 90px; font-family: var(--serif); font-size: 14px; }\n.mact { display: flex; gap: 7px; justify-content: flex-end; margin-top: 14px; }\n\n/* Toast */\n#toasts { position: fixed; bottom: 18px; right: 18px; display: flex; flex-direction: column; gap: 7px; z-index: 1000; pointer-events: none; }\n.toast { background: var(--bg4); border: 1px solid var(--border2); padding: 9px 14px; border-radius: 5px; font-size: 12px; pointer-events: all; animation: tin .18s ease; max-width: 310px; line-height: 1.4; }\n.tok { border-color: var(--green); color: var(--green); }\n.ter { border-color: var(--red);   color: var(--red);   }\n.tin { border-color: var(--accent); color: var(--accent); }\n@keyframes tin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }\n\n.h { display: none !important; }\n::-webkit-scrollbar { width: 5px; }\n::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }\n\n/* Field coverage */\n.fcov-item { margin-bottom:6px; padding:8px 10px; background:var(--bg3); border:1px solid var(--border); border-radius:5px; cursor:pointer; transition:border-color .12s; }\n.fcov-item:hover { border-color:var(--accent); }\n.fcov-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }\n.fcov-name { font-size:11px; font-weight:600; }\n.fcov-pct { font-size:11px; font-weight:600; }\n.fcov-pct.full { color:var(--green); } .fcov-pct.high { color:var(--accent); } .fcov-pct.low { color:var(--gold); } .fcov-pct.zero { color:var(--text3); }\n.fcov-bar { height:3px; background:var(--bg4); border-radius:2px; overflow:hidden; margin-bottom:3px; }\n.fcov-fill { height:100%; border-radius:2px; }\n.fcov-detail { font-size:10px; color:var(--text3); display:flex; gap:8px; flex-wrap:wrap; }\n.tracked-item { display:flex; align-items:center; gap:6px; padding:6px 8px; margin-bottom:5px; background:#1a180a; border:1px solid var(--gold2); border-radius:5px; }\n.tracked-name { font-size:11px; color:var(--gold); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n.tracked-cnt  { font-size:10px; color:var(--text3); white-space:nowrap; }\n.tracked-pct  { font-size:11px; font-weight:600; color:var(--gold2); white-space:nowrap; }\n.tracked-del  { font-size:12px; cursor:pointer; color:var(--text3); background:none; border:none; padding:0 2px; }\n.tracked-del:hover { color:var(--red); }\n\n/* ── EXTRACTION MODE ── */\n.xbar { background: #151f10; border-bottom: 2px solid var(--green); padding: 6px 14px; display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }\n.xbar-title { font-size: 11px; color: var(--green); font-weight: 600; }\n.xbar-count { font-size: 11px; color: var(--text2); margin-left: 4px; }\n.xmode .litem { cursor: pointer; }\n.xmode .litem.xsel { background: #1a2f12 !important; border-left: 3px solid var(--green) !important; padding-left: 7px !important; }\n.xmode .litem.xsel .lid { background: #2a4a1a !important; }\n/* Field checkboxes in detail */\n.xfields-bar { background: #151f10; border: 1px solid var(--green); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }\n.xfields-title { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); margin-bottom: 8px; font-weight: 600; }\n.xfields-grid { display: flex; flex-wrap: wrap; gap: 6px; }\n.xchk { display: flex; align-items: center; gap: 5px; padding: 3px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; user-select: none; transition: all .1s; }\n.xchk:hover { border-color: var(--green); }\n.xchk.on   { background: #1a3010; border-color: var(--green); color: var(--green); }\n.xchk.part { background: #1a2a10; border-color: #5a8a3a; color: #8aba6a; }\n.xchk input { display: none; }\n/* add-to-selection button on list items in xmode */\n.xadd-btn { display: none; }\n.xmode .xadd-btn { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 3px; background: none; border: 1px solid var(--border); color: var(--text3); font-size: 14px; flex-shrink: 0; transition: all .1s; cursor: pointer; padding: 0; margin-top: 2px; }\n.xmode .litem.xsel .xadd-btn { background: var(--green); border-color: var(--green); color: #fff; }\n.xmode .xadd-btn:hover { border-color: var(--green); color: var(--green); }\n";
+/* TOOLBAR */
+.toolbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 6px 14px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+.tg { display: flex; gap: 4px; align-items: center; padding-right: 10px; border-right: 1px solid var(--border); }
+.tg:last-child { border-right: none; }
+.tg-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; margin-right: 2px; }
 
-// ── HTML ──────────────────────────────────────────────────
-const SM_HTML = '<div id="sm-overlay" class="h" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;overflow:hidden;">\n  <div style="position:absolute;top:10px;right:14px;z-index:10000;display:flex;gap:8px">\n    <button onclick="SM.close()" style="background:#c04a4a;border:1px solid #e06060;color:#fff;padding:5px 12px;border-radius:4px;cursor:pointer;font-family:monospace;font-size:12px;font-weight:600">✕ Zavřít</button>\n  </div>\n<!-- OVERLAY -->\n<div id="ov" class="h">\n  <div class="spin"></div>\n  <div id="ov-t">Zpracovávám…</div>\n  <div id="ov-s"></div>\n  <div id="ov-p"><div id="ov-pf" style="width:0%"></div></div>\n</div>\n\n<!-- TOASTS -->\n<div id="toasts"></div>\n\n<!-- MODAL: Add field -->\n<div class="mbg h" id="mAdd">\n  <div class="modal">\n    <h3>Přidat vlastní pole</h3>\n    <div class="fr"><label>Název pole</label><input type="text" id="mAN" placeholder="např. Kabalah, Poznámka, Etymol CZ…"></div>\n    <div class="fr"><label>Obsah pole</label><textarea id="mAV" placeholder="Text hodnoty…"></textarea></div>\n    <div class="mact">\n      <button onclick="cModal(\'mAdd\')">Zrušit</button>\n      <button class="bg" onclick="doAddField()">💾 Uložit (Ctrl+Enter)</button>\n    </div>\n  </div>\n</div>\n\n<!-- MODAL: Edit field -->\n<div class="mbg h" id="mEdit">\n  <div class="modal">\n    <h3>Upravit vlastní pole</h3>\n    <div class="fr"><label>Název pole</label><input type="text" id="mEN"></div>\n    <div class="fr"><label>Obsah pole</label><textarea id="mEV"></textarea></div>\n    <div class="mact">\n      <button onclick="cModal(\'mEdit\')">Zrušit</button>\n      <button class="bg" onclick="doEditField()">💾 Uložit (Ctrl+Enter)</button>\n    </div>\n  </div>\n</div>\n\n<!-- MODAL: Merge -->\n<div class="mbg h" id="mMerge">\n  <div class="modal">\n    <h3>Sloučit soubory</h3>\n    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6" id="mMT"></p>\n    <div class="fr">\n      <label>Strategie při konfliktu ID</label>\n      <select id="mMS">\n        <option value="keep">Ponechat stávající záznam</option>\n        <option value="overwrite">Přepsat záznamem z nového souboru</option>\n        <option value="merge">Doplnit chybějící pole z nového souboru</option>\n      </select>\n    </div>\n    <div class="mact">\n      <button onclick="cModal(\'mMerge\')">Zrušit</button>\n      <button class="bp" onclick="doMerge()">🔀 Potvrdit sloučení</button>\n    </div>\n  </div>\n</div>\n\n<!-- HEADER -->\n<header>\n  <div class="logo">Strong\'s Manager <em>v2.1</em></div>\n  <div class="hdr-stats">\n    <span class="hdr-stat">Řecky: <b id="hG">0</b></span>\n    <span class="hdr-stat gold">Hebrejsky: <b id="hH">0</b></span>\n    <span class="hdr-stat">Celkem: <b id="hT">0</b></span>\n    <span class="hdr-stat green">Vl. pole u: <b id="hC">0</b></span>\n    <span class="hdr-stat">Soubory: <b id="hF">0</b></span>\n  </div>\n</header>\n\n<!-- TOOLBAR -->\n<div class="toolbar">\n  <div class="tg">\n    <span class="tg-lbl">Import</span>\n    <button class="bp" onclick="Q(\'fi\').click()">📂 Načíst soubor</button>\n    <button onclick="Q(\'fim\').click()">📂+ Přidat soubory</button>\n    <button class="bg" onclick="Q(\'fiTrans\').click()" title="Načíst překladový soubor a sloučit s aktuálními daty">🔀 Merge překladu</button>\n    <input type="file" id="fi"      accept=".txt,.tsv,.csv" style="display:none" onchange="importFiles(event,false)">\n    <input type="file" id="fim"     accept=".txt,.tsv,.csv" multiple style="display:none" onchange="importFiles(event,true)">\n    <input type="file" id="fiTrans" accept=".txt" style="display:none" onchange="importTranslation(event)">\n  </div>\n  <div class="tg">\n    <span class="tg-lbl">Hledání</span>\n    <input type="search" id="qS" placeholder="Slovo, ID, definice…" oninput="doSearch()" style="width:190px">\n    <select id="qL" onchange="doSearch()">\n      <option value="all">G + H</option>\n      <option value="G">Řečtina (G)</option>\n      <option value="H">Hebrejština (H)</option>\n    </select>\n    <select id="qF" onchange="doSearch()">\n      <option value="all">Všechna pole</option>\n      <option value="id">ID</option>\n      <option value="word">Slovo / znak</option>\n      <option value="prepis">Přepis</option>\n      <option value="definice">Definice</option>\n      <option value="cz">Česky</option>\n      <option value="kjv">KJV</option>\n      <option value="custom">Vlastní pole</option>\n    </select>\n    <select id="qO" onchange="doSearch()">\n      <option value="id">ID</option>\n      <option value="word">Slovo</option>\n      <option value="cz">Česky</option>\n    </select>\n    <select id="qX" onchange="doSearch()" title="Speciální filtry">\n      <option value="all">— Speciální filtr —</option>\n      <optgroup label="Překlad">\n        <option value="no_cz">❌ Bez českého překladu</option>\n        <option value="has_cz">✓ Má český překlad</option>\n      </optgroup>\n      <optgroup label="Vlastní pole">\n        <option value="has_custom">⭐ Má vlastní pole</option>\n        <option value="no_custom">○ Bez vlastních polí</option>\n        <option value="no_cz_has_custom">❌+⭐ Bez Cz, ale s vlastními poli</option>\n      </optgroup>\n      <optgroup label="Pole">\n        <option value="no_kjv">Bez KJV</option>\n        <option value="no_def">Bez definice</option>\n        <option value="bad_translation">⚠ Podezřelý překlad (EN zůstal)</option>\n        <option value="no_custom_field" style="display:none">Bez vlastního pole</option>\n      </optgroup>\n    </select>\n    <button onclick="clearQ()">✕</button>\n  </div>\n  <div class="tg">\n    <span class="tg-lbl">Export</span>\n    <button class="bs" onclick="exportAll()">💾 Vše</button>\n    <button class="bs" onclick="exportFiltered()">💾 Výběr</button>\n    <button class="bs" onclick="mergeAndExport()" title="Spojit všechny načtené soubory do jednoho a stáhnout">🔗 Spojit</button>\n    <button class="bg" onclick="showRT(\'export\')">✂️ Rozdělit…</button>\n    <button style="background:#153a25;border-color:#3a9e5a;color:#5abe7a" onclick="xModeOn()">🔲 Výběr polí…</button>\n  </div>\n  <div class="tg">\n    <span class="tg-lbl">Stav</span>\n    <button onclick="saveLS()" title="Uložit do úložiště prohlížeče (file://→localStorage, http://→IndexedDB)">💿 Uložit</button>\n    <button onclick="loadLS()">📥 Načíst z DB</button>\n    <button onclick="exportJSON()" title="Exportovat JSON zálohu na disk">📦 Export JSON</button>\n    <button onclick="triggerImportJSON()" title="Importovat JSON zálohu z disku">📦 Import JSON</button>\n    <input type="file" id="fiJSON" accept=".json" style="display:none" onchange="importJSON(event)">\n    <button class="bd" onclick="clearAll()">🗑️ Vymazat</button>\n  </div>\n</div>\n\n<!-- EXTRACTION BAR (shown only in xmode) -->\n<div class="xbar h" id="xbar">\n  <span class="xbar-title">✂️ Mód extrakce</span>\n  <span class="xbar-count" id="xbarCount">0 záznamů vybráno</span>\n  <button class="bs" onclick="xSelAll()">☑ Vybrat vše (filtr)</button>\n  <button onclick="xSelNone()">☐ Zrušit výběr</button>\n  <button class="bg" onclick="xInvert()">⇄ Invertovat</button>\n  <span style="flex:1"></span>\n  <button class="bs" onclick="xExport()">💾 Exportovat výběr</button>\n  <button class="bd" onclick="xModeOff()">✕ Ukončit mód extrakce</button>\n</div>\n\n<!-- MAIN -->\n<div class="main">\n\n  <!-- LEFT -->\n  <div class="panel-list" id="panelList">\n    <div class="list-hdr">\n      <div class="ltabs">\n        <div class="ltab a-all" id="lt-all" onclick="setLang(\'all\')">Vše</div>\n        <div class="ltab-wrap">\n          <div class="ltab" id="lt-G" onclick="toggleGDrop(event)">Řecky ▾</div>\n          <div class="ltab-drop h" id="lt-G-drop">\n            <div class="ltab-drop-item" id="ldi-G"  onclick="setLang(\'G\')">\n              <span>Vše řecky</span><span class="di-cnt" id="cnt-G"></span>\n            </div>\n            <div class="ltab-drop-item" id="ldi-G1" onclick="setLang(\'G1\')">\n              <span>G1–G5624</span><span class="di-cnt" id="cnt-G1"></span>\n            </div>\n            <div class="ltab-drop-item" id="ldi-G6" onclick="setLang(\'G6\')">\n              <span>G6000+</span><span class="di-cnt" id="cnt-G6"></span>\n            </div>\n          </div>\n        </div>\n        <div class="ltab" id="lt-H" onclick="setLang(\'H\')">Hebrejsky</div>\n      </div>\n      <div class="lsrow">\n        <input type="search" id="sQ" placeholder="Rychlé hledání…" oninput="sideSearch(this.value)">\n      </div>\n      <div class="lcnt" id="lcnt">0 záznamů</div>\n      <div id="czprog" class="h" style="margin-top:4px">\n        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px">\n          <span>Pokrytí Cz</span><span id="czprog-pct">0%</span>\n        </div>\n        <div class="pb"><div class="pf" id="czprog-bar" style="width:0%"></div></div>\n        <div style="font-size:10px;color:var(--text3);margin-top:2px" id="czprog-detail"></div>\n      </div>\n    </div>\n    <div class="lscroll" id="lscroll" onscroll="onLS()">\n      <div class="vsp" id="vsp"><div class="vit" id="vit"></div></div>\n    </div>\n  </div>\n\n  <div class="resizer" id="rz1" onmousedown="startRz(event,\'rz1\',\'panelList\',\'--list-w\',false)"></div>\n\n  <!-- CENTER -->\n  <div class="panel-center">\n    <div class="empty" id="emptyState">\n      <div class="empty-ico">📖</div>\n      <div class="empty-t">Strong\'s Manager</div>\n      <div class="empty-s">Načtěte .txt soubor slovníku kliknutím na tlačítko nebo přetažením souboru na pravý panel.<br>Podporuje řecké (G) i hebrejské (H) záznamy.</div>\n      <div style="display:flex;gap:8px;margin-top:6px">\n        <button class="bp" onclick="Q(\'fi\').click()">📂 Načíst soubor</button>\n        <button onclick="loadLS()">📥 Obnovit uložený stav</button>\n      </div>\n    </div>\n    <div id="dw" class="h" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">\n      <div class="det-hdr">\n        <div class="det-word" id="dW"></div>\n        <div class="det-meta">\n          <div class="det-badge G" id="dB">G1</div>\n          <div class="det-translit" id="dT"></div>\n          <div class="det-gram" id="dG"></div>\n        </div>\n        <div class="det-nav">
-          <button class="bs" id="sm-insert-btn" onclick="smInsertEntry()" title="Vložit heslo do překladače" style="display:none">← Vložit</button>\n          <button class="bg" onclick="oModal(\'mAdd\')">＋ Vlastní pole</button>\n          <button onclick="navP()" title="Předchozí (↑)">◀</button>\n          <button onclick="navN()" title="Následující (↓)">▶</button>\n        </div>\n      </div>\n      <div class="det-body" id="detBody"></div>\n    </div>\n  </div>\n\n  <div class="resizer" id="rz2" onmousedown="startRz(event,\'rz2\',\'panelRight\',\'--right-w\',true)"></div>\n\n  <!-- RIGHT -->\n  <div class="panel-right" id="panelRight">\n    <div class="rtabs">\n      <button class="rtab active" id="rt-files"  onclick="showRT(\'files\')">Soubory</button>\n      <button class="rtab"        id="rt-export" onclick="showRT(\'export\')">Export</button>\n      <button class="rtab"        id="rt-stats"  onclick="showRT(\'stats\')">Statistiky</button>\n      <button class="rtab"        id="rt-fields" onclick="showRT(\'fields\')">Pole</button>\n    </div>\n    <div class="rpanel">\n\n      <!-- FILES -->\n      <div class="rsec active" id="rs-files">\n        <div class="rshdr">Načtené soubory</div>\n        <div class="dz" id="dropzone"\n             ondragover="dzOv(event)" ondragleave="dzLv()" ondrop="dzDr(event)"\n             onclick="Q(\'fim\').click()">\n          <div class="dz-ico">📁</div>\n          Přetáhni .txt soubory nebo klikni pro výběr\n        </div>\n        <div id="flist"></div>\n        <button id="btnMrg" class="bp h" onclick="oMergeModal()">🔀 Sloučit všechny soubory</button>\n        <div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--gold2);border-radius:5px;font-size:10px;color:var(--text2);line-height:1.6">\n          <b style="color:var(--gold)">🔀 Merge překladu</b> (v toolbaru)<br>\n          Načte překladový soubor ve formátu:<br>\n          <code style="color:var(--text3);font-size:9px">G5 | slovo<br>Význam (CZ): …<br>Definice (CZ): …<br>KJV překlady (CZ): …<br>Původ: …<br>Specialista: …</code><br>\n          Pole se <b>doplní</b> — stávající data se nepřepíšou.\n        </div>\n      </div>\n\n      <!-- EXPORT -->\n      <div class="rsec" id="rs-export">\n        <div class="rshdr">Exportní možnosti</div>\n        <div class="ec"><div class="ec-t">📄 Celý slovník</div><p>Všechny záznamy včetně vlastních polí.</p><div class="er"><button class="bs" onclick="exportAll()">💾 Exportovat vše</button></div></div>\n        <div class="ec"><div class="ec-t">🔤 Podle jazyka</div><p>Řecká a hebrejská sekce do oddělených souborů.</p><div class="er"><button class="bs" onclick="exportLang(\'G\')">G Řečtina</button><button class="bs" onclick="exportLang(\'H\')">H Hebrejština</button></div></div>\n        <div class="ec">\n          <div class="ec-t">✂️ Rozdělit na N souborů</div>\n          <p>Rovnoměrně rozdělí záznamy do N souborů.</p>\n          <div class="er"><label>Počet:</label><input type="number" id="expN" value="10" min="2" max="200"><button class="bg" onclick="exportSplitN()">✂️ Rozdělit</button></div>\n        </div>\n        <div class="ec">\n          <div class="ec-t">🔢 Max. záznamů na soubor</div>\n          <p>Každý soubor max. N záznamů.</p>\n          <div class="er"><label>Záznamů:</label><input type="number" id="expSz" value="1000" min="10" max="50000"><button class="bg" onclick="exportSplitSz()">✂️ Rozdělit</button></div>\n        </div>\n        <div class="ec"><div class="ec-t">⭐ Jen vlastní pole</div><p>Záznamy s přidanými vlastními daty.</p><div class="er"><button class="bg" onclick="exportCustom()">💾 Exportovat</button></div></div>\n        <div class="ec"><div class="ec-t">🔍 Aktuální filtr</div><p>Výsledky aktuálního hledání.</p><div class="er"><button class="bs" onclick="exportFiltered()">💾 Exportovat výběr</button></div></div>\n      </div>\n\n      <!-- STATS -->\n      <div class="rsec" id="rs-stats">\n        <div class="rshdr">Přehled dat</div>\n        <div class="sg" id="sg"></div>\n        <div id="sd" style="margin-top:8px"></div>\n      </div>\n\n      <!-- POLE -->\n      <div class="rsec" id="rs-fields">\n        <div class="rshdr">Pokrytí polí</div>\n        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.5">\n          Kliknutím na pole spustíš filtr. Přidej vlastní pole pro sledování doplnění.\n        </div>\n        <div id="fieldcov-list"></div>\n        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">\n          <div class="rshdr" style="margin-bottom:8px">Sledovaná vlastní pole</div>\n          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;line-height:1.5">\n            Přidej název vlastního pole které chceš sledovat — uvidíš kolik záznamů ho má.\n          </div>\n          <div style="display:flex;gap:5px;margin-bottom:8px">\n            <input type="text" id="newTrackField" placeholder="Název pole…" style="flex:1;font-size:11px">\n            <button class="bg" onclick="addTrackedField()">＋</button>\n          </div>\n          <div id="tracked-list"></div>\n        </div>\n      </div>\n\n    </div>\n  </div>\n</div>\n</div>';
+/* BUTTONS */
+button { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 9px; border-radius: 4px; cursor: pointer; font-family: var(--mono); font-size: 11px; display: inline-flex; align-items: center; gap: 4px; transition: background .12s, border-color .12s, color .12s; white-space: nowrap; line-height: 1.4; }
+button:hover { background: var(--bg4); border-color: var(--border2); color: #fff; }
+.bp { background: var(--accent2); border-color: var(--accent); color: #fff; }
+.bp:hover { background: var(--accent) !important; }
+.bs { background: #153a25; border-color: var(--green); color: var(--green); }
+.bs:hover { background: var(--green) !important; color: #fff !important; }
+.bd { background: #3a1515; border-color: var(--red); color: var(--red); }
+.bd:hover { background: var(--red) !important; color: #fff !important; }
+.bg { background: #2a2010; border-color: var(--gold2); color: var(--gold); }
+.bg:hover { background: var(--gold2) !important; color: #fff !important; }
+.bi { background: none; border: none; cursor: pointer; color: var(--text3); padding: 2px 5px; border-radius: 3px; font-size: 13px; }
+.bi:hover { color: #fff !important; background: var(--bg4) !important; border: none !important; }
+button:disabled { opacity: .35; cursor: not-allowed; }
 
-// ── JS (scopovaný) ───────────────────────────────────────
-function SM_INIT() {
+/* INPUTS */
+input[type=text], input[type=search], input[type=number], select, textarea { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 4px 7px; border-radius: 4px; font-family: var(--mono); font-size: 12px; outline: none; transition: border-color .12s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+select { cursor: pointer; }
+textarea { resize: vertical; }
 
+/* LAYOUT */
+.main { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+/* LEFT PANEL */
+.panel-list { width: var(--list-w); flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.list-hdr { padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; }
+.ltabs { display: flex; gap: 3px; }
+.ltab { flex: 1; padding: 3px 0; text-align: center; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--text2); transition: all .12s; }
+.ltab.a-all { background: #1a2a4a; border-color: var(--accent); color: var(--accent); }
+.ltab.a-G   { background: #1a2a4a; border-color: #4a80c9; color: #6ab0ff; }
+.ltab.a-H   { background: #2a1f0a; border-color: var(--gold2); color: var(--gold); }
+.ltab.a-Gs  { background: #1a2a4a; border-color: #4a80c9; color: #6ab0ff; }
+
+/* Dropdown pro řecké podskupiny */
+.ltab-wrap { position: relative; flex: 1; }
+.ltab-wrap .ltab { width: 100%; }
+.ltab-drop {
+  display: block;
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  margin-top: 3px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  overflow: hidden;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0,0,0,.5);
+  min-width: 140px;
+}
+.ltab-drop.h { display: none !important; }
+.ltab-drop-item {
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ltab-drop-item:last-child { border-bottom: none; }
+.ltab-drop-item:hover { background: var(--bg4); color: #fff; }
+.ltab-drop-item.active { background: #1a2a4a; color: var(--accent); }
+.ltab-drop-item .di-cnt { font-size: 10px; color: var(--text3); }
+.lsrow { display: flex; gap: 4px; }
+.lsrow input { flex: 1; width: 0; }
+.lcnt { font-size: 10px; color: var(--text3); }
+.lscroll { flex: 1; overflow-y: auto; position: relative; }
+.lscroll::-webkit-scrollbar { width: 5px; }
+.lscroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.vsp { position: relative; }
+.vit { position: absolute; top: 0; left: 0; right: 0; }
+.litem { padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 7px; align-items: flex-start; transition: background .09s; user-select: none; }
+.litem:hover { background: var(--bg3); }
+.litem.sel  { background: var(--bg4); border-left: 2px solid var(--accent); padding-left: 8px; }
+.litem.cust { border-left: 2px solid var(--gold2); padding-left: 8px; }
+.litem.sel.cust { border-left: 2px solid var(--gold); }
+.lid { font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; margin-top: 2px; }
+.lid.G { background: #1a2a4a; color: var(--accent); }
+.lid.H { background: #2a1f0a; color: var(--gold); }
+.lbody { flex: 1; min-width: 0; }
+.lword  { font-family: var(--serif); font-size: 15px; line-height: 1.2; }
+.ltrans { font-size: 10px; color: var(--text2); }
+.lcz    { font-size: 11px; color: var(--text3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* RESIZER */
+.resizer { width: 4px; flex-shrink: 0; background: var(--border); cursor: col-resize; transition: background .15s; z-index: 10; }
+.resizer:hover, .resizer.drag { background: var(--accent); }
+
+/* CENTER PANEL */
+.panel-center { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.det-hdr { padding: 10px 18px; border-bottom: 1px solid var(--border); background: var(--bg2); display: flex; gap: 14px; align-items: flex-start; flex-shrink: 0; }
+.det-word { font-family: var(--serif); font-size: 34px; line-height: 1; color: #fff; margin-right: 4px; }
+.det-meta { flex: 1; min-width: 0; }
+.det-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 4px; margin-bottom: 4px; }
+.det-badge.G { background: #1a2a4a; color: var(--accent); border: 1px solid var(--accent2); }
+.det-badge.H { background: #2a1f0a; color: var(--gold); border: 1px solid var(--gold2); }
+.det-translit { color: var(--text2); font-size: 13px; }
+.det-gram { font-size: 10px; color: var(--text3); margin-top: 3px; }
+.det-nav { display: flex; gap: 6px; align-items: center; margin-left: auto; flex-shrink: 0; }
+.det-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
+.det-body::-webkit-scrollbar { width: 5px; }
+.det-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.fb { margin-bottom: 10px; padding: 9px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 5px; }
+.fl { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 5px; font-weight: 600; }
+.fv { font-family: var(--serif); font-size: 15px; line-height: 1.55; white-space: pre-wrap; }
+.fv.cz  { color: var(--cyan); }
+.fv.kjv { color: var(--green); }
+.fv.sm  { font-size: 13px; }
+.fv.mn  { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+.fgrid  { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+
+/* Custom fields */
+.cshdr { display: flex; align-items: center; gap: 8px; margin: 12px 0 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.cstitle { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); font-weight: 600; flex: 1; }
+.cfield { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 7px; padding: 8px 11px; background: #181510; border: 1px solid var(--gold2); border-radius: 5px; }
+.cfname { font-size: 10px; color: var(--gold2); text-transform: uppercase; letter-spacing: .05em; min-width: 90px; padding-top: 2px; flex-shrink: 0; word-break: break-all; }
+.cfval  { flex: 1; font-family: var(--serif); font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+.cfbtns { display: flex; gap: 2px; }
+.nocf { font-size: 11px; color: var(--text3); padding: 6px 0; font-style: italic; }
+
+/* RIGHT PANEL */
+.panel-right { width: var(--right-w); flex-shrink: 0; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.rtabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.rtab { flex: 1; padding: 8px 4px; text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; color: var(--text3); background: none; border: none; border-bottom: 2px solid transparent; transition: all .12s; font-family: var(--mono); }
+.rtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.rtab:hover:not(.active) { color: var(--text); background: var(--bg3); }
+.rpanel { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.rpanel::-webkit-scrollbar { width: 5px; }
+.rpanel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.rsec { display: none; flex-direction: column; gap: 8px; }
+.rsec.active { display: flex; }
+.rshdr { font-size: 10px; text-transform: uppercase; letter-spacing: .09em; color: var(--text3); padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+/* File item */
+.fitem { padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; display: flex; gap: 7px; align-items: center; }
+.fitem-ico { font-size: 15px; flex-shrink: 0; }
+.fitem-inf { flex: 1; min-width: 0; }
+.fitem-n { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fitem-m { font-size: 10px; color: var(--text3); }
+.fitem-b { display: flex; gap: 3px; }
+
+/* Drop zone */
+.dz { border: 2px dashed var(--border2); border-radius: 6px; padding: 18px 12px; text-align: center; color: var(--text3); font-size: 11px; cursor: pointer; transition: all .15s; }
+.dz:hover, .dz.over { border-color: var(--accent); background: rgba(74,144,217,.05); color: var(--accent); }
+.dz-ico { font-size: 26px; margin-bottom: 6px; }
+
+/* Export card */
+.ec { padding: 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; }
+.ec-t { font-size: 11px; font-weight: 600; margin-bottom: 5px; }
+.ec p { font-size: 10px; color: var(--text2); margin-bottom: 7px; line-height: 1.5; }
+.er { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.er label { font-size: 10px; color: var(--text2); }
+.er input[type=number] { width: 70px; }
+
+/* Stats */
+.sg { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.sc { padding: 10px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; text-align: center; }
+.sc-v { font-size: 18px; font-weight: 600; color: var(--accent); }
+.sc-l { font-size: 9px; color: var(--text3); margin-top: 2px; text-transform: uppercase; letter-spacing: .05em; }
+.pb { height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; margin: 6px 0; }
+.pf { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+
+/* Empty state */
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text3); gap: 10px; padding: 40px; text-align: center; }
+.empty-ico { font-size: 44px; }
+.empty-t { font-family: var(--serif); font-size: 22px; color: var(--text2); }
+.empty-s { font-size: 12px; line-height: 1.7; max-width: 340px; }
+
+/* Loading */
+#ov { position: fixed; inset: 0; background: rgba(13,15,18,.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; gap: 14px; }
+#ov.h { display: none; }
+.spin { width: 38px; height: 38px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#ov-t { font-size: 13px; color: var(--text2); }
+#ov-s { font-size: 11px; color: var(--text3); }
+#ov-p { width: 260px; height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+#ov-pf { height: 100%; background: var(--accent); border-radius: 2px; transition: width .1s; }
+
+/* Modal */
+.mbg { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200; display: flex; align-items: center; justify-content: center; }
+.mbg.h { display: none; }
+.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 20px; width: 480px; max-width: 94vw; max-height: 85vh; overflow-y: auto; }
+.modal h3 { font-family: var(--serif); font-size: 18px; margin-bottom: 14px; }
+.fr { margin-bottom: 11px; }
+.fr label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 4px; }
+.fr input, .fr textarea, .fr select { width: 100%; }
+.fr textarea { min-height: 90px; font-family: var(--serif); font-size: 14px; }
+.mact { display: flex; gap: 7px; justify-content: flex-end; margin-top: 14px; }
+
+/* Toast */
+#toasts { position: fixed; bottom: 18px; right: 18px; display: flex; flex-direction: column; gap: 7px; z-index: 1000; pointer-events: none; }
+.toast { background: var(--bg4); border: 1px solid var(--border2); padding: 9px 14px; border-radius: 5px; font-size: 12px; pointer-events: all; animation: tin .18s ease; max-width: 310px; line-height: 1.4; }
+.tok { border-color: var(--green); color: var(--green); }
+.ter { border-color: var(--red);   color: var(--red);   }
+.tin { border-color: var(--accent); color: var(--accent); }
+@keyframes tin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+
+.h { display: none !important; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* Field coverage */
+.fcov-item { margin-bottom:6px; padding:8px 10px; background:var(--bg3); border:1px solid var(--border); border-radius:5px; cursor:pointer; transition:border-color .12s; }
+.fcov-item:hover { border-color:var(--accent); }
+.fcov-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.fcov-name { font-size:11px; font-weight:600; }
+.fcov-pct { font-size:11px; font-weight:600; }
+.fcov-pct.full { color:var(--green); } .fcov-pct.high { color:var(--accent); } .fcov-pct.low { color:var(--gold); } .fcov-pct.zero { color:var(--text3); }
+.fcov-bar { height:3px; background:var(--bg4); border-radius:2px; overflow:hidden; margin-bottom:3px; }
+.fcov-fill { height:100%; border-radius:2px; }
+.fcov-detail { font-size:10px; color:var(--text3); display:flex; gap:8px; flex-wrap:wrap; }
+.tracked-item { display:flex; align-items:center; gap:6px; padding:6px 8px; margin-bottom:5px; background:#1a180a; border:1px solid var(--gold2); border-radius:5px; }
+.tracked-name { font-size:11px; color:var(--gold); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tracked-cnt  { font-size:10px; color:var(--text3); white-space:nowrap; }
+.tracked-pct  { font-size:11px; font-weight:600; color:var(--gold2); white-space:nowrap; }
+.tracked-del  { font-size:12px; cursor:pointer; color:var(--text3); background:none; border:none; padding:0 2px; }
+.tracked-del:hover { color:var(--red); }
+
+/* ── EXTRACTION MODE ── */
+.xbar { background: #151f10; border-bottom: 2px solid var(--green); padding: 6px 14px; display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+.xbar-title { font-size: 11px; color: var(--green); font-weight: 600; }
+.xbar-count { font-size: 11px; color: var(--text2); margin-left: 4px; }
+.xmode .litem { cursor: pointer; }
+.xmode .litem.xsel { background: #1a2f12 !important; border-left: 3px solid var(--green) !important; padding-left: 7px !important; }
+.xmode .litem.xsel .lid { background: #2a4a1a !important; }
+/* Field checkboxes in detail */
+.xfields-bar { background: #151f10; border: 1px solid var(--green); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }
+.xfields-title { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); margin-bottom: 8px; font-weight: 600; }
+.xfields-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.xchk { display: flex; align-items: center; gap: 5px; padding: 3px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; user-select: none; transition: all .1s; }
+.xchk:hover { border-color: var(--green); }
+.xchk.on   { background: #1a3010; border-color: var(--green); color: var(--green); }
+.xchk.part { background: #1a2a10; border-color: #5a8a3a; color: #8aba6a; }
+.xchk input { display: none; }
+/* add-to-selection button on list items in xmode */
+.xadd-btn { display: none; }
+.xmode .xadd-btn { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 3px; background: none; border: 1px solid var(--border); color: var(--text3); font-size: 14px; flex-shrink: 0; transition: all .1s; cursor: pointer; padding: 0; margin-top: 2px; }
+.xmode .litem.xsel .xadd-btn { background: var(--green); border-color: var(--green); color: #fff; }
+.xmode .xadd-btn:hover { border-color: var(--green); color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- OVERLAY -->
+<div id="ov" class="h">
+  <div class="spin"></div>
+  <div id="ov-t">Zpracovávám…</div>
+  <div id="ov-s"></div>
+  <div id="ov-p"><div id="ov-pf" style="width:0%"></div></div>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts"></div>
+
+<!-- MODAL: Add field -->
+<div class="mbg h" id="mAdd">
+  <div class="modal">
+    <h3>Přidat vlastní pole</h3>
+    <div class="fr"><label>Název pole</label><input type="text" id="mAN" placeholder="např. Kabalah, Poznámka, Etymol CZ…"></div>
+    <div class="fr"><label>Obsah pole</label><textarea id="mAV" placeholder="Text hodnoty…"></textarea></div>
+    <div class="mact">
+      <button onclick="cModal('mAdd')">Zrušit</button>
+      <button class="bg" onclick="doAddField()">💾 Uložit (Ctrl+Enter)</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Edit field -->
+<div class="mbg h" id="mEdit">
+  <div class="modal">
+    <h3>Upravit vlastní pole</h3>
+    <div class="fr"><label>Název pole</label><input type="text" id="mEN"></div>
+    <div class="fr"><label>Obsah pole</label><textarea id="mEV"></textarea></div>
+    <div class="mact">
+      <button onclick="cModal('mEdit')">Zrušit</button>
+      <button class="bg" onclick="doEditField()">💾 Uložit (Ctrl+Enter)</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Merge -->
+<div class="mbg h" id="mMerge">
+  <div class="modal">
+    <h3>Sloučit soubory</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6" id="mMT"></p>
+    <div class="fr">
+      <label>Strategie při konfliktu ID</label>
+      <select id="mMS">
+        <option value="keep">Ponechat stávající záznam</option>
+        <option value="overwrite">Přepsat záznamem z nového souboru</option>
+        <option value="merge">Doplnit chybějící pole z nového souboru</option>
+      </select>
+    </div>
+    <div class="mact">
+      <button onclick="cModal('mMerge')">Zrušit</button>
+      <button class="bp" onclick="doMerge()">🔀 Potvrdit sloučení</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Strong's Manager <em>v2.1</em></div>
+  <div class="hdr-stats">
+    <span class="hdr-stat">Řecky: <b id="hG">0</b></span>
+    <span class="hdr-stat gold">Hebrejsky: <b id="hH">0</b></span>
+    <span class="hdr-stat">Celkem: <b id="hT">0</b></span>
+    <span class="hdr-stat green">Vl. pole u: <b id="hC">0</b></span>
+    <span class="hdr-stat">Soubory: <b id="hF">0</b></span>
+  </div>
+</header>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="tg">
+    <span class="tg-lbl">Import</span>
+    <button class="bp" onclick="Q('fi').click()">📂 Načíst soubor</button>
+    <button onclick="Q('fim').click()">📂+ Přidat soubory</button>
+    <button class="bg" onclick="Q('fiTrans').click()" title="Načíst překladový soubor a sloučit s aktuálními daty">🔀 Merge překladu</button>
+    <input type="file" id="fi"      accept=".txt,.tsv,.csv" style="display:none" onchange="importFiles(event,false)">
+    <input type="file" id="fim"     accept=".txt,.tsv,.csv" multiple style="display:none" onchange="importFiles(event,true)">
+    <input type="file" id="fiTrans" accept=".txt" style="display:none" onchange="importTranslation(event)">
+  </div>
+  <div class="tg">
+    <span class="tg-lbl">Hledání</span>
+    <input type="search" id="qS" placeholder="Slovo, ID, definice…" oninput="doSearch()" style="width:190px">
+    <select id="qL" onchange="doSearch()">
+      <option value="all">G + H</option>
+      <option value="G">Řečtina (G)</option>
+      <option value="H">Hebrejština (H)</option>
+    </select>
+    <select id="qF" onchange="doSearch()">
+      <option value="all">Všechna pole</option>
+      <option value="id">ID</option>
+      <option value="word">Slovo / znak</option>
+      <option value="prepis">Přepis</option>
+      <option value="definice">Definice</option>
+      <option value="cz">Česky</option>
+      <option value="kjv">KJV</option>
+      <option value="custom">Vlastní pole</option>
+    </select>
+    <select id="qO" onchange="doSearch()">
+      <option value="id">ID</option>
+      <option value="word">Slovo</option>
+      <option value="cz">Česky</option>
+    </select>
+    <select id="qX" onchange="doSearch()" title="Speciální filtry">
+      <option value="all">— Speciální filtr —</option>
+      <optgroup label="Překlad">
+        <option value="no_cz">❌ Bez českého překladu</option>
+        <option value="has_cz">✓ Má český překlad</option>
+      </optgroup>
+      <optgroup label="Vlastní pole">
+        <option value="has_custom">⭐ Má vlastní pole</option>
+        <option value="no_custom">○ Bez vlastních polí</option>
+        <option value="no_cz_has_custom">❌+⭐ Bez Cz, ale s vlastními poli</option>
+      </optgroup>
+      <optgroup label="Pole">
+        <option value="no_kjv">Bez KJV</option>
+        <option value="no_def">Bez definice</option>
+        <option value="bad_translation">⚠ Podezřelý překlad (EN zůstal)</option>
+        <option value="no_custom_field" style="display:none">Bez vlastního pole</option>
+      </optgroup>
+    </select>
+    <button onclick="clearQ()">✕</button>
+  </div>
+  <div class="tg">
+    <span class="tg-lbl">Export</span>
+    <button class="bs" onclick="exportAll()">💾 Vše</button>
+    <button class="bs" onclick="exportFiltered()">💾 Výběr</button>
+    <button class="bs" onclick="mergeAndExport()" title="Spojit všechny načtené soubory do jednoho a stáhnout">🔗 Spojit</button>
+    <button class="bg" onclick="showRT('export')">✂️ Rozdělit…</button>
+    <button style="background:#153a25;border-color:#3a9e5a;color:#5abe7a" onclick="xModeOn()">🔲 Výběr polí…</button>
+  </div>
+  <div class="tg">
+    <span class="tg-lbl">Stav</span>
+    <button onclick="saveLS()" title="Uložit do úložiště prohlížeče (file://→localStorage, http://→IndexedDB)">💿 Uložit</button>
+    <button onclick="loadLS()">📥 Načíst z DB</button>
+    <button onclick="exportJSON()" title="Exportovat JSON zálohu na disk">📦 Export JSON</button>
+    <button onclick="triggerImportJSON()" title="Importovat JSON zálohu z disku">📦 Import JSON</button>
+    <input type="file" id="fiJSON" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="bd" onclick="clearAll()">🗑️ Vymazat</button>
+  </div>
+</div>
+
+<!-- EXTRACTION BAR (shown only in xmode) -->
+<div class="xbar h" id="xbar">
+  <span class="xbar-title">✂️ Mód extrakce</span>
+  <span class="xbar-count" id="xbarCount">0 záznamů vybráno</span>
+  <button class="bs" onclick="xSelAll()">☑ Vybrat vše (filtr)</button>
+  <button onclick="xSelNone()">☐ Zrušit výběr</button>
+  <button class="bg" onclick="xInvert()">⇄ Invertovat</button>
+  <span style="flex:1"></span>
+  <button class="bs" onclick="xExport()">💾 Exportovat výběr</button>
+  <button class="bd" onclick="xModeOff()">✕ Ukončit mód extrakce</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- LEFT -->
+  <div class="panel-list" id="panelList">
+    <div class="list-hdr">
+      <div class="ltabs">
+        <div class="ltab a-all" id="lt-all" onclick="setLang('all')">Vše</div>
+        <div class="ltab-wrap">
+          <div class="ltab" id="lt-G" onclick="toggleGDrop(event)">Řecky ▾</div>
+          <div class="ltab-drop h" id="lt-G-drop">
+            <div class="ltab-drop-item" id="ldi-G"  onclick="setLang('G')">
+              <span>Vše řecky</span><span class="di-cnt" id="cnt-G"></span>
+            </div>
+            <div class="ltab-drop-item" id="ldi-G1" onclick="setLang('G1')">
+              <span>G1–G5624</span><span class="di-cnt" id="cnt-G1"></span>
+            </div>
+            <div class="ltab-drop-item" id="ldi-G6" onclick="setLang('G6')">
+              <span>G6000+</span><span class="di-cnt" id="cnt-G6"></span>
+            </div>
+          </div>
+        </div>
+        <div class="ltab" id="lt-H" onclick="setLang('H')">Hebrejsky</div>
+      </div>
+      <div class="lsrow">
+        <input type="search" id="sQ" placeholder="Rychlé hledání…" oninput="sideSearch(this.value)">
+      </div>
+      <div class="lcnt" id="lcnt">0 záznamů</div>
+      <div id="czprog" class="h" style="margin-top:4px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px">
+          <span>Pokrytí Cz</span><span id="czprog-pct">0%</span>
+        </div>
+        <div class="pb"><div class="pf" id="czprog-bar" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px" id="czprog-detail"></div>
+      </div>
+    </div>
+    <div class="lscroll" id="lscroll" onscroll="onLS()">
+      <div class="vsp" id="vsp"><div class="vit" id="vit"></div></div>
+    </div>
+  </div>
+
+  <div class="resizer" id="rz1" onmousedown="startRz(event,'rz1','panelList','--list-w',false)"></div>
+
+  <!-- CENTER -->
+  <div class="panel-center">
+    <div class="empty" id="emptyState">
+      <div class="empty-ico">📖</div>
+      <div class="empty-t">Strong's Manager</div>
+      <div class="empty-s">Načtěte .txt soubor slovníku kliknutím na tlačítko nebo přetažením souboru na pravý panel.<br>Podporuje řecké (G) i hebrejské (H) záznamy.</div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="bp" onclick="Q('fi').click()">📂 Načíst soubor</button>
+        <button onclick="loadLS()">📥 Obnovit uložený stav</button>
+      </div>
+    </div>
+    <div id="dw" class="h" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+      <div class="det-hdr">
+        <div class="det-word" id="dW"></div>
+        <div class="det-meta">
+          <div class="det-badge G" id="dB">G1</div>
+          <div class="det-translit" id="dT"></div>
+          <div class="det-gram" id="dG"></div>
+        </div>
+        <div class="det-nav">
+          <button class="bg" onclick="oModal('mAdd')">＋ Vlastní pole</button>
+          <button onclick="navP()" title="Předchozí (↑)">◀</button>
+          <button onclick="navN()" title="Následující (↓)">▶</button>
+        </div>
+      </div>
+      <div class="det-body" id="detBody"></div>
+    </div>
+  </div>
+
+  <div class="resizer" id="rz2" onmousedown="startRz(event,'rz2','panelRight','--right-w',true)"></div>
+
+  <!-- RIGHT -->
+  <div class="panel-right" id="panelRight">
+    <div class="rtabs">
+      <button class="rtab active" id="rt-files"  onclick="showRT('files')">Soubory</button>
+      <button class="rtab"        id="rt-export" onclick="showRT('export')">Export</button>
+      <button class="rtab"        id="rt-stats"  onclick="showRT('stats')">Statistiky</button>
+      <button class="rtab"        id="rt-fields" onclick="showRT('fields')">Pole</button>
+    </div>
+    <div class="rpanel">
+
+      <!-- FILES -->
+      <div class="rsec active" id="rs-files">
+        <div class="rshdr">Načtené soubory</div>
+        <div class="dz" id="dropzone"
+             ondragover="dzOv(event)" ondragleave="dzLv()" ondrop="dzDr(event)"
+             onclick="Q('fim').click()">
+          <div class="dz-ico">📁</div>
+          Přetáhni .txt soubory nebo klikni pro výběr
+        </div>
+        <div id="flist"></div>
+        <button id="btnMrg" class="bp h" onclick="oMergeModal()">🔀 Sloučit všechny soubory</button>
+        <div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--gold2);border-radius:5px;font-size:10px;color:var(--text2);line-height:1.6">
+          <b style="color:var(--gold)">🔀 Merge překladu</b> (v toolbaru)<br>
+          Načte překladový soubor ve formátu:<br>
+          <code style="color:var(--text3);font-size:9px">G5 | slovo<br>Význam (CZ): …<br>Definice (CZ): …<br>KJV překlady (CZ): …<br>Původ: …<br>Specialista: …</code><br>
+          Pole se <b>doplní</b> — stávající data se nepřepíšou.
+        </div>
+      </div>
+
+      <!-- EXPORT -->
+      <div class="rsec" id="rs-export">
+        <div class="rshdr">Exportní možnosti</div>
+        <div class="ec"><div class="ec-t">📄 Celý slovník</div><p>Všechny záznamy včetně vlastních polí.</p><div class="er"><button class="bs" onclick="exportAll()">💾 Exportovat vše</button></div></div>
+        <div class="ec"><div class="ec-t">🔤 Podle jazyka</div><p>Řecká a hebrejská sekce do oddělených souborů.</p><div class="er"><button class="bs" onclick="exportLang('G')">G Řečtina</button><button class="bs" onclick="exportLang('H')">H Hebrejština</button></div></div>
+        <div class="ec">
+          <div class="ec-t">✂️ Rozdělit na N souborů</div>
+          <p>Rovnoměrně rozdělí záznamy do N souborů.</p>
+          <div class="er"><label>Počet:</label><input type="number" id="expN" value="10" min="2" max="200"><button class="bg" onclick="exportSplitN()">✂️ Rozdělit</button></div>
+        </div>
+        <div class="ec">
+          <div class="ec-t">🔢 Max. záznamů na soubor</div>
+          <p>Každý soubor max. N záznamů.</p>
+          <div class="er"><label>Záznamů:</label><input type="number" id="expSz" value="1000" min="10" max="50000"><button class="bg" onclick="exportSplitSz()">✂️ Rozdělit</button></div>
+        </div>
+        <div class="ec"><div class="ec-t">⭐ Jen vlastní pole</div><p>Záznamy s přidanými vlastními daty.</p><div class="er"><button class="bg" onclick="exportCustom()">💾 Exportovat</button></div></div>
+        <div class="ec"><div class="ec-t">🔍 Aktuální filtr</div><p>Výsledky aktuálního hledání.</p><div class="er"><button class="bs" onclick="exportFiltered()">💾 Exportovat výběr</button></div></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="rsec" id="rs-stats">
+        <div class="rshdr">Přehled dat</div>
+        <div class="sg" id="sg"></div>
+        <div id="sd" style="margin-top:8px"></div>
+      </div>
+
+      <!-- POLE -->
+      <div class="rsec" id="rs-fields">
+        <div class="rshdr">Pokrytí polí</div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.5">
+          Kliknutím na pole spustíš filtr. Přidej vlastní pole pro sledování doplnění.
+        </div>
+        <div id="fieldcov-list"></div>
+        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+          <div class="rshdr" style="margin-bottom:8px">Sledovaná vlastní pole</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:6px;line-height:1.5">
+            Přidej název vlastního pole které chceš sledovat — uvidíš kolik záznamů ho má.
+          </div>
+          <div style="display:flex;gap:5px;margin-bottom:8px">
+            <input type="text" id="newTrackField" placeholder="Název pole…" style="flex:1;font-size:11px">
+            <button class="bg" onclick="addTrackedField()">＋</button>
+          </div>
+          <div id="tracked-list"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
 'use strict';
 // Bezpečnostní guard — některá prostředí nemají console
 if (typeof console === 'undefined') window.console = { log:function(){}, warn:function(){}, error:function(){} };
@@ -81,7 +623,7 @@ const IH = 63; // item height px
 let vlTop = 0;
 
 // ═══════════════════════ UTILS ═══════════════════════
-const Q  = id => (document.getElementById('sm-overlay') || document).querySelector('#' + id);
+const Q  = id => document.getElementById(id);
 const esc = s => s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '';
 
 function toast(msg, type='tin', dur=3200) {
@@ -647,7 +1189,6 @@ function showDetail(id) {
 
   Q('detBody').innerHTML=html;
   renderCF(id);
-  smUpdateInsertBtn();
 }
 
 function fb(label,val,cls='') {
@@ -1665,37 +2206,6 @@ function xExport() {
   toast(`Exportováno ${ids.length.toLocaleString('cs')} záznamů, pole: ${[...X.fields].join(', ')}`, 'tok', 5000);
 }
 
-// ── Plugin API: vložit do překladače ──────────────────────
-function smInsertEntry() {
-  if (!S.sel) return;
-  const e = S.entries.get(S.sel);
-  if (!e) return;
-  if (window.SM && window.SM.triggerSelect) {
-    window.SM.triggerSelect({
-      id:        e.id,
-      lang:      e.lang,
-      word:      e.word,
-      prepis:    e.prepis,
-      cz:        e.cz || e.vyznam || '',
-      definice:  e.definice || '',
-      kjv:       e.kjv || '',
-      preklad:   e.preklad || '',
-      vysvetleni:e.vysvetleni || '',
-      etymol:    e.etymol || '',
-      kjvCZ:     (e.extra && e.extra['KJV_CZ']) || '',
-      defCZ:     (e.extra && e.extra['Definice_CZ']) || '',
-      puvod:     (e.extra && e.extra['Původ']) || '',
-      spec:      (e.extra && e.extra['Specialista']) || '',
-    });
-  }
-}
-
-// Ukaž/skryj "← Vložit" tlačítko podle toho zda je callback registrován
-function smUpdateInsertBtn() {
-  const btn = Q('sm-insert-btn');
-  if (btn) btn.style.display = (window.SM && window.SM._selectCallback) ? '' : 'none';
-}
-
 // ═══════════════════════ INIT ═══════════════════════
 updHdr(); updStats(); loadTrackedFields();
 console.log('Strong\'s Manager:', IS_FILE ? 'file:// → záloha přes JSON soubor' : 'http(s):// → IndexedDB');
@@ -1741,7 +2251,6 @@ if (!IS_FILE) {
     toast('file:// režim: načti .txt slovník nebo importuj 📦 JSON zálohu. Uložení dat = stažení JSON souboru.', 'tin', 7000);
   }, 800);
 }
-
-}
-
-})(); // konec IIFE
+</script>
+</body>
+</html>
