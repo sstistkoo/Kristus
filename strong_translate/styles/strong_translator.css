@@ -895,6 +895,18 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   color: var(--acc);
   letter-spacing: .1em;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topic-missing-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .tbox-actions { margin-left: auto; display: flex; gap: 6px; }

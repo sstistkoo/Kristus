@@ -54,7 +54,10 @@ export function createDetailApi({
     return sections.map(s => `
       <div class="translation-box" role="group" aria-label="${s.label}">
         <div class="tbox-head">
-          <div class="tbox-label">${s.label}</div>
+          <div class="tbox-label">
+            ${s.label}
+            ${!hasMeaningfulValue(s.field) ? '<span class="topic-missing-indicator" title="Chybí téma"></span>' : ''}
+          </div>
           <div class="tbox-actions">
             <button class="tbox-btn" onclick="openTopicPromptModal('${key}','${s.id}')" aria-label="${escHtml(t('detail.promptButton.aria', { label: s.label }))}">${t('detail.promptButton')}</button>
             ${!hasMeaningfulValue(s.field) ? `<button class="tbox-btn" onclick="refillSingleField('${key}','${s.id}')" aria-label="${escHtml(t('detail.refillButton.aria', { label: s.label }))}">${t('detail.refillButton')}</button>` : ''}
