@@ -41,6 +41,7 @@ export function isDefinitionLikelyEnglish(text) {
   const s = stripDefinitionOriginReferenceTail(String(text || '').trim());
   if (!s) return false;
   const markers = [
+    // Původní
     /\bwithout\b/i,
     /\bwith\b/i,
     /\bnot\b/i,
@@ -50,7 +51,87 @@ export function isDefinitionLikelyEnglish(text) {
     /\bfrom\b/i,
     /\bmetaphor(?:ically)?\b/i,
     /\bsee word\b/i,
-    /\bweight\b/i
+    /\bweight\b/i,
+
+    // Rozšíření – základní anglické slova časté ve scholarly definicích
+    /\bwhich\b/i,
+    /\bsee\b/i,
+    /\bthe\b/i,
+    /\band\b/i,
+    /\bor\b/i,
+    /\bthat\b/i,
+    /\bthose\b/i,
+    /\bthese\b/i,
+    /\balso\b/i,
+    /\bfiguratively\b/i,
+    /\bespecially\b/i,
+
+    // Členy a一楼
+    /\ba\b/i,
+    /\ban\b/i,
+
+    // Běžné anglické slovesa/přídavná jména ve významových definicích
+    /\bis\b/i,
+    /\bare\b/i,
+    /\bwas\b/i,
+    /\bwere\b/i,
+    /\bbe\b/i,
+    /\bbeen\b/i,
+    /\bbeing\b/i,
+    /\bhave\b/i,
+    /\bhas\b/i,
+    /\bhad\b/i,
+    /\bdo\b/i,
+    /\bdoes\b/i,
+    /\bdid\b/i,
+    /\bwill\b/i,
+    /\bwould\b/i,
+    /\bshall\b/i,
+    /\bshould\b/i,
+    /\bmay\b/i,
+    /\bmight\b/i,
+    /\bmust\b/i,
+    /\bcan\b/i,
+    /\bcould\b/i,
+
+    // Zájmena
+    /\bit\b/i,
+    /\bits\b/i,
+    /\bhe\b/i,
+    /\bhim\b/i,
+    /\bhis\b/i,
+    /\bshe\b/i,
+    /\bher\b/i,
+    /\bthey\b/i,
+    /\bthem\b/i,
+    /\btheir\b/i,
+
+    // Předpony ( detectable independently)
+    /\bun\w+\b/i,
+    /\bim\b/i,
+    /\bil\b/i,
+    /\bir\b/i,
+
+    // Ostatní časté
+    /\bas\b/i,
+    /\bso\b/i,
+    /\bbut\b/i,
+    /\bif\b/i,
+    /\bthen\b/i,
+    /\bbecause\b/i,
+    /\btherefore\b/i,
+    /\bthus\b/i,
+    /\bhence\b/i,
+    /\bindeed\b/i,
+    /\bof\b/i,
+    /\bin\b/i,
+    /\bon\b/i,
+    /\bat\b/i,
+    /\bby\b/i,
+    /\bfor\b/i,
+    /\bto\b/i,
+    /\bwith\b/i, // already present
+    /\bfrom\b/i  // already present
   ];
   return markers.some(re => re.test(s));
 }
@@ -209,4 +290,65 @@ export function getStrongKeyNumber(key) {
   if (!match) return Number.POSITIVE_INFINITY;
   const parsed = parseInt(match[1], 10);
   return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+}
+
+export function isTopicValueProblematic(key, topicId, value, translatedEntry) {
+  // Ignoruj, pokud bylo téma manuálně schváleno (uživatel označil jako v pořádku)
+  if (state.topicRepairManuallyApproved?.has(`${key}:${topicId}`)) return null;
+
+  // 1. Chybí hodnotu úplně
+  if (!hasMeaningfulValue(value)) return 'missing';
+
+  // 2. Pro definici - kontrola kvality/přímého angličtiny
+  if (topicId === 'definice') {
+    if (isDefinitionLowQuality(value)) return 'quality';
+    if (isDefinitionLikelyEnglish(value)) return 'quality';
+  }
+
+  // 3. Pro KJV - pokud je velmi krátké (1-2 slova) a neobsahuje českou diakritiku → pravděpodobně chybí/špatný
+  if (topicId === 'kjv') {
+    const words = String(value).trim().split(/\s+/).filter(Boolean);
+    if (words.length <= 2 && !/[áčďéěíňóřšťúůýž]/i.test(value)) return 'quality';
+  }
+
+  // 4. Pro původ - pokud je příliš krátký (bez diakritiky/slov) → podezřelé
+  if (topicId === 'puvod') {
+    const words = String(value).trim().split(/\s+/).filter(Boolean);
+    if (words.length <= 2 && !/[áčďéěíňóřšťúůýžäöüß]/i.test(value)) return 'quality';
+  }
+
+  // 5. Pro význam - pokud je 1-2 slova bez diakritiky
+  if (topicId === 'vyznam') {
+    const words = String(value).trim().split(/\s+/).filter(Boolean);
+    if (words.length <= 2 && !/[áčďéěíňóřšťúůýž]/i.test(value)) return 'quality';
+  }
+
+  // 6. Specialista - pokud je velmi krátký (< 20 znaků) → neodborný
+  if (topicId === 'specialista') {
+    const s = String(value).trim();
+    if (s.length < 20) return 'quality';
+  }
+
+  return null;
+}
+
+export function getFailedTopicsForFallback(translationEntry) {
+  const t = translationEntry || {};
+  const failed = [];
+  for (const topicId of _FALLBACK_TOPIC_ORDER) {
+    const val = String(t[topicId] || '').trim();
+    if (!hasMeaningfulValue(val)) {
+      failed.push(topicId);
+      continue;
+    }
+    if (topicId === 'definice' && isDefinitionLowQuality(val)) {
+      failed.push(topicId);
+    }
+  }
+  return failed;
+}
+
+export function getMissingTopicsForRepair(translationEntry) {
+  const allMissing = getFailedTopicsForFallback(translationEntry);
+  return allMissing.slice(0, 2);
 }

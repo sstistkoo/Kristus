@@ -6,9 +6,11 @@
  *       buildTopicPrompt, openTopicPromptModal,
  *       callAIWithRetry, extractTopicValueFromAI,
  *       resolveProviderForInteractiveAction, getPipelineModelForProvider,
- *       getCurrentApiKey, getSystemMessage, getResolvedSystemMessage
+ *       getCurrentApiKey, getSystemMessage, getResolvedSystemMessage,
+ *       getDefaultBatchTopicUserPrompt, getDefaultBatchTopicSystemPrompt,
+ *       isTopicValueProblematic
  */
-import { hasMeaningfulValue, isTranslationComplete } from '../translation/utils.js';
+import { hasMeaningfulValue, isTranslationComplete, isTopicValueProblematic } from '../translation/utils.js';
 
 // Storage klíče pro topic-specific prompty (zjednodušená verze z topicRepair.js)
 const TOPIC_REPAIR_PROMPT_PREFIX = 'strong_topic_repair_batch_prompt_v1_';
@@ -38,7 +40,7 @@ export function createDetailApi({
     const e = state.entryMap.get(key) || {};
     const sourceCzDef = String(e.czDef || '').trim();
     const translatedDef = String(tr?.definice || '').trim();
-    const looksEnglish = /(\bin general\b|\bused of\b|\bin itself\b|\bthat which\b|\bopposite to\b|\bwhere it is contrasted\b|\bsee word\b|\bSYN\.:|\bchiefly for\b)/i.test(translatedDef);
+    const looksEnglish = /(\bin general\b|\bused of\b|\bin itself\b|\bthat which\b|\bopposite to\b|\bwhere it is contrasted\b|\bsee word\b|\bSYN\.:|\b chiefly for\b|\bwhich\b|\bsee\b|\bthe\b|\band\b|\bor\b|\bthat\b|\bthose\b|\bthese\b|\balso\b|\bfiguratively\b|\bespecially\b|\ba\b|\ban\b|\bis\b|\bare\b|\bwas\b|\bwere\b)/i.test(translatedDef);
     const hasDetailedTranslatedDef = translatedDef.length >= 80 && /(\b1\.\b|\b2\.\b|[a-z]\)|\(|\[)/i.test(translatedDef);
     const shouldPreferSourceDef = hasMeaningfulValue(sourceCzDef) && (looksEnglish || !hasDetailedTranslatedDef);
     const definitionDisplay = shouldPreferSourceDef ? sourceCzDef : translatedDef;
@@ -51,16 +53,23 @@ export function createDetailApi({
       { id: 'specialista', label: TOPIC_LABELS.specialista, field: tr?.specialista }
     ];
 
-    return sections.map(s => `
+    return sections.map(s => {
+      const problemType = isTopicValueProblematic(key, s.id, s.field, tr);
+      const isMissing = problemType === 'missing';
+      const hasProblem = problemType !== null;
+      const indicatorClass = hasProblem ? 'topic-missing-indicator' : '';
+      const indicatorTitle = isMissing ? 'Chybí téma' : (hasProblem ? 'Problematický obsah/překlad' : '');
+
+      return `
       <div class="translation-box" role="group" aria-label="${s.label}">
         <div class="tbox-head">
           <div class="tbox-label">
             ${s.label}
-            ${!hasMeaningfulValue(s.field) ? '<span class="topic-missing-indicator" title="Chybí téma"></span>' : ''}
+            ${indicatorClass ? `<span class="${indicatorClass}" title="${indicatorTitle}"></span>` : ''}
           </div>
           <div class="tbox-actions">
             <button class="tbox-btn" onclick="openTopicPromptModal('${key}','${s.id}')" aria-label="${escHtml(t('detail.promptButton.aria', { label: s.label }))}">${t('detail.promptButton')}</button>
-            ${!hasMeaningfulValue(s.field) ? `<button class="tbox-btn" onclick="refillSingleField('${key}','${s.id}')" aria-label="${escHtml(t('detail.refillButton.aria', { label: s.label }))}">${t('detail.refillButton')}</button>` : ''}
+            ${isMissing ? `<button class="tbox-btn" onclick="refillSingleField('${key}','${s.id}')" aria-label="${escHtml(t('detail.refillButton.aria', { label: s.label }))}">${t('detail.refillButton')}</button>` : ''}
             <button class="tbox-btn" onclick="toggleEditSection('${key}','${s.id}')" aria-label="${escHtml(t('detail.editButton.aria', { label: s.label }))}">${t('detail.editButton')}</button>
           </div>
         </div>
@@ -70,7 +79,8 @@ export function createDetailApi({
           <button class="tbox-save" onclick="saveSection('${key}','${s.id}')" aria-label="${escHtml(t('detail.saveButton.aria', { label: s.label }))}">${t('detail.saveButton')}</button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function renderDetail() {
