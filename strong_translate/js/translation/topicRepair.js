@@ -936,7 +936,6 @@ function restoreTopicRepairModal() {
 function toggleShowApproved() {
   if (!state.topicRepairState) return;
   state.showApproved = !state.showApproved;
-  console.log('[DEBUG] toggleShowApproved →', state.showApproved, 'hidden tasks:', state.topicRepairState.tasks.filter(t => t.hidden).length);
   updateTopicRepairModalUI();
 }
 
@@ -959,18 +958,11 @@ function defaultBulkListTopicFilter() {
 
 function getTopicRepairModalVisibleTasks(state) {
   const topicRepairState = state.topicRepairState;
-  if (!topicRepairState || !Array.isArray(topicRepairState.tasks)) {
-    console.log('[DEBUG] getTopicRepairModalVisibleTasks: no state or tasks');
-    return [];
-  }
-  
-  console.log('[DEBUG] getTopicRepairModalVisibleTasks: showApproved=', state.showApproved, 'total=', topicRepairState.tasks.length, 'hidden=', topicRepairState.tasks.filter(t => t.hidden).length);
+  if (!topicRepairState || !Array.isArray(topicRepairState.tasks)) return [];
   
   // Režim "zobrazit schválené" – ignoruj všechny filtry
   if (state.showApproved) {
-    const res = topicRepairState.tasks.filter(t => t.hidden);
-    console.log('[DEBUG] → returning hidden tasks:', res.length);
-    return res;
+    return topicRepairState.tasks.filter(t => t.hidden);
   }
   
   // Běžné filtrování (dropdown téma + filtry)
@@ -982,7 +974,6 @@ function getTopicRepairModalVisibleTasks(state) {
   } else {
     tasks = tasks.filter(t => t.topicId === bid && !t.hidden);
   }
-  console.log('[DEBUG] → returning normal tasks:', tasks.length);
   return tasks;
 }
 
