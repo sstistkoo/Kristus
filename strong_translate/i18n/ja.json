@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "任意のトピック",
+  "list.filterStatus.missing_topic_definice": "定義",
+  "list.filterStatus.missing_topic_vyznam": "意味",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "起源",
+  "list.filterStatus.missing_topic_specialista": "専門家"
+}

@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Orice subiect",
+  "list.filterStatus.missing_topic_definice": "Definiție",
+  "list.filterStatus.missing_topic_vyznam": "Semnificație",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Origine",
+  "list.filterStatus.missing_topic_specialista": "Specialist"
+}

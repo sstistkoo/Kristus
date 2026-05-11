@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Люба тема",
+  "list.filterStatus.missing_topic_definice": "Дефиниция",
+  "list.filterStatus.missing_topic_vyznam": "Значение",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Произход",
+  "list.filterStatus.missing_topic_specialista": "Специалист"
+}

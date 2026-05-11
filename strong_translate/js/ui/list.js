@@ -7,7 +7,7 @@
  *       showToast, logError, updateFailedCount, saveProgress,
  *       updateStats, renderDetail (late-bound)
  */
-import { getStrongKeyNumber } from '../translation/utils.js';
+import { getStrongKeyNumber, hasMeaningfulValue, isDefinitionLowQuality } from '../translation/utils.js';
 export function createListApi({
   state, t, escHtml, ITEM_HEIGHT, BUFFER_ITEMS,
   getTranslationStateForKey,
@@ -22,17 +22,22 @@ export function createListApi({
      const sortBy = document.getElementById('filterSort')?.value || 'original';
 
      let lang = 'all';
-     let status = 'all';
+      let status = 'all';
+      let missingTopicFilter = null; // 'all', 'definice', 'vyznam', 'kjv', 'puvod', 'specialista'
 
-     if (statusFilter.startsWith('g_')) {
-       lang = 'G';
-       status = statusFilter.slice(2);
-     } else if (statusFilter.startsWith('h_')) {
-       lang = 'H';
-       status = statusFilter.slice(2);
-     } else {
-       status = statusFilter;
-     }
+      if (statusFilter.startsWith('g_')) {
+        lang = 'G';
+        status = statusFilter.slice(2);
+      } else if (statusFilter.startsWith('h_')) {
+        lang = 'H';
+        status = statusFilter.slice(2);
+      } else {
+        status = statusFilter;
+        if (status.startsWith('missing_topic_')) {
+          missingTopicFilter = status.slice(14); // 'all', 'definice', 'vyznam', 'kjv', 'puvod', 'specialista'
+          status = 'missing_topic';
+        }
+      }
 
      // Get source language setting for filtering entries
      const sourceLang = localStorage.getItem('strong_source_lang') || 'gr';
@@ -61,10 +66,24 @@ export function createListApi({
          return false;
        }
 
-       if (status === 'pending')       return translationState === 'pending';
-       if (status === 'done')          return translationState === 'done';
-       if (status === 'failed')        return translationState === 'failed' || translationState === 'failed_partial';
-       if (status === 'missing_topic') return translationState === 'missing_topic';
+        if (status === 'pending')       return translationState === 'pending';
+        if (status === 'done')          return translationState === 'done';
+        if (status === 'failed')        return translationState === 'failed' || translationState === 'failed_partial';
+        if (status === 'missing_topic') {
+          if (translationState !== 'missing_topic') return false;
+          // Konkrétní téma chybí?
+          if (missingTopicFilter && missingTopicFilter !== 'all') {
+            const t = state.translated[e.key];
+            if (!t) return false;
+            // Kontrola, zda konkrétní téma chybí/pokreslitěné
+            const val = String(t[missingTopicFilter] || '').trim();
+            if (hasMeaningfulValue(val)) return false;
+            // Pro definici zkontroluj kvalitu
+            if (missingTopicFilter === 'definice' && !isDefinitionLowQuality(val)) return false;
+            return true;
+          }
+          return true;
+        }
 
        return true;
      });
@@ -95,12 +114,12 @@ export function createListApi({
      return filtered;
    }
 
-  function filterMissingTopicsList() {
-    const filterEl = document.getElementById('filterStatus');
-    if (filterEl) filterEl.value = 'missing_topic';
-    renderList();
-    showToast(t('toast.filter.missingTopic'));
-  }
+   function filterMissingTopicsList() {
+     const filterEl = document.getElementById('filterStatus');
+     if (filterEl) filterEl.value = 'missing_topic_all';
+     renderList();
+     showToast(t('toast.filter.missingTopic'));
+   }
 
   function scrollToActive() {
     const el = document.querySelector(`.list-item[data-key="${state.activeKey}"]`);

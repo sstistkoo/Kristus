@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Elk onderwerp",
+  "list.filterStatus.missing_topic_definice": "Definitie",
+  "list.filterStatus.missing_topic_vyznam": "Betekenis",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Oorsprong",
+  "list.filterStatus.missing_topic_specialista": "Specialist"
+}

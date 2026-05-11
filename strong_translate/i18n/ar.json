@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "أي موضوع",
+  "list.filterStatus.missing_topic_definice": "تعريف",
+  "list.filterStatus.missing_topic_vyznam": "معنى",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "أصل",
+  "list.filterStatus.missing_topic_specialista": "متخصص"
+}

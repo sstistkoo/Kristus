@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "모든 주제",
+  "list.filterStatus.missing_topic_definice": "정의",
+  "list.filterStatus.missing_topic_vyznam": "의미",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "기원",
+  "list.filterStatus.missing_topic_specialista": "전문가"
+}

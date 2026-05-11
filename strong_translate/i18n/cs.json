@@ -195,6 +195,12 @@
   "list.filterStatus.all": "Vše",
   "list.filterStatus.pending": "K překladu",
   "list.filterStatus.missing_topic": "Chybí téma",
+  "list.filterStatus.missing_topic_all": "Libovolné téma",
+  "list.filterStatus.missing_topic_definice": "Definice",
+  "list.filterStatus.missing_topic_vyznam": "Význam",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Původ",
+  "list.filterStatus.missing_topic_specialista": "Specialista",
   "list.filterStatus.failed": "Neúspěšné",
   "list.filterStatus.done": "Hotovo",
   "list.filterStatus.g_all": "Jen řecké (G)",
@@ -1015,5 +1021,8 @@
   "systemPrompt.translator.status.aiBuildRunning": "AI generuje prompt ({provider} | {model})...",
   "systemPrompt.translator.status.aiBuildDone": "Hotovo: prompt vytvořen ({provider} | {model}).",
   "systemPrompt.translator.status.aiBuildError": "Chyba generování promptu: {message}",
-  "topicRepair.modal.waiting": "čeká"
+   "topicRepair.modal.waiting": "čeká",
+  "header.topicRepair": "Oprava témat",
+  "header.topicRepair.title": "Otevřít modal opravy chybějících témat",
+  "header.topicRepair.aria": "Otevřít modal opravy chybějících témat"
 }

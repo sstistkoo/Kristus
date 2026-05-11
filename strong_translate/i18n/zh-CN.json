@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "任何主题",
+  "list.filterStatus.missing_topic_definice": "定义",
+  "list.filterStatus.missing_topic_vyznam": "含义",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "起源",
+  "list.filterStatus.missing_topic_specialista": "专家"
+}

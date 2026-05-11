@@ -2,7 +2,7 @@
  * Hlavička / statistiky / timer / log panel.
  * Deps: state, t, getTranslationStateForKey, storeKey, backupKey
  */
-import { isTranslationComplete } from '../translation/utils.js';
+import { isTranslationComplete, hasMeaningfulValue, isDefinitionLowQuality } from '../translation/utils.js';
 export function createHeaderApi({ state, t, getTranslationStateForKey, storeKey, backupKey }) {
   function logMsg(msg, type) {
     const scroll = document.getElementById('logScroll');
@@ -71,15 +71,35 @@ export function createHeaderApi({ state, t, getTranslationStateForKey, storeKey,
     if (el) el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
-  function updateFailedCount() {
-    let count = 0;
-    for (const key of Object.keys(state.translated)) {
-      const translationState = getTranslationStateForKey(key);
-      if (translationState === 'failed' || translationState === 'failed_partial') count++;
-    }
-    const el = document.getElementById('failedCount');
-    if (el) el.textContent = count > 0 ? `(${count})` : '';
-  }
+   function updateFailedCount() {
+     let failedCount = 0;
+     for (const key of Object.keys(state.translated)) {
+       const translationState = getTranslationStateForKey(key);
+       if (translationState === 'failed' || translationState === 'failed_partial') failedCount++;
+     }
+     const elFailed = document.getElementById('failedCount');
+     if (elFailed) elFailed.textContent = failedCount > 0 ? `(${failedCount})` : '';
+
+     // Počet úkolů opravy témat (definice, význam, kjv, původ, specialist)
+     let topicRepairTaskCount = 0;
+     const topics = ['definice','vyznam','kjv','puvod','specialista'];
+     for (const key of Object.keys(state.translated)) {
+       const t = state.translated[key];
+       if (!t || t.skipped) continue;
+       for (const topicId of topics) {
+         const val = String(t[topicId] || '').trim();
+         if (!hasMeaningfulValue(val)) {
+           topicRepairTaskCount++;
+           continue;
+         }
+         if (topicId === 'definice' && isDefinitionLowQuality(val)) {
+           topicRepairTaskCount++;
+         }
+       }
+     }
+     const elTopic = document.getElementById('topicRepairCount');
+     if (elTopic) elTopic.textContent = topicRepairTaskCount > 0 ? `(${topicRepairTaskCount})` : '';
+   }
 
   function updateFileIdBadge() {
     const badge = document.getElementById('fileIdBadge');

@@ -187,8 +187,11 @@
        <button class="hbtn grn" id="btnExportAll" onclick="exportAllLocalStorage()" title="Exportovat všechny překlady z localStorage" aria-label="Exportovat všechny překlady">⬇ Vše</button>
        <button class="hbtn red" id="btnCleanupBackups" onclick="cleanupOldBackups()" title="Vymazat staré zálohy a undo" aria-label="Vymazat staré zálohy">🧹 Zálohy</button>
       <button class="hbtn" id="btnExportRange" onclick="exportRange()" title="Export vybraného rozsahu G čísel" aria-label="Exportovat rozsah G čísel">⬇ Rozsah</button>
-      <button class="hbtn red" id="btnFailedEntries" onclick="showFailedEntries()" title="Zobrazit neúspěšné překlady" aria-label="Zobrazit neúspěšné překlady">⚠ Neus. <span id="failedCount"></span></button>
-      <button class="hbtn" id="btnAISettingsDesktop" onclick="showSettingsModal()" title="Nastavení AI (provider, model, dávka)" aria-label="Nastavení AI">⚙ Nastavení AI</button>
+       <button class="hbtn red" id="btnFailedEntries" onclick="showFailedEntries()" title="Zobrazit neúspěšné překlady" aria-label="Zobrazit neúspěšné překlady">⚠ Neus. <span id="failedCount"></span></button>
+       <button class="hbtn" id="btnTopicRepair" onclick="startTopicRepairFlowForMissing()" title="Opravit chybějící témata" aria-label="Opravit chybějící témata">
+         🗔 <span id="topicRepairLabel">Oprava témat</span> <span id="topicRepairCount"></span>
+       </button>
+       <button class="hbtn" id="btnAISettingsDesktop" onclick="showSettingsModal()" title="Nastavení AI (provider, model, dávka)" aria-label="Nastavení AI">⚙ Nastavení AI</button>
       <button class="hbtn red" id="mobileMenuBtn" onclick="showMobileActions()" aria-label="Zobrazit akce">☰</button>
     </div>
   </div>
@@ -246,19 +249,26 @@
           <button class="sbtn" id="btnSelectRange" onclick="selectRange()" title="Označit rozsah hesel k překladu" aria-label="Označit rozsah hesel">☑ Výběr</button>
         </div>
         <div class="list-search-row">
-          <select id="filterStatus" class="list-select list-select-status" onchange="filterList()" aria-label="Co zobrazit">
-            <option value="all" selected>Vše</option>
-            <option value="pending">K překladu</option>
-            <option value="missing_topic">Chybí téma</option>
-            <option value="failed">Neúspěšné</option>
-            <option value="done">Hotovo</option>
-            <option value="g_all">Jen řecké (G)</option>
-            <option value="h_all">Jen hebrejské (H)</option>
-            <option value="g_pending">G: k překladu</option>
-            <option value="h_pending">H: k překladu</option>
-            <option value="g_done">G: hotovo</option>
-            <option value="h_done">H: hotovo</option>
-          </select>
+           <select id="filterStatus" class="list-select list-select-status" onchange="filterList()" aria-label="Co zobrazit">
+             <option value="all" selected>Vše</option>
+             <option value="pending">K překladu</option>
+             <optgroup label="Chybí téma">
+               <option value="missing_topic_all">Libovolné téma</option>
+               <option value="missing_topic_definice">— Definice</option>
+               <option value="missing_topic_vyznam">— Význam</option>
+               <option value="missing_topic_kjv">— KJV</option>
+               <option value="missing_topic_puvod">— Původ</option>
+               <option value="missing_topic_specialista">— Specialista</option>
+             </optgroup>
+             <option value="failed">Neúspěšné</option>
+             <option value="done">Hotovo</option>
+             <option value="g_all">Jen řecké (G)</option>
+             <option value="h_all">Jen hebrejské (H)</option>
+             <option value="g_pending">G: k překladu</option>
+             <option value="h_pending">H: k překladu</option>
+             <option value="g_done">G: hotovo</option>
+             <option value="h_done">H: hotovo</option>
+           </select>
           <select id="filterSort" class="list-select list-select-sort" onchange="filterList()" aria-label="Řazení">
             <option value="original" selected>Řazení: původní</option>
             <option value="num">Řazení: podle čísla</option>

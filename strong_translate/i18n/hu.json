@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Bármely téma",
+  "list.filterStatus.missing_topic_definice": "Definíció",
+  "list.filterStatus.missing_topic_vyznam": "Jelentés",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Eredet",
+  "list.filterStatus.missing_topic_specialista": "Szakértő"
+}

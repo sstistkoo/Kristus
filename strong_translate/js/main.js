@@ -48,6 +48,7 @@ API_KEY_PROFILES_PREFIX,
      getDefaultContentTag
    } from './i18n.js';
    import { sleepMs, sleep, debounce, formatAiResponseTime, escHtml } from './utils.js';
+import { getTranslationStateForKey } from './translation/utils.js';
    import { createCallApi } from './ai/call.js';
    import { StorageStats } from './storageStats.js';
 import {
@@ -88,15 +89,15 @@ import { createListApi } from './ui/list.js';
     getResolvedFinalPrompt,
     getResolvedPromptLibraryBase
   } from './aiPromptsResolve.js';
-  import {
-    hasMeaningfulValue, isDefinitionLowQuality, isTranslationComplete,
-    hasAnyTranslationContent, getStrongKeyNumber,
-    stripDefinitionOriginReferenceTail, isDefinitionLikelyEnglish,
-    tryNormalizeNumberedOpenRouterResponse,
-    getTranslationStateForKey,
-    fillMissingVyznamFromSource, fillMissingKjvFromSource, annotateEnglishDefinitionsInTranslated,
-    applyFallbacksToParsedMap, parseWithOpenRouterNormalization
-  } from './translation/utils.js';
+   import {
+     hasMeaningfulValue, isDefinitionLowQuality, isTranslationComplete,
+     hasAnyTranslationContent, getStrongKeyNumber,
+     stripDefinitionOriginReferenceTail, isDefinitionLikelyEnglish,
+     tryNormalizeNumberedOpenRouterResponse,
+     getTranslationStateForKey as getState,
+     fillMissingVyznamFromSource, fillMissingKjvFromSource, annotateEnglishDefinitionsInTranslated,
+     applyFallbacksToParsedMap, parseWithOpenRouterNormalization
+   } from './translation/utils.js';
   // Re-export for use in this module
 const {
       parseTXT: parseTXTCore,
@@ -429,19 +430,25 @@ function getModelTestPromptCatalog() {
         if (txt) opt.textContent = txt;
       });
     }
-    const filterStatusLabels = {
-      all: t('list.filterStatus.all'),
-      pending: t('list.filterStatus.pending'),
-      missing_topic: t('list.filterStatus.missing_topic'),
-      failed: t('list.filterStatus.failed'),
-      done: t('list.filterStatus.done'),
-      g_all: t('list.filterStatus.g_all'),
-      h_all: t('list.filterStatus.h_all'),
-      g_pending: t('list.filterStatus.g_pending'),
-      h_pending: t('list.filterStatus.h_pending'),
-      g_done: t('list.filterStatus.g_done'),
-      h_done: t('list.filterStatus.h_done')
-    };
+     const filterStatusLabels = {
+       all: t('list.filterStatus.all'),
+       pending: t('list.filterStatus.pending'),
+       missing_topic: t('list.filterStatus.missing_topic'),
+       missing_topic_all: t('list.filterStatus.missing_topic_all'),
+       missing_topic_definice: t('list.filterStatus.missing_topic_definice'),
+       missing_topic_vyznam: t('list.filterStatus.missing_topic_vyznam'),
+       missing_topic_kjv: t('list.filterStatus.missing_topic_kjv'),
+       missing_topic_puvod: t('list.filterStatus.missing_topic_puvod'),
+       missing_topic_specialista: t('list.filterStatus.missing_topic_specialista'),
+       failed: t('list.filterStatus.failed'),
+       done: t('list.filterStatus.done'),
+       g_all: t('list.filterStatus.g_all'),
+       h_all: t('list.filterStatus.h_all'),
+       g_pending: t('list.filterStatus.g_pending'),
+       h_pending: t('list.filterStatus.h_pending'),
+       g_done: t('list.filterStatus.g_done'),
+       h_done: t('list.filterStatus.h_done')
+     };
     const filterStatusEl = document.getElementById('filterStatus');
     if (filterStatusEl) {
       for (const option of filterStatusEl.options) {
@@ -470,10 +477,13 @@ function getModelTestPromptCatalog() {
     setAttr('btnSelectAllSmall', 'aria-label', t('list.selectAll.aria'));
     setAttr('btnSelectNoneSmall', 'title', t('list.selectNone.title'));
     setAttr('btnSelectNoneSmall', 'aria-label', t('list.selectNone.aria'));
-    setText('btnTopicRepairMini', t('list.topicRepair.restore'));
-    setAttr('btnTopicRepairMini', 'title', t('list.topicRepair.restore.title'));
-    setAttr('btnTopicRepairMini', 'aria-label', t('list.topicRepair.restore.aria'));
-    setText('btnSelectAllVisible', t('list.selectAllVisible'));
+     setText('btnTopicRepairMini', t('list.topicRepair.restore'));
+     setAttr('btnTopicRepairMini', 'title', t('list.topicRepair.restore.title'));
+     setAttr('btnTopicRepairMini', 'aria-label', t('list.topicRepair.restore.aria'));
+     setText('topicRepairLabel', t('header.topicRepair'));
+     setAttr('btnTopicRepair', 'title', t('header.topicRepair.title'));
+     setAttr('btnTopicRepair', 'aria-label', t('header.topicRepair.aria'));
+     setText('btnSelectAllVisible', t('list.selectAllVisible'));
     setAttr('btnSelectAllVisible', 'aria-label', t('list.selectAllVisible.aria'));
     setText('btnTranslateSelected', t('list.translateSelected'));
     setAttr('btnTranslateSelected', 'aria-label', t('list.translateSelected.aria'));
@@ -4757,10 +4767,21 @@ function printRecentAICalls() {
   console.groupEnd();
 }
 
-// Print recent AI calls to console for debugging
-window.printRecentAICalls = printRecentAICalls;
+ // Print recent AI calls to console for debugging
+ window.printRecentAICalls = printRecentAICalls;
 
-// Cleanup on page unload - auto-save progress
+ // Open topic repair modal for all missing topics
+ function startTopicRepairFlowForMissing() {
+   const keys = Object.keys(state.translated).filter(key => getState(key) === 'missing_topic');
+   if (!keys.length) {
+     showToast(t('toast.topicRepair.noEligible'));
+     return;
+   }
+   startTopicRepairFlow(keys);
+ }
+ window.startTopicRepairFlowForMissing = startTopicRepairFlowForMissing;
+
+ // Cleanup on page unload - auto-save progress
 window.addEventListener('beforeunload', () => {
   if (state.autoTimer) clearTimeout(state.autoTimer);
   if (state.autoCountTimer) clearInterval(state.autoCountTimer);

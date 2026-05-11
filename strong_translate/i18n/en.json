@@ -194,6 +194,12 @@
   "list.filterStatus.all": "All",
   "list.filterStatus.pending": "To translate",
   "list.filterStatus.missing_topic": "Missing topic",
+  "list.filterStatus.missing_topic_all": "Any topic",
+  "list.filterStatus.missing_topic_definice": "Definition",
+  "list.filterStatus.missing_topic_vyznam": "Meaning",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Origin",
+  "list.filterStatus.missing_topic_specialista": "Specialist",
   "list.filterStatus.failed": "Failed",
   "list.filterStatus.done": "Done",
   "list.filterStatus.g_all": "Greek only (G)",
@@ -1015,5 +1021,8 @@
   "systemPrompt.translator.status.aiBuildError": "Prompt generation error: {message}",
   "confirm.clearTranslations": "Delete all translations (all slots) and backups?\n\n✅ ï¸ This will DELETE ALL translation progress.\n\n✅… preserved: API keys, language/provider/model settings.\n\nðŸ’¡ Recommendation: Save your work first using '📄 TXT' or '📄 JSON' export.",
   "toast.translationsCleared": "✅… Translations cleared, API keys and settings preserved",
-  "topicRepair.modal.waiting": "waiting"
+   "topicRepair.modal.waiting": "waiting",
+  "header.topicRepair": "Topic repair",
+  "header.topicRepair.title": "Open topic repair modal",
+  "header.topicRepair.aria": "Open topic repair modal"
 }

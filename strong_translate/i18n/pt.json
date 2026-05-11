@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Qualquer tópico",
+  "list.filterStatus.missing_topic_definice": "Definição",
+  "list.filterStatus.missing_topic_vyznam": "Significado",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Origem",
+  "list.filterStatus.missing_topic_specialista": "Especialista"
+}

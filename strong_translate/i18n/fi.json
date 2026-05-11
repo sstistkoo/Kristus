@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Mikä tahansa aihe",
+  "list.filterStatus.missing_topic_definice": "Määritelmä",
+  "list.filterStatus.missing_topic_vyznam": "Merkitys",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Alkuperä",
+  "list.filterStatus.missing_topic_specialista": "Asiantuntija"
+}

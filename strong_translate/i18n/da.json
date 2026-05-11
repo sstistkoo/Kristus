@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Ethvert emne",
+  "list.filterStatus.missing_topic_definice": "Definition",
+  "list.filterStatus.missing_topic_vyznam": "Betydning",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Oprindelse",
+  "list.filterStatus.missing_topic_specialista": "Specialist"
+}

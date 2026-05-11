@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Οποιοδήποτε θέμα",
+  "list.filterStatus.missing_topic_definice": "Ορισμός",
+  "list.filterStatus.missing_topic_vyznam": "Σημασία",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Καταγωγή",
+  "list.filterStatus.missing_topic_specialista": "Ειδικός"
+}

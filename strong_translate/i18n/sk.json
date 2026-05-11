@@ -1,1 +1,8 @@
-{}
+{
+  "list.filterStatus.missing_topic_all": "Ľubovoľné téma",
+  "list.filterStatus.missing_topic_definice": "Definícia",
+  "list.filterStatus.missing_topic_vyznam": "Význam",
+  "list.filterStatus.missing_topic_kjv": "KJV",
+  "list.filterStatus.missing_topic_puvod": "Pôvod",
+  "list.filterStatus.missing_topic_specialista": "Specialista"
+}
