@@ -2403,33 +2403,53 @@ function closeI18nToolHelpModal() {
   const m = document.getElementById('i18nToolHelpModal');
   if (m) m.classList.remove('show');
 }
-const I18N_TOOL_LANGUAGES = [
-  { code: 'cs', tag: 'CZ', name: 'Čeština', flag: 'CZ' },
-  { code: 'en', tag: 'EN', name: 'Angličtina', flag: 'GB' }
+// --- Raw data: Google Translate supported languages (code, name) ---
+const RAW_GOOGLE_TRANSLATE_LANGS = [
+  {"code":"af","name":"Afrikaans"},{"code":"sq","name":"Albanian"},{"code":"am","name":"Amharic"},{"code":"ar-SA","name":"Arabic (Saudi Arabia)"},{"code":"ar","name":"Arabic"},{"code":"hy","name":"Armenian"},{"code":"az","name":"Azerbaijani"},{"code":"eu","name":"Basque"},{"code":"be","name":"Belarusian"},{"code":"bn-IN","name":"Bengali (India)"},{"code":"bn","name":"Bengali"},{"code":"bs-Cyrl","name":"Bosnian (Cyrillic)"},{"code":"bs","name":"Bosnian"},{"code":"bg","name":"Bulgarian"},{"code":"my","name":"Burmese"},{"code":"ca","name":"Catalan"},{"code":"zh-CN","name":"Chinese (China)"},{"code":"zh-HK","name":"Chinese (Hong Kong)"},{"code":"zh-Hans","name":"Chinese (Simplified)"},{"code":"zh-TW","name":"Chinese (Taiwan)"},{"code":"zh-Hant","name":"Chinese (Traditional)"},{"code":"zh","name":"Chinese"},{"code":"hr","name":"Croatian"},{"code":"cs","name":"Czech"},{"code":"da","name":"Danish"},{"code":"nl-BE","name":"Dutch (Belgium)"},{"code":"nl","name":"Dutch"},{"code":"en-AU","name":"English (Australia)"},{"code":"en-CA","name":"English (Canada)"},{"code":"en-NZ","name":"English (New Zealand)"},{"code":"en-PH","name":"English (Philippines)"},{"code":"en-ZA","name":"English (South Africa)"},{"code":"en-GB","name":"English (United Kingdom)"},{"code":"en-US","name":"English (United States)"},{"code":"en","name":"English"},{"code":"et","name":"Estonian"},{"code":"fil","name":"Filipino"},{"code":"fi","name":"Finnish"},{"code":"fr-CA","name":"French (Canada)"},{"code":"fr-CH","name":"French (Switzerland)"},{"code":"fr","name":"French"},{"code":"fy","name":"Frisian"},{"code":"gl","name":"Galician"},{"code":"ka","name":"Georgian"},{"code":"de","name":"German"},{"code":"el","name":"Greek"},{"code":"gn","name":"Guarani"},{"code":"gu","name":"Gujarati"},{"code":"ha","name":"Hausa"},{"code":"he","name":"Hebrew"},{"code":"iw","name":"Hebrew"},{"code":"hi","name":"Hindi"},{"code":"hu","name":"Hungarian"},{"code":"is","name":"Icelandic"},{"code":"ig","name":"Igbo"},{"code":"id","name":"Indonesian"},{"code":"ga","name":"Irish"},{"code":"it","name":"Italian"},{"code":"ja","name":"Japanese"},{"code":"kn","name":"Kannada"},{"code":"km","name":"Khmer"},{"code":"ko","name":"Korean"},{"code":"ky","name":"Kyrgyz"},{"code":"lo","name":"Lao"},{"code":"lv","name":"Latvian"},{"code":"ln","name":"Lingala"},{"code":"lt","name":"Lithuanian"},{"code":"lb","name":"Luxembourgish"},{"code":"mk","name":"Macedonian"},{"code":"ms","name":"Malay"},{"code":"ml","name":"Malayalam"},{"code":"mt","name":"Maltese"},{"code":"mr","name":"Marathi"},{"code":"mn","name":"Mongolian"},{"code":"ne","name":"Nepali"},{"code":"nb","name":"Norwegian Bokmal"},{"code":"no","name":"Norwegian"},{"code":"or","name":"Odia"},{"code":"fa","name":"Persian"},{"code":"pl","name":"Polish"},{"code":"pt-BR","name":"Portuguese (Brazil)"},{"code":"pt-PT","name":"Portuguese (Portugal)"},{"code":"pt","name":"Portuguese"},{"code":"pa-PK","name":"Punjabi (Pakistan)"},{"code":"pa","name":"Punjabi"},{"code":"ro","name":"Romanian"},{"code":"ru","name":"Russian"},{"code":"gd","name":"Scots Gaelic"},{"code":"sr","name":"Serbian"},{"code":"sk","name":"Slovak"},{"code":"sl","name":"Slovenian"},{"code":"so","name":"Somali"},{"code":"es-AR","name":"Spanish (Argentina)"},{"code":"es-CL","name":"Spanish (Chile)"},{"code":"es-CO","name":"Spanish (Colombia)"},{"code":"es-CR","name":"Spanish (Costa Rica)"},{"code":"es-EC","name":"Spanish (Ecuador)"},{"code":"es-SV","name":"Spanish (El Salvador)"},{"code":"es-GT","name":"Spanish (Guatemala)"},{"code":"es-HT","name":"Spanish (Haiti)"},{"code":"es-HN","name":"Spanish (Honduras)"},{"code":"es-419","name":"Spanish (Latin America)"},{"code":"es-MX","name":"Spanish (Mexico)"},{"code":"es-NI","name":"Spanish (Nicaragua)"},{"code":"es-PA","name":"Spanish (Panama)"},{"code":"es-PY","name":"Spanish (Paraguay)"},{"code":"es-PE","name":"Spanish (Peru)"},{"code":"es-PR","name":"Spanish (Puerto Rico)"},{"code":"es-ES","name":"Spanish (Spain)"},{"code":"es-US","name":"Spanish (United States)"},{"code":"es-UY","name":"Spanish (Uruguay)"},{"code":"es-VE","name":"Spanish (Venezuela)"},{"code":"es","name":"Spanish"},{"code":"sw","name":"Swahili"},{"code":"sv","name":"Swedish"},{"code":"tl","name":"Tagalog"},{"code":"tg","name":"Tajik"},{"code":"ta","name":"Tamil"},{"code":"te","name":"Telugu"},{"code":"th","name":"Thai"},{"code":"tr","name":"Turkish"},{"code":"uk","name":"Ukrainian"},{"code":"ur","name":"Urdu"},{"code":"uz","name":"Uzbek"},{"code":"vi","name":"Vietnamese"},{"code":"cy","name":"Welsh"},{"code":"zu","name":"Zulu"}
 ];
+
+// Build I18N_TOOL_LANGUAGES with additional properties 'tag' and 'flag'
+const I18N_TOOL_LANGUAGES = RAW_GOOGLE_TRANSLATE_LANGS.map(l => ({
+  code: l.code,
+  name: l.name,
+  tag: l.code.toUpperCase(),   // used for --tag argument
+  flag: l.code.split('-')[0].toUpperCase()  // display code (e.g., FR, DE, ZH)
+}));
+
+const I18N_TOOL_TRANSLATOR_TARGET_CODES = new Set(RAW_GOOGLE_TRANSLATE_LANGS.map(l => l.code));
+
+// Keep display codes for special overrides (e.g., cs->CZ, en->GB)
 const I18N_TOOL_LANG_DISPLAY_CODE = {
   cs: 'CZ',
   en: 'GB'
 };
-const I18N_TOOL_TRANSLATOR_TARGET_CODES = new Set([
-  'cs', 'cz', 'en'
-]);
 
 function sanitizeI18nToolLanguages() {
+  // Remove source languages (cs, cz) and English (en) from target selection
   for (let i = I18N_TOOL_LANGUAGES.length - 1; i >= 0; i--) {
-    const code = String(I18N_TOOL_LANGUAGES[i]?.code || '');
-    // "cz"/"cs" je zdroj a nechceme ho v c�lov�m seznamu.
-    if (code === 'cz' || code === 'cs' || !I18N_TOOL_TRANSLATOR_TARGET_CODES.has(code)) {
+    const code = String(I18N_TOOL_LANGUAGES[i]?.code || '').toLowerCase();
+    if (code === 'cz' || code === 'cs' || code === 'en') {
       I18N_TOOL_LANGUAGES.splice(i, 1);
     }
   }
-  // Bezpecnostn� pojistka: EN mus� b�t v�dy dostupn� jako c�lov� jazyk.
-  if (!I18N_TOOL_LANGUAGES.some((lang) => String(lang?.code || '').toLowerCase() === 'en')) {
-    I18N_TOOL_LANGUAGES.unshift({ code: 'en', tag: 'EN', name: 'Anglictina', flag: '????' });
+}
+sanitizeI18nToolLanguages();
+
+// Funkce pro získání zobrazovaného názvu jazyka v češtině (fallback na název z dat)
+function getI18nToolLanguageDisplayName(code) {
+  try {
+    if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
+      const dn = new Intl.DisplayNames(['cs'], { type: 'language' });
+      const result = dn.of(code);
+      if (result && result !== code) return result;
+    }
+  } catch (e) {
+    // ignore
   }
+  const lang = I18N_TOOL_LANGUAGES.find(l => l.code === code);
+  return lang ? lang.name : code;
 }
 
-sanitizeI18nToolLanguages();
 const i18nToolSelectedLanguages = new Set();
 const I18N_TOOL_PLACEHOLDER = '__ST_TAG_';
 const I18N_TOOL_WORD_PLACEHOLDER = '__ST_WORD_';
@@ -3243,7 +3263,7 @@ function renderI18nToolLanguageGrid() {
   grid.innerHTML = I18N_TOOL_LANGUAGES.map((lang) => `
     <button type="button" class="i18n-tool-lang-card ${i18nToolSelectedLanguages.has(lang.code) ? 'selected' : ''}" onclick="toggleI18nToolLanguage('${lang.code}')">
       <div class="i18n-tool-lang-flag">${String(lang.code || '').toUpperCase()}</div>
-      <div class="i18n-tool-lang-name">${lang.name}</div>
+      <div class="i18n-tool-lang-name">${getI18nToolLanguageDisplayName(lang.code)}</div>
       <div class="i18n-tool-lang-code">${I18N_TOOL_LANG_DISPLAY_CODE[lang.code] || String(lang.code || '').toUpperCase()}</div>
     </button>
   `).join('');
@@ -3255,7 +3275,7 @@ function updateI18nToolSummary() {
   if (!summary) return;
   const selectedList = I18N_TOOL_LANGUAGES
     .filter((lang) => i18nToolSelectedLanguages.has(lang.code))
-    .map((lang) => `${lang.name} (${lang.code})`);
+    .map((lang) => `${getI18nToolLanguageDisplayName(lang.code)} (${lang.code})`);
   if (!selectedList.length) {
     summary.textContent = t('i18nTool.summary.selected', { count: 0, list: t('common.none') });
     return;
