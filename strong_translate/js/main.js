@@ -598,6 +598,8 @@ function applyUiLanguage() {
     setText('btnI18nToolLangSelectAll', t('i18nTool.langModal.selectAll'));
     setText('btnI18nToolLangDeselectAll', t('i18nTool.langModal.deselectAll'));
     setText('btnI18nToolLangDone', t('i18nTool.langModal.done'));
+    setAttr('i18nToolLangSearch', 'placeholder', t('i18nTool.langModal.search'));
+    setAttr('i18nToolLangSearch', 'aria-label', t('i18nTool.langModal.search'));
     setText('i18nToolDoneModalTitle', t('i18nTool.done.title'));
     setText('i18nToolDoneText', t('i18nTool.done.text'));
     setText('btnI18nToolDoneReopen', t('i18nTool.done.reopen'));
@@ -3272,14 +3274,27 @@ function i18nToolKeepPromptsInEnglish() {
 function renderI18nToolLanguageGrid() {
   const grid = document.getElementById('i18nToolLanguageGrid');
   if (!grid) return;
-  grid.innerHTML = I18N_TOOL_LANGUAGES.map((lang) => `
+  const filter = (document.getElementById('i18nToolLangSearch')?.value || '').trim().toLowerCase();
+  const filtered = filter
+    ? I18N_TOOL_LANGUAGES.filter((lang) => {
+        const name = getI18nToolLanguageDisplayName(lang.code).toLowerCase();
+        const code = (lang.code || '').toLowerCase();
+        const flag = (lang.flag || '').toLowerCase();
+        return name.includes(filter) || code.includes(filter) || flag.includes(filter);
+      })
+    : I18N_TOOL_LANGUAGES;
+  grid.innerHTML = filtered.map((lang) => `
     <button type="button" class="i18n-tool-lang-card ${i18nToolSelectedLanguages.has(lang.code) ? 'selected' : ''}" onclick="toggleI18nToolLanguage('${lang.code}')">
-      <div class="i18n-tool-lang-flag">${String(lang.code || '').toUpperCase()}</div>
+      <div class="i18n-tool-lang-flag">${String(lang.flag || '').toUpperCase()}</div>
       <div class="i18n-tool-lang-name">${getI18nToolLanguageDisplayName(lang.code)}</div>
       <div class="i18n-tool-lang-code">${I18N_TOOL_LANG_DISPLAY_CODE[lang.code] || String(lang.code || '').toUpperCase()}</div>
     </button>
   `).join('');
   updateI18nToolSummary();
+}
+
+function filterI18nToolLanguages() {
+  renderI18nToolLanguageGrid();
 }
 
 function updateI18nToolSummary() {
@@ -4302,6 +4317,7 @@ window.closeI18nToolLangModal = closeI18nToolLangModal;
 window.toggleI18nToolLanguage = toggleI18nToolLanguage;
 window.i18nToolSelectAllLangs = i18nToolSelectAllLangs;
 window.i18nToolDeselectAllLangs = i18nToolDeselectAllLangs;
+window.filterI18nToolLanguages = filterI18nToolLanguages;
 window.copyI18nToolCmd = copyI18nToolCmd;
 window.openI18nToolHelpModal = openI18nToolHelpModal;
 window.closeI18nToolHelpModal = closeI18nToolHelpModal;

@@ -1947,6 +1947,35 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   margin-bottom: 12px;
 }
 
+.i18n-tool-lang-search-wrap {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.i18n-tool-lang-search {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--bg2);
+  border: 1px solid var(--brd);
+  border-radius: 6px;
+  color: var(--txt);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s;
+  box-sizing: border-box;
+}
+
+.i18n-tool-lang-search:focus {
+  border-color: var(--acc);
+}
+
+.i18n-tool-lang-search::placeholder {
+  color: var(--muted);
+}
+
 .i18n-tool-language-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

@@ -924,6 +924,9 @@
         <button type="button" class="prompt-btn cancel" id="btnI18nToolLangDeselectAll" onclick="i18nToolDeselectAllLangs()">Zrušit výběr</button>
         <button type="button" class="prompt-btn ok" id="btnI18nToolLangDone" onclick="closeI18nToolLangModal()">Hotovo</button>
       </div>
+      <div class="i18n-tool-lang-search-wrap">
+        <input type="text" id="i18nToolLangSearch" class="i18n-tool-lang-search" placeholder="Hledat jazyk…" oninput="filterI18nToolLanguages()" aria-label="Hledat jazyk">
+      </div>
       <div id="i18nToolLanguageGrid" class="i18n-tool-language-grid"></div>
     </div>
   </div>

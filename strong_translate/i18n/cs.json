@@ -933,6 +933,7 @@
   "i18nTool.runAnim.3": "⏳ Překlad běží...",
   "i18nTool.eta.idle": "⏱ Odhad do konce: —",
   "i18nTool.langModal.title": "Vyberte cílové jazyky",
+  "i18nTool.langModal.search": "Hledat jazyk…",
   "i18nTool.langModal.selectAll": "Vybrat vše",
   "i18nTool.langModal.deselectAll": "Zrušit výběr",
   "i18nTool.langModal.done": "Hotovo",

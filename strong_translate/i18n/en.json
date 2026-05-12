@@ -931,6 +931,7 @@
   "i18nTool.runAnim.3": "â³ Translation running...",
   "i18nTool.eta.idle": "â± ETA: ”",
   "i18nTool.langModal.title": "Select target languages",
+  "i18nTool.langModal.search": "Search language…",
   "i18nTool.langModal.selectAll": "Select all",
   "i18nTool.langModal.deselectAll": "Clear selection",
   "i18nTool.langModal.done": "Done",
