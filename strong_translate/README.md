@@ -57,16 +57,6 @@ Otevřít `http://localhost:8000` v prohlížeči.
 4. Klikněte na **Editor** pro načtení
 5. Použijte **AUTO** pro automatický překlad nebo **Dávka** pro ruční kontrolu
 
-## Údržba i18n
-
-```bash
-# Doplní chybějící klíče do i18n souborů
-node scripts/fix-i18n.js
-
-# Reset všech jazyků kromě cs/en na prázdné
-node scripts/fix-i18n-all.js
-```
-
 ## Licence
 
 Tento projekt je uvolněn pod licencí [Unlicense](https://unlicense.org/). To znamená, že kód je ve veřejné doméně a můžete ho libovolně upravovat, kopírovat i prodávat bez jakýchkoliv omezení.
