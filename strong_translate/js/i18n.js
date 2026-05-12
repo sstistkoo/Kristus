@@ -213,6 +213,65 @@ export async function fetchUiDictionary(lang) {
 }
 
 /**
+ * Načte AI prompt balíček pro daný cílový jazyk.
+ * Pokud existuje prompts.{targetLang}.json, použije ho.
+ * Jinak fallback na prompts.cs.json (default) nebo prompts.en.json.
+ */
+export async function getPromptPack(targetLang) {
+  const tryFile = async (filename) => {
+    try {
+      const response = await fetch(`./i18n/${filename}`, { cache: 'no-store' });
+      if (response.ok) return await response.json();
+    } catch (_) {}
+    return null;
+  };
+
+  // Map target lang codes to prompt file codes
+  const targetToPromptCode = {
+    cz: 'cs', cs: 'cs',
+    sk: 'sk',
+    pl: 'pl',
+    de: 'de',
+    fr: 'fr',
+    es: 'es',
+    it: 'it',
+    pt: 'pt',
+    ru: 'ru',
+    uk: 'uk',
+    bg: 'bg',
+    ro: 'ro',
+    hu: 'hu',
+    nl: 'nl',
+    sv: 'sv',
+    da: 'da',
+    no: 'no',
+    fi: 'fi',
+    el: 'el',
+    tr: 'tr',
+    ar: 'ar',
+    'zh-cn': 'zh-cn',
+    ja: 'ja',
+    ko: 'ko',
+    he: 'he',
+    en: 'en'
+  };
+
+  const langCode = String(targetLang || 'cz').toLowerCase();
+  const promptCode = targetToPromptCode[langCode] || 'cs';
+
+  // Try target language prompt file first
+  const targetPack = await tryFile(`prompts.${promptCode}.json`);
+  if (targetPack) return targetPack;
+
+  // Fallback to cs, then en
+  const csPack = await tryFile('prompts.cs.json');
+  if (csPack) return csPack;
+
+  const enPack = await tryFile('prompts.en.json');
+  return enPack || {};
+}
+
+/**
  * Načte AI prompt balíčky bez 404 pro každý jazyk zvlášť.
  * Používá jen i18n/prompts.{DEFAULT_UI_LANG}.json a volitelně prompts.en.json (2 requesty).
  * Jazyk cs: balíček prompts.cs.json. Vše ostatní: prompts.en.json (anglické instrukce pro AI, i když UI není en).

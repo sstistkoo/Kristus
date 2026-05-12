@@ -90,6 +90,7 @@ import { createListApi } from './ui/list.js';
     getResolvedFinalPrompt,
     getResolvedPromptLibraryBase
   } from './aiPromptsResolve.js';
+  import { getPromptPack } from './i18n.js';
    import {
      hasMeaningfulValue, isDefinitionLowQuality, isTranslationComplete,
      hasAnyTranslationContent, getStrongKeyNumber,
@@ -681,11 +682,17 @@ function enforceSpecialistaFormat(promptText) {
 }
 
   function getActiveMainPromptTemplate(context = 'batch') {
-    const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
-    const saved = String(localStorage.getItem('strong_prompt') || '').trim();
-    if (mode === 'custom' && saved) return saved;
-    return context === 'topic' ? getSystemPromptForCurrentTask('topic') : getResolvedDefaultPrompt();
+  const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
+  const saved = String(localStorage.getItem('strong_prompt') || '').trim();
+  if (mode === 'custom' && saved) return saved;
+  // Check if there's a prompt pack for target language
+  const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+  const targetPromptPack = getPromptPack(targetLang);
+  if (targetPromptPack && targetPromptPack['aiPrompts.core.userDefault']) {
+    return targetPromptPack['aiPrompts.core.userDefault'];
   }
+  return context === 'topic' ? getSystemPromptForCurrentTask('topic') : getResolvedDefaultPrompt();
+}
 
   // Custom buildPromptMessages that reads from localStorage
     function buildPromptMessages(batch) {
@@ -760,6 +767,12 @@ function enforceSpecialistaFormat(promptText) {
       function getActiveSystemMessage() {
         const custom = localStorage.getItem('strong_custom_system_prompt');
         if (custom && custom.trim()) return custom.trim();
+        // Check if there's a prompt pack for target language
+        const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+        const targetPromptPack = getPromptPack(targetLang);
+        if (targetPromptPack && targetPromptPack['aiPrompts.core.system']) {
+          return targetPromptPack['aiPrompts.core.system'];
+        }
         return getResolvedSystemMessage();
       }
 
