@@ -33,6 +33,35 @@ const UI_LANGUAGE_CATALOG = [
   { code: 'he', fileCode: 'he', labelCode: 'he', name: 'Hebrejština', flag: '🇮🇱' }
 ];
 
+const TARGET_LANGUAGE_CATALOG = [
+  { code: 'cz', name: 'Čeština', flag: '🇨🇿' },
+  { code: 'en', name: 'Angličtina', flag: '🇬🇧' },
+  { code: 'sk', name: 'Slovenština', flag: '🇸🇰' },
+  { code: 'pl', name: 'Polština', flag: '🇵🇱' },
+  { code: 'de', name: 'Němčina', flag: '🇩🇪' },
+  { code: 'fr', name: 'Francouzština', flag: '🇫🇷' },
+  { code: 'es', name: 'Španělština', flag: '🇪🇸' },
+  { code: 'it', name: 'Italština', flag: '🇮🇹' },
+  { code: 'pt', name: 'Portugalština', flag: '🇵🇹' },
+  { code: 'ru', name: 'Ruština', flag: '🇷🇺' },
+  { code: 'uk', name: 'Ukrajinština', flag: '🇺🇦' },
+  { code: 'bg', name: 'Bulharština', flag: '🇧🇬' },
+  { code: 'ro', name: 'Rumunština', flag: '🇷🇴' },
+  { code: 'hu', name: 'Maďarština', flag: '🇭🇺' },
+  { code: 'nl', name: 'Holandština', flag: '🇳🇱' },
+  { code: 'sv', name: 'Švédština', flag: '🇸🇪' },
+  { code: 'da', name: 'Dánština', flag: '🇩🇰' },
+  { code: 'no', name: 'Norština', flag: '🇳🇴' },
+  { code: 'fi', name: 'Finština', flag: '🇫🇮' },
+  { code: 'el', name: 'Řečtina', flag: '🇬🇷' },
+  { code: 'tr', name: 'Turečtina', flag: '🇹🇷' },
+  { code: 'ar', name: 'Arabština', flag: '🇸🇦' },
+  { code: 'zh-cn', name: 'Čínština', flag: '🇨🇳' },
+  { code: 'ja', name: 'Japonština', flag: '🇯🇵' },
+  { code: 'ko', name: 'Korejština', flag: '🇰🇷' },
+  { code: 'he', name: 'Hebrejština', flag: '🇮🇱' }
+];
+
 let uiLangAvailabilityCache = null;
 const I18N_TOOL_PREFILL_LANG_KEY = 'strong_i18n_tool_prefill_lang';
 
@@ -118,59 +147,79 @@ function bindUiLanguageSelectBehavior() {
 
 async function populateUiLanguageSelect() {
    const select = document.getElementById('uiLanguage');
-   if (!select) return;
-   const current = String(localStorage.getItem(UI_LANG_KEY) || DEFAULT_UI_LANG).toLowerCase();
-   const checked = await detectUiLangAvailability();
-   const available = checked.filter((x) => x.available);
-   const missing = checked.filter((x) => !x.available);
+    if (!select) return;
+    const current = String(localStorage.getItem(UI_LANG_KEY) || DEFAULT_UI_LANG).toLowerCase();
+    const checked = await detectUiLangAvailability();
+    const available = checked.filter((x) => x.available);
+    const missing = checked.filter((x) => !x.available);
 
-   available.forEach((lang) => UI_LANGS.add(lang.code));
+    available.forEach((lang) => UI_LANGS.add(lang.code));
 
-   // Load custom languages from localStorage
-   const customLangs = [];
-   for (let i = 0; i < localStorage.length; i++) {
-     const key = localStorage.key(i);
-     if (key && key.startsWith('strong_ui_lang_custom_')) {
-       const code = key.replace('strong_ui_lang_custom_', '');
-       if (code !== 'active') {
-         customLangs.push({ code, name: `Vlastní: ${code}` });
-       }
-     }
-   }
+    // Load custom languages from localStorage
+    const customLangs = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('strong_ui_lang_custom_')) {
+        const code = key.replace('strong_ui_lang_custom_', '');
+        if (code !== 'active') {
+          customLangs.push({ code, name: `Vlastní: ${code}` });
+        }
+      }
+    }
 
-   const fragment = document.createDocumentFragment();
-   available.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
-   if (available.length && missing.length) {
-     const separator = document.createElement('option');
-     separator.disabled = true;
-     separator.textContent = t('uiLanguage.separator');
-     fragment.appendChild(separator);
-   }
-   missing.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
+    const fragment = document.createDocumentFragment();
+    available.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
+    if (available.length && missing.length) {
+      const separator = document.createElement('option');
+      separator.disabled = true;
+      separator.textContent = t('uiLanguage.separator');
+      fragment.appendChild(separator);
+    }
+    missing.forEach((lang) => fragment.appendChild(createUiLangOption(lang)));
 
-   // Add custom languages section
-   if (customLangs.length) {
-     const customSeparator = document.createElement('option');
-     customSeparator.disabled = true;
-     customSeparator.textContent = '— Vlastní jazyky —';
-     fragment.appendChild(customSeparator);
-     customLangs.forEach((lang) => {
-       const option = document.createElement('option');
-       option.value = lang.code;
-       option.dataset.customUiLang = '1';
-       option.textContent = lang.name;
-       fragment.appendChild(option);
-     });
-   }
+    // Add custom languages section
+    if (customLangs.length) {
+      const customSeparator = document.createElement('option');
+      customSeparator.disabled = true;
+      customSeparator.textContent = '— Vlastní jazyky —';
+      fragment.appendChild(customSeparator);
+      customLangs.forEach((lang) => {
+        const option = document.createElement('option');
+        option.value = lang.code;
+        option.dataset.customUiLang = '1';
+        option.textContent = lang.name;
+        fragment.appendChild(option);
+      });
+    }
 
-   select.innerHTML = '';
-   select.appendChild(fragment);
-   bindUiLanguageSelectBehavior();
-   const canKeepCurrent = Array.from(select.options).some((opt) => opt.value === current);
-   if (canKeepCurrent) select.value = current;
-   else if (available.length) select.value = available[0].code;
-   else select.value = DEFAULT_UI_LANG;
- }
+    select.innerHTML = '';
+    select.appendChild(fragment);
+    bindUiLanguageSelectBehavior();
+    const canKeepCurrent = Array.from(select.options).some((opt) => opt.value === current);
+    if (canKeepCurrent) select.value = current;
+    else if (available.length) select.value = available[0].code;
+    else select.value = DEFAULT_UI_LANG;
+  }
+
+  function populateTargetLanguageSelect() {
+    const select = document.getElementById('targetLanguage');
+    if (!select) return;
+    const current = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+    const fragment = document.createDocumentFragment();
+    TARGET_LANGUAGE_CATALOG.forEach((lang) => {
+      const option = document.createElement('option');
+      option.value = lang.code;
+      option.textContent = `${lang.flag} ${lang.name}`;
+      fragment.appendChild(option);
+    });
+    select.innerHTML = '';
+    select.appendChild(fragment);
+    if (Array.from(select.options).some((opt) => opt.value === current)) {
+      select.value = current;
+    } else {
+      select.value = 'cz';
+    }
+  }
 
 function getDefaultContentTagForTarget(targetRaw) {
   let target = String(targetRaw || 'cz').toLowerCase();
@@ -303,21 +352,22 @@ function saveAISettings() {
 }
 
 async function showPromptLangModal() {
-  const modal = document.getElementById('promptLangModal');
-  const savedLang = localStorage.getItem('strong_target_lang') || 'cz';
-  const savedSource = localStorage.getItem('strong_source_lang') || 'gr';
-  await populateUiLanguageSelect();
-  const savedUi = String(localStorage.getItem(UI_LANG_KEY) || getUiLang()).toLowerCase();
-  document.getElementById('targetLanguage').value = savedLang;
-  document.getElementById('sourceLanguage').value = savedSource;
-  const uiLanguageEl = document.getElementById('uiLanguage');
-  if (uiLanguageEl) uiLanguageEl.value = savedUi;
-  modal.style.display = 'flex';
-  // Close on backdrop click
-  modal.onclick = (e) => {
-    if (e.target === modal) closePromptLangModal();
-  };
-}
+   const modal = document.getElementById('promptLangModal');
+   const savedLang = localStorage.getItem('strong_target_lang') || 'cz';
+   const savedSource = localStorage.getItem('strong_source_lang') || 'gr';
+   await populateUiLanguageSelect();
+   populateTargetLanguageSelect();
+   const savedUi = String(localStorage.getItem(UI_LANG_KEY) || getUiLang()).toLowerCase();
+   document.getElementById('targetLanguage').value = savedLang;
+   document.getElementById('sourceLanguage').value = savedSource;
+   const uiLanguageEl = document.getElementById('uiLanguage');
+   if (uiLanguageEl) uiLanguageEl.value = savedUi;
+   modal.style.display = 'flex';
+   // Close on backdrop click
+   modal.onclick = (e) => {
+     if (e.target === modal) closePromptLangModal();
+   };
+ }
 
 function closePromptLangModal() {
    document.getElementById('promptLangModal').style.display = 'none';

@@ -820,13 +820,11 @@
    <button type="button" class="prompt-btn" id="btnLoadCustomLangFile" onclick="document.getElementById('loadCustomLangFileInput').click()">📂 Načíst vlastní jazyk (JSON)</button>
    <input type="file" id="loadCustomLangFileInput" class="is-hidden" accept=".json,application/json" onchange="loadCustomLangFile(event)" aria-label="Načíst vlastní jazykový soubor JSON" title="Načíst vlastní jazykový soubor JSON">
 </div>
- <div class="mobl-set-row">
-   <label id="targetLanguageLabel">Překlad do</label>
-   <select id="targetLanguage" class="prompt-ai-select" aria-label="Překlad do" title="Překlad do">
-     <option value="cz" selected>Čeština</option>
-     <option value="en">English</option>
-   </select>
- </div>
+<div class="mobl-set-row">
+    <label id="targetLanguageLabel">Překlad do</label>
+    <select id="targetLanguage" class="prompt-ai-select" aria-label="Překlad do" title="Překlad do">
+    </select>
+  </div>
 
       <div class="mobl-set-row prompt-lang-i18n-tool-row">
         <button type="button" class="prompt-btn lang" id="btnI18nTranslateTool" onclick="showI18nToolModal()">🌍 Překladač/Editor Jazyka rozhraní</button>
