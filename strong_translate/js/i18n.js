@@ -4,7 +4,7 @@ export const UI_LANG_KEY = 'strong_ui_lang';
 export const DEFAULT_UI_LANG = 'cs';
 // Pro úsporu údržby jsou aktivní pouze cs a en.
 // Ostatní jazyky jsou prázdné (soubory zůstávají pro budoucí rozšíření).
-export const UI_LANGS = new Set(['cs', 'en', 'de', 'sk', 'pl']);
+export const UI_LANGS = new Set(['cs', 'en', 'de', 'sk', 'pl', 'fr', 'es', 'it']);
 const FIXED_EN_KEYS = new Set([
   'detail.label.definitionEn',
   'export.field.definitionEn'
