@@ -2,13 +2,66 @@ import { PROVIDERS } from './config.js';
 
 export const UI_LANG_KEY = 'strong_ui_lang';
 export const DEFAULT_UI_LANG = 'cs';
-// Pro úsporu údržby jsou aktivní pouze cs a en.
-// Ostatní jazyky jsou prázdné (soubory zůstávají pro budoucí rozšíření).
 export const UI_LANGS = new Set(['cs', 'en', 'de', 'sk', 'pl', 'fr', 'es', 'it', 'uk', 'ru', 'ro', 'pt', 'bg', 'da', 'fi', 'hu', 'nl', 'no', 'sv', 'ar', 'el', 'tr', 'zh-cn', 'ja', 'ko', 'he']);
 const FIXED_EN_KEYS = new Set([
   'detail.label.definitionEn',
   'export.field.definitionEn'
 ]);
+
+// Map target language → prompt file code
+const TARGET_TO_PROMPT_CODE = {
+  cz: 'cs', cs: 'cs',
+  sk: 'sk',
+  pl: 'pl',
+  de: 'de',
+  fr: 'fr',
+  es: 'es',
+  it: 'it',
+  pt: 'pt',
+  ru: 'ru',
+  uk: 'uk',
+  bg: 'bg',
+  ro: 'ro',
+  da: 'da',
+  fi: 'fi',
+  hu: 'hu',
+  nl: 'nl',
+  no: 'no',
+  sv: 'sv',
+  ar: 'ar',
+  el: 'el',
+  tr: 'tr',
+  'zh-cn': 'zh-cn',
+  ja: 'ja',
+  ko: 'ko',
+  he: 'he',
+  en: 'en'
+};
+
+// Cache for prompt packs
+const PROMPT_PACK_CACHE = {};
+
+/**
+ * Preloads all prompt packs needed for UI and target languages.
+ */
+async function preloadPromptPacks() {
+  const codes = new Set(Object.values(TARGET_TO_PROMPT_CODE));
+  codes.add('cs');
+  codes.add('en');
+  const fetchPromises = Array.from(codes).map(async (code) => {
+    try {
+      const resp = await fetch(`./i18n/prompts.${code}.json`, { cache: 'no-store' });
+      if (resp.ok) {
+        PROMPT_PACK_CACHE[code] = await resp.json();
+      } else {
+        console.warn('[i18n] Prompt pack not found for code:', code, resp.status);
+      }
+    } catch (e) {
+      console.warn('[i18n] Error loading prompt pack', code, e.message);
+    }
+  });
+  await Promise.all(fetchPromises);
+}
 
 /** Cílový jazyk slovníku (strong_target_lang) → kód v závorkách v UI, pokud není zvolen ručně. */
 const TARGET_TO_CONTENT_TAG = {
@@ -213,63 +266,15 @@ export async function fetchUiDictionary(lang) {
 }
 
 /**
- * Načte AI prompt balíček pro daný cílový jazyk.
- * Pokud existuje prompts.{targetLang}.json, použije ho.
- * Jinak fallback na prompts.cs.json (default) nebo prompts.en.json.
+ * Načte AI prompt balíček pro daný cílový jazyk (synchronně z cache).
+ * Pokud je v cache, vrátí ho. Jinak vrátí fallback (cs nebo en).
  */
-export async function getPromptPack(targetLang) {
-  const tryFile = async (filename) => {
-    try {
-      const response = await fetch(`./i18n/${filename}`, { cache: 'no-store' });
-      if (response.ok) return await response.json();
-    } catch (_) {}
-    return null;
-  };
-
-  // Map target lang codes to prompt file codes
-  const targetToPromptCode = {
-    cz: 'cs', cs: 'cs',
-    sk: 'sk',
-    pl: 'pl',
-    de: 'de',
-    fr: 'fr',
-    es: 'es',
-    it: 'it',
-    pt: 'pt',
-    ru: 'ru',
-    uk: 'uk',
-    bg: 'bg',
-    ro: 'ro',
-    hu: 'hu',
-    nl: 'nl',
-    sv: 'sv',
-    da: 'da',
-    no: 'no',
-    fi: 'fi',
-    el: 'el',
-    tr: 'tr',
-    ar: 'ar',
-    'zh-cn': 'zh-cn',
-    ja: 'ja',
-    ko: 'ko',
-    he: 'he',
-    en: 'en'
-  };
-
+export function getPromptPack(targetLang) {
   const langCode = String(targetLang || 'cz').toLowerCase();
-  const promptCode = targetToPromptCode[langCode] || 'cs';
-
-  // Try target language prompt file first
-  const targetPack = await tryFile(`prompts.${promptCode}.json`);
-  if (targetPack) return targetPack;
-
-  // Fallback to cs, then en
-  const csPack = await tryFile('prompts.cs.json');
-  if (csPack) return csPack;
-
-  const enPack = await tryFile('prompts.en.json');
-  return enPack || {};
+  const promptCode = TARGET_TO_PROMPT_CODE[langCode] || 'cs';
+  return PROMPT_PACK_CACHE[promptCode] || PROMPT_PACK_CACHE['cs'] || PROMPT_PACK_CACHE['en'] || {};
 }
+
 
 /**
  * Načte AI prompt balíčky bez 404 pro každý jazyk zvlášť.
@@ -277,23 +282,15 @@ export async function getPromptPack(targetLang) {
  * Jazyk cs: balíček prompts.cs.json. Vše ostatní: prompts.en.json (anglické instrukce pro AI, i když UI není en).
  * Pokud prompts.en.json chybí, použije se cs balíček.
  */
+/**
+ * Načte AI prompt balíčky a přidá je do načtených UI zpráv.
+ * Používá cache PROMPT_PACK_CACHE, které by mělo být předem načteno.
+ */
 async function mergePromptPacksIntoLoaded(loaded) {
-  const tryFile = async (filename) => {
-    try {
-      const response = await fetch(`./i18n/${filename}`, { cache: 'no-store' });
-      if (response.ok) return await response.json();
-    } catch (_) {}
-    return null;
-  };
-  const packDefault = (await tryFile(`prompts.${DEFAULT_UI_LANG}.json`)) || {};
-  const packEnRaw = await tryFile('prompts.en.json');
-  const packEn =
-    packEnRaw && typeof packEnRaw === 'object' && Object.keys(packEnRaw).length
-      ? packEnRaw
-      : packDefault;
-
+  // Pro každý jazyk použijeme příslušný prompt pack z cache podle mapování
   for (const lang of Array.from(UI_LANGS)) {
-    const pack = lang === DEFAULT_UI_LANG ? packDefault : packEn;
+    const promptCode = TARGET_TO_PROMPT_CODE[lang] || lang;
+    const pack = PROMPT_PACK_CACHE[promptCode] || PROMPT_PACK_CACHE['cs'] || {};
     Object.assign(loaded[lang], pack);
   }
 }
@@ -329,8 +326,11 @@ export function loadUiMessages(force = false) {
       }
     }));
     try {
+      // Preload all prompt packs into cache before merging
+      await preloadPromptPacks();
       await mergePromptPacksIntoLoaded(loaded);
     } catch (err) {
+      console.warn('[i18n] Failed to merge prompt packs:', err);
     }
     UI_MESSAGES = loaded;
     validateUiMessages(UI_MESSAGES);
