@@ -933,6 +933,7 @@
   "i18nTool.runAnim.3": "⏳ Trwa tłumaczenie...",
   "i18nTool.eta.idle": "⏱ Oszacuj do końca: —",
   "i18nTool.langModal.title": "Wybierz języki docelowe",
+  "i18nTool.langModal.search": "Wyszukaj język…",
   "i18nTool.langModal.selectAll": "Zaznacz wszystko",
   "i18nTool.langModal.deselectAll": "Anuluj wybór",
   "i18nTool.langModal.done": "Zrobione",
