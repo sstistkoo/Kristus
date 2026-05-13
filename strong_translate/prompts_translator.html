@@ -74,6 +74,37 @@ async function mmTranslate(text, targetLang) {
   throw lastError;
 }
 
+// Apply regular substitutions (without the CZ fix)
+function applyRegularSubstitutions(text, langCode) {
+  // Sort longest search first
+  const sorted = [...substitutions].sort((a,b) => b.search.length - a.search.length);
+  for (const sub of sorted) {
+    const replacement = sub.replaces[langCode];
+    if (!replacement) continue;
+    // Case-insensitive replacement
+    const escaped = sub.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    text = text.replace(new RegExp(escaped, 'gi'), replacement);
+  }
+  return text;
+}
+
+// Apply substitutions after translation (includes regular subs and CZ fix)
+function applySubstitutions(text, langCode) {
+  // Apply regular substitutions
+  text = applyRegularSubstitutions(text, langCode);
+  // Replace standalone "CZ" with target language code (uppercase)
+  // This fixes consistency rules like "nach CZ" -> "nach DE" for German translation
+  text = text.replace(/\bCZ\b/g, targetLang.toUpperCase());
+  return text;
+}
+
+// Also apply substitutions to the CS source before translation
+// so translator doesn't get confused by "czechtina" phrases
+function prepareForTranslation(text, langCode) {
+  // First apply regular subs to source (without the CZ replacement)
+  return applyRegularSubstitutions(text, langCode);
+}
+
 // ─── TRANSLATE ONE ─────────────────────────────────────────────────────────────
 async function translateOne(langCode) {
   if (!csData) { toast('Nejprve načti JSON soubor', 'err'); return; }
