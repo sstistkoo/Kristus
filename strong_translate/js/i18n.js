@@ -31,7 +31,7 @@ const TARGET_TO_PROMPT_CODE = {
   ar: 'ar',
   el: 'el',
   tr: 'tr',
-  'zh-CN': 'zh-CN',
+   'zh-CN': 'zh_CN',
   ja: 'ja',
   ko: 'ko',
   he: 'he',
