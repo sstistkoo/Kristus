@@ -2,7 +2,7 @@ import { PROVIDERS } from './config.js';
 
 export const UI_LANG_KEY = 'strong_ui_lang';
 export const DEFAULT_UI_LANG = 'cs';
-export const UI_LANGS = new Set(['cs', 'en', 'de', 'sk', 'pl', 'fr', 'es', 'it', 'uk', 'ru', 'ro', 'pt', 'bg', 'da', 'fi', 'hu', 'nl', 'no', 'sv', 'ar', 'el', 'tr', 'zh-cn', 'ja', 'ko', 'he']);
+export const UI_LANGS = new Set(['cs', 'en', 'de', 'sk', 'pl', 'fr', 'es', 'it', 'uk', 'ru', 'ro', 'pt', 'bg', 'da', 'fi', 'hu', 'nl', 'no', 'sv', 'ar', 'el', 'tr', 'zh-CN', 'ja', 'ko', 'he']);
 const FIXED_EN_KEYS = new Set([
   'detail.label.definitionEn',
   'export.field.definitionEn'
@@ -31,7 +31,7 @@ const TARGET_TO_PROMPT_CODE = {
   ar: 'ar',
   el: 'el',
   tr: 'tr',
-  'zh-cn': 'zh-cn',
+  'zh-CN': 'zh-CN',
   ja: 'ja',
   ko: 'ko',
   he: 'he',
@@ -85,7 +85,7 @@ const TARGET_TO_CONTENT_TAG = {
   sv: 'SV',
   bg: 'BG',
   ch: 'zh-CN',
-  'zh-cn': 'ZH_CN',
+  'zh-CN': 'ZH_CN',
   sp: 'ES',
   gr: 'EL',
   he: 'HE',
@@ -117,34 +117,34 @@ export function getContentLangTag() {
   // Tag v závorkách řídíme jazykem UI, aby nebyl mix (např. Definition (EN) v češtině).
   const ui = getUiLang();
   
-  // Map UI language to content tag (brackets language)
-  const UI_TO_CONTENT_TAG = {
-    cs: 'CZ',
-    en: 'EN',
-    sk: 'SK',
-    pl: 'PL',
-    de: 'DE',
-    fr: 'FR',
-    es: 'ES',
-    it: 'IT',
-    pt: 'PT',
-    ru: 'RU',
-    da: 'DA',
-    fi: 'FI',
-    hu: 'HU',
-    nl: 'NL',
-    no: 'NO',
-    ro: 'RO',
-    sv: 'SV',
-  bg: 'BG',
-  el: 'EL',
-  ar: 'AR',
-  tr: 'TR',
-  'zh-cn': 'ZH_CN',
-  ja: 'JA',
-  ko: 'KO',
-  he: 'HE',
-  uk: 'UK'
+   // Map UI language to content tag (brackets language)
+   const UI_TO_CONTENT_TAG = {
+     cs: 'CZ',
+     en: 'EN',
+     sk: 'SK',
+     pl: 'PL',
+     de: 'DE',
+     fr: 'FR',
+     es: 'ES',
+     it: 'IT',
+     pt: 'PT',
+     ru: 'RU',
+     da: 'DA',
+     fi: 'FI',
+     hu: 'HU',
+     nl: 'NL',
+     no: 'NO',
+     ro: 'RO',
+     sv: 'SV',
+   bg: 'BG',
+   el: 'EL',
+   ar: 'AR',
+   tr: 'TR',
+   'zh-CN': 'ZH_CN',
+   ja: 'JA',
+   ko: 'KO',
+   he: 'HE',
+   uk: 'UK'
 };
   
   const uiTag = UI_TO_CONTENT_TAG[ui];
@@ -227,9 +227,9 @@ export const INLINE_UI_MESSAGES = {
   tr: {
     'toast.error.withMessage': '✗ Hata: {message}'
   },
-  'zh-cn': {
-    'toast.error.withMessage': '✗ 错误: {message}'
-  },
+   'zh-CN': {
+     'toast.error.withMessage': '✗ 错误: {message}'
+   },
   he: {
     'toast.error.withMessage': '✗ Error: {message}'
   },
@@ -256,12 +256,6 @@ export async function fetchUiDictionary(lang) {
   const url = `./i18n/${lang}.json`;
   const response = await fetch(url, { cache: 'no-store' });
   if (response.ok) return response.json();
-  // GitHub/file-system case mismatch fallback: try capitalized zh-CN variant
-  if (lang === 'zh-cn') {
-    const altUrl = './i18n/zh-CN.json';
-    const altResponse = await fetch(altUrl, { cache: 'no-store' });
-    if (altResponse.ok) return altResponse.json();
-  }
   throw new Error(`HTTP ${response.status} for ${url}`);
 }
 
