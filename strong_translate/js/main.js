@@ -4859,17 +4859,23 @@ function printRecentAICalls() {
  }
  window.startTopicRepairFlowForMissing = startTopicRepairFlowForMissing;
 
- // Cleanup on page unload - auto-save progress
-window.addEventListener('beforeunload', () => {
-  if (state.autoTimer) clearTimeout(state.autoTimer);
-  if (state.autoCountTimer) clearInterval(state.autoCountTimer);
-  if (state.autoProviderCountdownTimer) clearInterval(state.autoProviderCountdownTimer);
-  stopTopicRepairTicker();
-  if (state.elapsedTimer) clearInterval(state.elapsedTimer);
-  stopResize();
-  // Debounced save mus� b�t proveden synchronne pred zavren�m
-  saveProgress.flush();
-});
+  // Cleanup on page unload - auto-save progress
+  window.addEventListener('beforeunload', () => {
+    if (state.autoTimer) clearTimeout(state.autoTimer);
+    if (state.autoCountTimer) clearInterval(state.autoCountTimer);
+    if (state.autoProviderCountdownTimer) clearInterval(state.autoProviderCountdownTimer);
+    stopTopicRepairTicker();
+    if (state.elapsedTimer) clearInterval(state.elapsedTimer);
+    stopResize();
+    // Debounced save mus� b�t proveden synchronne pred zavren�m
+    saveProgress.flush();
+  });
+  
+  // Expose toggleMenu to global scope
+  window.toggleMenu = function() {
+    const menuPanel = document.getElementById('menuPanel');
+    menuPanel.classList.toggle('is-hidden');
+  };
 // Pri skryt� tabu tak� flushni, aby se nic neztratilo
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') saveProgress.flush();
