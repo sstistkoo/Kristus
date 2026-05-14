@@ -66,6 +66,10 @@ let uiLangAvailabilityCache = null;
 const I18N_TOOL_PREFILL_LANG_KEY = 'strong_i18n_tool_prefill_lang';
 
 async function listI18nJsonFilesFromDirectory() {
+  // GitHub Pages (a další static hosts) neumožňují directory listing → přeskočit a použít fallback
+  if (typeof window !== 'undefined' && window.location.hostname.includes('github.io')) {
+    return null;
+  }
   try {
     const res = await fetch('./i18n/', { cache: 'no-store' });
     if (!res.ok) return null;
