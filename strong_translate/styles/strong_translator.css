@@ -473,6 +473,47 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
 .hbtn.auto:hover { background: var(--grn); color: var(--bg); }
 .hbtn.auto.active { background: var(--red); border-color: var(--red); color: var(--txt); animation: none; }
 
+/* Dropdown menu styles */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: var(--bg2);
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  border: 1px solid var(--brd);
+  border-radius: 4px;
+  margin-top: 4px;
+  right: 0;
+}
+
+.dropdown-content .hbtn {
+  color: var(--txt2);
+  padding: 8px 12px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dropdown-content .hbtn:hover {
+  background-color: var(--bg3);
+  border-color: var(--acc);
+  color: var(--acc);
+}
+
+.show {
+  display: block;
+}
+
 /* Auto panel */
 .auto-panel {
   background: var(--bg2);

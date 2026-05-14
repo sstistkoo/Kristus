@@ -1467,6 +1467,11 @@ function toggleListPane() {
   }
 }
 
+function toggleMenu() {
+  const menuPanel = document.getElementById('menuPanel');
+  menuPanel.classList.toggle('is-hidden');
+}
+
 // -- START --------------------------------------------------------
 function startApp() {
   // Uka� loading hned

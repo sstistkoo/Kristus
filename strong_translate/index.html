@@ -193,8 +193,22 @@
        <button class="hbtn" id="btnTopicRepair" onclick="startTopicRepairFlowForMissing()" title="Opravit chybějící témata" aria-label="Opravit chybějící témata">
          🗔 <span id="topicRepairLabel">Oprava témat</span> <span id="topicRepairCount"></span>
        </button>
-       <button class="hbtn" id="btnAISettingsDesktop" onclick="showSettingsModal()" title="Nastavení AI (provider, model, dávka)" aria-label="Nastavení AI">⚙ Nastavení AI</button>
-      <button class="hbtn red" id="mobileMenuBtn" onclick="showMobileActions()" aria-label="Zobrazit akce">☰</button>
+<button class="hbtn" id="btnAISettingsDesktop" onclick="showSettingsModal()" title="Nastavení AI (provider, model, dávka)" aria-label="Nastavení AI">⚙ Nastavení AI</button>
+  <div class="dropdown">
+    <button class="hbtn" id="btnMenu" onclick="toggleMenu()" title="Menu" aria-label="Menu">☰ Menu</button>
+    <div id="menuPanel" class="menu-panel is-hidden">
+      <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů (nejdřív modal, pak ▶ Test provideru)" aria-label="Test modelů — otevře nastavení">🧪 Test modelů</button>
+      <button class="hbtn" id="btnBadTranslations" onclick="showBadTranslationsModal()" title="Seznam špatných překladů (angličtina → čeština)" aria-label="Zobrazit seznam špatných překladů">📖 Špatné překlady</button>
+      <button class="hbtn" id="btnExportBadTranslations" onclick="exportBadTranslationsJSON()" title="Exportovat seznam špatných překladů do JSON" aria-label="Exportovat špatné překlady">⬇ Export JSON</button>
+      <button class="hbtn red" id="btnCleanupBackups" onclick="cleanupOldBackups()" title="Vymazat staré zálohy a undo" aria-label="Vymazat staré zálohy">🧹 Zálohy</button>
+      <button class="hbtn" id="btnExportRange" onclick="exportRange()" title="Export vybraného rozsahu G čísel" aria-label="Exportovat rozsah G čísel">⬇ Rozsah</button>
+      <button class="hbtn red" id="btnFailedEntries" onclick="showFailedEntries()" title="Zobrazit neúspěšné překlady" aria-label="Zobrazit neúspěšné překlady">⚠ Neus. <span id="failedCount"></span></button>
+      <button class="hbtn" id="btnTopicRepair" onclick="startTopicRepairFlowForMissing()" title="Opravit chybějící témata" aria-label="Opravit chybějící témata">
+        🗔 <span id="topicRepairLabel">Oprava témat</span> <span id="topicRepairCount"></span>
+      </button>
+    </div>
+  </div>
+       <button class="hbtn red" id="mobileMenuBtn" onclick="showMobileActions()" aria-label="Zobrazit akce">☰</button>
     </div>
   </div>
 
