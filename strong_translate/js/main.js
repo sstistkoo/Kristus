@@ -2074,6 +2074,7 @@ const settingsModalsApi = createSettingsModalsApi({
   setPipelineSecondaryEnabled: (...a) => setPipelineSecondaryEnabled(...a),
   syncSecondaryProviderToggles: (...a) => syncSecondaryProviderToggles(...a),
   updateAutoProviderCountdowns: (...a) => updateAutoProviderCountdowns(...a),
+  updateStats: headerApi.updateStats,
 });
 const { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile } = settingsModalsApi;
 

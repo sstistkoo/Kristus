@@ -34,8 +34,25 @@ export function createHeaderApi({ state, t, getTranslationStateForKey, storeKey,
   }
 
   function updateStats() {
-    const done = Object.values(state.translated).filter(tr => isTranslationComplete(tr)).length;
-    const total = state.entries.length;
+    const doneAll = Object.values(state.translated).filter(tr => isTranslationComplete(tr)).length;
+    // Filtrovat entries dle zdrojového jazyka
+    const sourceLang = (localStorage.getItem('strong_source_lang') || 'gr').toLowerCase();
+    const includeG = sourceLang === 'gr' || sourceLang === 'both';
+    const includeH = sourceLang === 'he' || sourceLang === 'both';
+    let relevantEntries = state.entries;
+    if (!includeG || !includeH) {
+      relevantEntries = state.entries.filter(e => (includeG && e.key.startsWith('G')) || (includeH && e.key.startsWith('H')));
+    }
+    const total = relevantEntries.length;
+    // Přepočítat done jen pro relevantní klíče
+    let done = doneAll;
+    if (!includeG || !includeH) {
+      const relevantKeys = new Set(relevantEntries.map(e => e.key));
+      done = 0;
+      for (const key of Object.keys(state.translated)) {
+        if (relevantKeys.has(key) && isTranslationComplete(state.translated[key])) done++;
+      }
+    }
     const remain = total - done;
     const pct = total ? (done / total * 100).toFixed(1) : 0;
     document.getElementById('sDone').textContent = done;

@@ -2,7 +2,7 @@ import { t, getUiLang, getDefaultContentTag, CONTENT_TAG_LANG_KEY, CONTENT_TAG_L
 import { safeSetLocalStorage, safeRemoveLocalStorage } from '../storage.js';
 import { BATCH_SIZE_KEY, INTERVAL_KEY } from '../config.js';
 
-export function createSettingsModalsApi({ initRunSelects, updateSetupCompactSummary, initPipelineModelSelectors, initPipelineModelSelectorsInSettingsModal, showToast, refreshTopicLabels, renderList, saveProgress, refreshLanguageAwarePromptOptionLabels, applySystemPromptForCurrentTask, applyUiLanguage, DEFAULT_UI_LANG, UI_LANGS, UI_LANG_KEY, setPipelineModelForProvider, setPipelineSecondaryEnabled, syncSecondaryProviderToggles, updateAutoProviderCountdowns }) {
+export function createSettingsModalsApi({ initRunSelects, updateSetupCompactSummary, initPipelineModelSelectors, initPipelineModelSelectorsInSettingsModal, showToast, refreshTopicLabels, renderList, saveProgress, refreshLanguageAwarePromptOptionLabels, applySystemPromptForCurrentTask, applyUiLanguage, DEFAULT_UI_LANG, UI_LANGS, UI_LANG_KEY, setPipelineModelForProvider, setPipelineSecondaryEnabled, syncSecondaryProviderToggles, updateAutoProviderCountdowns, updateStats }) {
 
 const UI_LANGUAGE_CATALOG = [
   { code: 'cs', fileCode: 'cs', labelCode: 'cs', name: 'Čeština', flag: '🇨🇿' },
@@ -422,12 +422,15 @@ function saveLangSettings() {
    safeSetLocalStorage(UI_LANG_KEY, ui, 'settingsModals');
    safeRemoveLocalStorage(CONTENT_TAG_LANG_KEY, 'settingsModals');
    safeRemoveLocalStorage(CONTENT_TAG_LANG_MANUAL_KEY, 'settingsModals');
-   refreshLanguageAwarePromptOptionLabels();
-   applySystemPromptForCurrentTask();
-   applyUiLanguage();
-   updatePromptLangButtonLabel();
-   closePromptLangModal();
-   showToast(t('toast.lang.settings.saved'));
+    refreshLanguageAwarePromptOptionLabels();
+    applySystemPromptForCurrentTask();
+    applyUiLanguage();
+    updatePromptLangButtonLabel();
+    // Aktualizace seznamu a statistik po změně zdrojového jazyka
+    renderList();
+    updateStats();
+    closePromptLangModal();
+    showToast(t('toast.lang.settings.saved'));
  }
 
   return { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile };
