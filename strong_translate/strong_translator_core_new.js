@@ -178,7 +178,7 @@ function normalizeReferences(input) {
 }
 
 export function parseTranslations(raw, keys, translated = {}) {
-  const normalized = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+   const normalized = String(raw || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const blocks = normalized.split(/(?=###(?:[GH])?\d+###)/);
   
   const numToKey = {};
