@@ -264,10 +264,12 @@ export function createAutoApi(deps) {
     return Number.isNaN(fromStorage) ? 0 : Math.max(0, fromStorage);
   }
 
-  function isAutoTokenLimitReached() {
-    const limit = getAutoTokenLimit();
-    return limit > 0 && state.groqTokens.total >= limit;
-  }
+   function isAutoTokenLimitReached() {
+     const limit = getAutoTokenLimit();
+     if (limit <= 0) return false;
+     const total = state.totalTokens.total;
+     return total >= limit;
+   }
 
   function refreshTokenStatsDisplay() {
     const el = document.getElementById('tokenStats');

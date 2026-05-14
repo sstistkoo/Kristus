@@ -406,24 +406,27 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
   }
 }
 
-  // Use core module with error handling
-  function parseTranslations(raw, keys) {
-    try {
-      const parsed = parseWithOpenRouterNormalization(raw, keys, state.translated);
-      if (parsed.normalizedUsed) {
-        log('ℹ AUTO_NORMALIZOVANO_Z_OPENROUTER_FORMATU');
-      }
-      return parsed.missing;
-    } catch(e) {
-      logError('parseTranslations', e, {
-        rawLength: raw?.length,
-        keysCount: keys?.length,
-        keysSample: keys?.slice(0, 5)
-      });
-      // Return all keys as missing to trigger retry
-      return keys;
-    }
-  }
+   // Use core module with error handling
+   function parseTranslations(raw, keys) {
+     try {
+       const parseTarget = {}; // lokální objekt
+       const parsed = parseWithOpenRouterNormalization(raw, keys, parseTarget);
+       if (parsed.normalizedUsed) {
+         log('ℹ AUTO_NORMALIZOVANO_Z_OPENROUTER_FORMATU');
+       }
+       // Úspěšný parsing - merge výsledků do stavu
+       Object.assign(state.translated, parseTarget);
+       return parsed.missing;
+     } catch(e) {
+       logError('parseTranslations', e, {
+         rawLength: raw?.length,
+         keysCount: keys?.length,
+         keysSample: keys?.slice(0, 5)
+       });
+       // Return all keys as missing to trigger retry
+       return keys;
+     }
+   }
 
    return { callAIWithRetry, callOnce, getTranslationEngineLabel, getProviderConfiguredModels, getFallbackModels, parseTranslations, getRecentAICalls };
 }
