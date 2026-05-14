@@ -12,8 +12,27 @@ function tp(key, fallback) {
   return v !== key ? v : fallback;
 }
 
+// Načte překlad podle cílového jazyka překladu (strong_target_lang)
+function tTargetLang(key, fallback) {
+  const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+  // Mapování na kód souboru prompts
+  const langToFileCode = {
+    cz: 'cs', cs: 'cs', sk: 'sk', pl: 'pl', de: 'de', fr: 'fr', es: 'es', it: 'it',
+    pt: 'pt', ru: 'ru', uk: 'uk', bg: 'bg', ro: 'ro', da: 'da', fi: 'fi', hu: 'hu',
+    nl: 'nl', no: 'no', sv: 'sv', ar: 'ar', el: 'el', tr: 'tr', 'zh-cn': 'zh_CN',
+    ja: 'ja', ko: 'ko', he: 'he', en: 'en', gr: 'el'
+  };
+  const fileCode = langToFileCode[targetLang] || 'cs';
+  
+  // Zkusíme načíst z UI_MESSAGES (byly načteny mergePromptPacksIntoLoaded)
+  const UI_MESSAGES = window?.UI_MESSAGES || {};
+  const promptMessages = UI_MESSAGES[fileCode] || UI_MESSAGES.cs || {};
+  const v = promptMessages[key];
+  return v !== undefined ? v : fallback;
+}
+
 export function getResolvedSystemMessage() {
-  return tp('aiPrompts.core.system', core.SYSTEM_MESSAGE);
+  return tTargetLang('aiPrompts.core.system', core.SYSTEM_MESSAGE);
 }
 
 export function getResolvedDefaultPrompt() {

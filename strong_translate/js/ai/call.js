@@ -275,8 +275,9 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
        log(`📊 Groq: ${d.usage.prompt_tokens} in / ${d.usage.completion_tokens} out / ${d.usage.total_tokens} total`);
      }
      const content = d.choices[0].message.content;
-    // Kontrola na nesmyslnou odpověď
-    const weirdChars = (content.match(/[^\x20-\x7E\n\r\těščřžýáíéúůťďňĚŠČŘŽÝÁÍÉÚŮŤĎŇ]/g) || []).length;
+// Kontrola na nesmyslnou odpověď
+     // Povolíme: ASCII, české znaky, ruční cyrilici (ruština), a běžné interpunkce
+     const weirdChars = (content.match(/[^\x20-\x7E\n\r\těščřžýáíéúůťďňĚŠČŘŽÝÁÍÉÚŮŤĎŇЀЁЂЃЄЅІЇЈЉЊЋЌЍЎЏЂЂ‡§¶·\u0400-\u04FF\u0500-\u052F]/g) || []).length;
     if (content.length > 0 && weirdChars > content.length * 0.5) {
       throw new Error(t('ai.error.gibberishResponse'));
     }

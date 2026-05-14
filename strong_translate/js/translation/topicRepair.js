@@ -4,22 +4,16 @@ import { hasMeaningfulValue, isDefinitionLowQuality, isDefinitionLikelyEnglish, 
 import { sleepMs } from '../utils.js';
 import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPromptsResolve.js';
 
-// ─── VÝCHOZÍ SYSTÉMOVÝ PROMPT PRO DÁVKOVOU OPRAVU TÉMAT ───
-const BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT = `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+// ─── VÝCHOZÍ SYSTÉMOVÝ PROMPT PRO DÁVKOVOU OPRAVU TÉMAT ─── (načítá se dynamicky podle jazyka)
 
-// ─── TÉMAT-SPECIFICKÉ DOPLŇKY PRO SYSTÉMOVÝ PROMPT ───
+// ─── TÉMAT-SPECIFICKÉ DOPLŇKY PRO SYSTÉMOVÝ PROMPT ─── (používají dynamicky načtený prompt)
 const TOPIC_SPECIFIC_SYSTEM_PROMPTS = {
-  definice: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
-
-  vyznam: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
-
-  kjv: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
-
-  puvod: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
-
-  specialista: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`,
-
-  all: `Jsi expert na biblistiku, koine řečtinu, hebrewštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny. Režim „Vše“: seznam řádků filtruješ zaškrtávkami výše. Hromadný překlad postupně použije uložený batch prompt pro každé zaškrtnuté téma.`
+   definice: null, // načte se dynamicky
+   vyznam: null,
+   kjv: null,
+   puvod: null,
+   specialista: null,
+   all: null
 };
 
 // ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
@@ -94,8 +88,12 @@ HESLA:
 };
 
 function getDefaultBatchTopicSystemPrompt(topicId) {
-  return TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId] || BATCH_REPAIR_DEFAULT_SYSTEM_PROMPT;
-}
+   const resolved = getResolvedSystemMessage();
+   if (TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId]) {
+     return TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId];
+   }
+   return resolved || `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+ }
 
 function getDefaultBatchTopicUserPrompt(topicId) {
   const template = TOPIC_BATCH_TEMPLATES[topicId] || getResolvedDefaultPrompt() || '';

@@ -140,13 +140,38 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+const TARGET_LANG_CHAR_SETS = {
+  cz: /[áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/,
+  cs: /[áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/,
+  sk: /[áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/,
+  ru: /[\u0400-\u04FF\u0500-\u052F]/,
+  bg: /[\u0400-\u04FF\u0500-\u052F]/,
+  ch: /[äöüàéèìùáéíóúý]/,
+  sp: /[áéíóúüñ¿¡]/,
+  pl: /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/
+};
+
+export function hasTargetLangWord(text) {
+  const s = String(text || '').trim();
+  if (!s) return false;
+  const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+  const charSet = TARGET_LANG_CHAR_SETS[targetLang] || TARGET_LANG_CHAR_SETS.cz;
+  return charSet.test(s);
+}
+
 export function hasCzechWord(text) {
   const s = String(text || '').trim();
   if (!s) return false;
+  const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+  if (targetLang === 'ru' || targetLang === 'bg') {
+    const cyrillic = /[\u0400-\u04FF\u0500-\u052F]/;
+    if (cyrillic.test(s)) return true;
+    return false;
+  }
   const czechDiacritics = /[áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/;
   const words = s.split(/\s+/);
   return words.some(word => czechDiacritics.test(word));
-}
+ }
 
 export function isDefinitionLikelyEnglish(text) {
   const s = stripDefinitionOriginReferenceTail(String(text || '').trim());
@@ -169,12 +194,14 @@ export function isDefinitionLowQuality(text) {
   // Definice má být věcná; krátké, ale smysluplné formulace nechceme trestat.
   const words = s.split(/\s+/).filter(Boolean);
   const hasStructure = /[,:;()]/.test(s);
-  const hasCzechDiacritics = /[áčďéěíňóřšťúůýž]/i.test(s);
-  // Povolit 1–2 slova, pokud obsahují českou diakritiku (jako "dávka")
-  if (words.length <= 2 && hasCzechDiacritics) return false;
+  const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+  const langChars = TARGET_LANG_CHAR_SETS[targetLang] || TARGET_LANG_CHAR_SETS.cz;
+  const hasTargetLangChars = langChars.test(s);
+  // Povolit 1–2 slova, pokud obsahují znaky cílového jazyka
+  if (words.length <= 2 && hasTargetLangChars) return false;
   if (words.length < 4) return true;
   if (s.length < 30 && !hasStructure) return true;
-  if (words.length < 6 && s.length < 45 && !hasStructure && !hasCzechDiacritics) return true;
+  if (words.length < 6 && s.length < 45 && !hasStructure && !hasTargetLangChars) return true;
   return false;
 }
 
@@ -329,22 +356,28 @@ export function isTopicValueProblematic(key, topicId, value, translatedEntry) {
     if (isDefinitionLikelyEnglish(value)) return 'quality';
   }
 
-  // 3. Pro KJV - pokud je velmi krátké (1-2 slova) a neobsahuje českou diakritiku → pravděpodobně chybí/špatný
+  // 3. Pro KJV - pokud je velmi krátké (1-2 slova) a neobsahuje znaky cílového jazyka → pravděpodobně chybí/špatný
   if (topicId === 'kjv') {
     const words = String(value).trim().split(/\s+/).filter(Boolean);
-    if (words.length <= 2 && !/[áčďéěíňóřšťúůýž]/i.test(value)) return 'quality';
+    const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+    const langChars = TARGET_LANG_CHAR_SETS[targetLang] || TARGET_LANG_CHAR_SETS.cz;
+    if (words.length <= 2 && !langChars.test(value)) return 'quality';
   }
 
   // 4. Pro původ - pokud je příliš krátký (bez diakritiky/slov) → podezřelé
   if (topicId === 'puvod') {
     const words = String(value).trim().split(/\s+/).filter(Boolean);
-    if (words.length <= 2 && !/[áčďéěíňóřšťúůýžäöüß]/i.test(value)) return 'quality';
+    const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+    const langChars = TARGET_LANG_CHAR_SETS[targetLang] || TARGET_LANG_CHAR_SETS.cz;
+    if (words.length <= 2 && !langChars.test(value)) return 'quality';
   }
 
   // 5. Pro význam - pokud je 1-2 slova bez diakritiky
   if (topicId === 'vyznam') {
     const words = String(value).trim().split(/\s+/).filter(Boolean);
-    if (words.length <= 2 && !/[áčďéěíňóřšťúůýž]/i.test(value)) return 'quality';
+    const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+    const langChars = TARGET_LANG_CHAR_SETS[targetLang] || TARGET_LANG_CHAR_SETS.cz;
+    if (words.length <= 2 && !langChars.test(value)) return 'quality';
   }
 
   // 6. Specialista - pokud je velmi krátký (< 20 znaků) → neodborný
