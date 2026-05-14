@@ -314,99 +314,118 @@ export function createListApi({
     }
   }
 
-   async function translateSelected() {
-     const activeProvider = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
-     if (!isAutoProviderEnabled(activeProvider)) {
-       showToast(t('toast.provider.enableOne'));
-       return;
-     }
-     const sourceLang = localStorage.getItem('strong_source_lang') || 'gr';
-     const includeG = sourceLang === 'gr' || sourceLang === 'both';
-     const includeH = sourceLang === 'he' || sourceLang === 'both';
-     let keys = Array.from(state.selectedKeys);
-     
-     // Filter keys based on source language setting
-     keys = keys.filter(key => {
-       const startsWithG = key.startsWith('G');
-       const startsWithH = key.startsWith('H');
-       return (includeG && startsWithG) || (includeH && startsWithH);
-     });
-     
-     if (!keys.length) return;
-     const filterStatus = document.getElementById('filterStatus')?.value || '';
-     if (filterStatus === 'missing_topic') {
-       startTopicRepairFlow(keys);
-       return;
-     }
-
-    const bs = parseInt(document.getElementById('batchSizeRun')?.value) || 10;
-    let processed = 0;
-    let allNewTranslations = {};
-
-    while (processed < keys.length) {
-      const batchKeys = keys.slice(processed, processed + bs);
-      document.getElementById('btnTranslateSelected').textContent = `⏳ ${processed + batchKeys.length}/${keys.length}...`;
-
+    async function translateSelected() {
+      // Zastavit pokud už běží
+      if (state.selectedTranslationRunning) {
+        state.selectedTranslationRunning = false;
+        document.getElementById('btnTranslateSelected').textContent = t('list.translateSelected');
+        return;
+      }
+      
+      state.selectedTranslationRunning = true;
+      
       try {
-        const beforeMap = {};
-        for (const key of batchKeys) {
-          beforeMap[key] = state.translated[key] ? JSON.stringify(state.translated[key]) : '';
+        const activeProvider = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
+        if (!isAutoProviderEnabled(activeProvider)) {
+          showToast(t('toast.provider.enableOne'));
+          return;
         }
-        await translateBatch(batchKeys);
-        const newTranslations = {};
-        for (const key of batchKeys) {
-          const after = state.translated[key] ? JSON.stringify(state.translated[key]) : '';
-          if (after && after !== beforeMap[key]) {
-            newTranslations[key] = { ...state.translated[key] };
-          }
-        }
-        allNewTranslations = { ...allNewTranslations, ...newTranslations };
-        saveProgress();
-        updateFailedCount();
-        renderList();
-      } catch (e) {
-        logError('translateSelected', e, {
-          batchKeys,
-          batchSize: batchKeys.length,
-          provider: activeProvider,
-          model: getPipelineModelForProvider(activeProvider)
+        const sourceLang = localStorage.getItem('strong_source_lang') || 'gr';
+        const includeG = sourceLang === 'gr' || sourceLang === 'both';
+        const includeH = sourceLang === 'he' || sourceLang === 'both';
+        let keys = Array.from(state.selectedKeys);
+        
+        // Filter keys based on source language setting
+        keys = keys.filter(key => {
+          const startsWithG = key.startsWith('G');
+          const startsWithH = key.startsWith('H');
+          return (includeG && startsWithG) || (includeH && startsWithH);
         });
-        showToast(t('toast.error.withMessage', { message: e.message }));
+        
+        if (!keys.length) return;
+        const filterStatus = document.getElementById('filterStatus')?.value || '';
+        if (filterStatus === 'missing_topic') {
+          startTopicRepairFlow(keys);
+          return;
+        }
+
+       const bs = parseInt(document.getElementById('batchSizeRun')?.value) || 10;
+       let processed = 0;
+       let allNewTranslations = {};
+
+       while (processed < keys.length && state.selectedTranslationRunning) {
+         const batchKeys = keys.slice(processed, processed + bs);
+         document.getElementById('btnTranslateSelected').textContent = `⏳ ${processed + batchKeys.length}/${keys.length}...`;
+
+         try {
+           const beforeMap = {};
+           for (const key of batchKeys) {
+             beforeMap[key] = state.translated[key] ? JSON.stringify(state.translated[key]) : '';
+           }
+           await translateBatch(batchKeys);
+           const newTranslations = {};
+           for (const key of batchKeys) {
+             const after = state.translated[key] ? JSON.stringify(state.translated[key]) : '';
+             if (after && after !== beforeMap[key]) {
+               newTranslations[key] = { ...state.translated[key] };
+             }
+           }
+           allNewTranslations = { ...allNewTranslations, ...newTranslations };
+           saveProgress();
+           updateFailedCount();
+           renderList();
+         } catch (e) {
+           logError('translateSelected', e, {
+             batchKeys,
+             batchSize: batchKeys.length,
+             provider: activeProvider,
+             model: getPipelineModelForProvider(activeProvider)
+           });
+           showToast(t('toast.error.withMessage', { message: e.message }));
+         }
+
+         processed += batchKeys.length;
+
+         if (processed < keys.length && state.selectedTranslationRunning) {
+           const interval = parseInt(document.getElementById('intervalRun')?.value) ||
+                            parseInt(document.getElementById('interval')?.value) || 20;
+           document.getElementById('btnTranslateSelected').textContent = t('list.translateWaiting', { seconds: interval });
+           await new Promise(r => setTimeout(r, interval * 1000));
+         }
+       }
+
+        if (!state.selectedTranslationRunning) {
+          // Přerušeno uživatelem
+          document.getElementById('btnTranslateSelected').textContent = t('list.translateSelected');
+          return;
+        }
+
+        state.selectedKeys.clear();
+        renderList();
+
+        // Počkej na dokončení všech sekundárních fallbacks (Gemini/OpenRouter)
+        if (state.sideFallbackBackgroundQueue) {
+          try {
+            await state.sideFallbackBackgroundQueue;
+          } catch (e) {}
+        }
+
+        // Auto-open Topic Repair modal if any translated entries still have missing topics
+        startTopicRepairFlow(keys);
+
+        updateFailedCount();
+        document.getElementById('btnTranslateSelected').textContent = t('list.translateSelected');
+
+       if (Object.keys(allNewTranslations).length > 0) {
+         showPreviewModal(allNewTranslations);
+         showToast(t('toast.translated.count', { count: Object.keys(allNewTranslations).length }));
+       } else {
+         showToast(t('toast.translation.none'));
+       }
+      } finally {
+        state.selectedTranslationRunning = false;
       }
-
-      processed += batchKeys.length;
-
-      if (processed < keys.length) {
-        const interval = parseInt(document.getElementById('intervalRun')?.value) ||
-                         parseInt(document.getElementById('interval')?.value) || 20;
-        document.getElementById('btnTranslateSelected').textContent = t('list.translateWaiting', { seconds: interval });
-        await new Promise(r => setTimeout(r, interval * 1000));
-      }
-    }
-
-     state.selectedKeys.clear();
-     renderList();
-
-     // Počkej na dokončení všech sekundárních fallbacks (Gemini/OpenRouter)
-     if (state.sideFallbackBackgroundQueue) {
-       try {
-         await state.sideFallbackBackgroundQueue;
-       } catch (e) {}
-     }
-
-     // Auto-open Topic Repair modal if any translated entries still have missing topics
-     startTopicRepairFlow(keys);
-
-     updateFailedCount();
-     document.getElementById('btnTranslateSelected').textContent = t('list.translateSelected');
-
-    if (Object.keys(allNewTranslations).length > 0) {
-      showPreviewModal(allNewTranslations);
-      showToast(t('toast.translated.count', { count: Object.keys(allNewTranslations).length }));
-    } else {
-      showToast(t('toast.translation.none'));
-    }
-  }
+   }
 
   return {
     getFilteredEntries,
