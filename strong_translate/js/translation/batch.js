@@ -754,12 +754,13 @@ async function translateBatch(keys, depth = 0) {
   const batch = keys.map(k => state.entryMap.get(k)).filter(Boolean);
   const messages = buildPromptMessages(batch);
 
-  // Ozna?it klí?e jako "p?ekládané" hned na za?átku, aby se nepoužily znovu
-  for (const key of keys) {
-    if (!state.translated[key]) {
-      state.translated[key] = { vyznam: null, _processing: true };
-    }
-  }
+   // Ozna?it klí?e jako "p?ekládané" hned na za?átku, aby se nepoužily znovu
+   const processingKeys = [...keys];
+   for (const key of keys) {
+     if (!state.translated[key]) {
+       state.translated[key] = { vyznam: null, _processing: true };
+     }
+   }
 
   const reqStart = performance.now();
   try {

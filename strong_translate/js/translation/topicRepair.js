@@ -713,11 +713,11 @@ async function processTopicRepairQueue() {
           updateTopicRepairProviderStatus();
         }
       }
-      if (!success) {
-        nextTask.status = 'failed';
-      }
-      updateTopicRepairModalUI();
-       saveProgress();
+       if (!success) {
+         nextTask.status = 'failed';
+       }
+       updateTopicRepairModalUI();
+       await saveProgress();
        await sleepMs(state.currentInterval * 1000);
     }
     updateTopicRepairModalUI();
