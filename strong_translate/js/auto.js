@@ -56,22 +56,23 @@ export function createAutoApi(deps) {
     }, 50);
   }
 
-  function stopAuto() {
-    state.autoRunning = false;
-    state.sideFallbackAbortVersion++;
-    clearTimeout(state.autoTimer);
-    clearInterval(state.autoCountTimer);
-    document.getElementById('btnAuto')?.classList.remove('active');
-    const btnAuto = document.getElementById('btnAuto');
-    if (btnAuto) btnAuto.textContent = t('auto.button.start');
-    if (window.innerWidth <= 600) {
-      document.getElementById('autoPanel')?.classList.remove('show');
-    }
-    const countdown = document.getElementById('countdown');
-    if (countdown) countdown.textContent = '—';
-    updateAutoProviderCountdowns();
-    stopElapsedTimer();
-  }
+   function stopAuto() {
+     state.autoRunning = false;
+     state.autoStepRunning = false; // ← přidáno
+     state.sideFallbackAbortVersion++;
+     clearTimeout(state.autoTimer);
+     clearInterval(state.autoCountTimer);
+     document.getElementById('btnAuto')?.classList.remove('active');
+     const btnAuto = document.getElementById('btnAuto');
+     if (btnAuto) btnAuto.textContent = t('auto.button.start');
+     if (window.innerWidth <= 600) {
+       document.getElementById('autoPanel')?.classList.remove('show');
+     }
+     const countdown = document.getElementById('countdown');
+     if (countdown) countdown.textContent = '—';
+     updateAutoProviderCountdowns();
+     stopElapsedTimer();
+   }
 
   function setAutoProviderCountdownLabel(prov, text) {
     const el = document.getElementById(`autoCountdown_${prov}`);
@@ -174,9 +175,10 @@ export function createAutoApi(deps) {
     state.autoProviderCountdownTimer = null;
   }
 
-  async function runAutoStep() {
-    if (!state.autoRunning || state.autoStepRunning) return;
-    state.autoStepRunning = true;
+   async function runAutoStep() {
+     if (!state.autoRunning || state.autoStepRunning) return;
+     if (!state.autoRunning) return;
+     state.autoStepRunning = true;
 
     try {
       if (!isAutoProviderEnabled('groq')) {
