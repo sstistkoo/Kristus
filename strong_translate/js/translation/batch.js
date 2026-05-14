@@ -7,7 +7,14 @@ import {
   getStaticFallbackModels
 } from '../../strong_translator_ai.js';
 import {
-  hasMeaningfulValue, isDefinitionLowQuality, isTranslationComplete
+  hasMeaningfulValue, isDefinitionLowQuality, isTranslationComplete,
+  getFailedTopicsForFallback,
+  getMissingTopicsForRepair,
+  cloneTranslationTopicFields,
+  shouldReplaceTopicValue,
+  isBetterGenericTopicValue,
+  preserveBetterTopicsAfterBatch,
+  FALLBACK_TOPIC_ORDER
 } from './utils.js';
 import { sleepMs } from '../utils.js';
 import {
@@ -342,79 +349,7 @@ function getNextBatch(size) {
   return result;
 }
 
-const FALLBACK_TOPIC_ORDER = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
 
-function getFailedTopicsForFallback(translationEntry) {
-  const t = translationEntry || {};
-  const failed = [];
-  for (const topicId of FALLBACK_TOPIC_ORDER) {
-    const val = String(t[topicId] || '').trim();
-    if (!hasMeaningfulValue(val)) {
-      failed.push(topicId);
-      continue;
-    }
-    if (topicId === 'definice' && isDefinitionLowQuality(val)) {
-      failed.push(topicId);
-    }
-  }
-  return failed;
-}
-
-function getMissingTopicsForRepair(translationEntry) {
-  const allMissing = getFailedTopicsForFallback(translationEntry);
-  return allMissing.slice(0, 2);
-}
-
-function cloneTranslationTopicFields(entry) {
-  const src = entry || {};
-  return {
-    vyznam: String(src.vyznam || ''),
-    definice: String(src.definice || ''),
-    kjv: String(src.kjv || ''),
-    puvod: String(src.puvod || ''),
-    specialista: String(src.specialista || '')
-  };
-}
-
-function isBetterGenericTopicValue(prev, next) {
-  const prevText = String(prev || '').trim();
-  const nextText = String(next || '').trim();
-  if (!hasMeaningfulValue(nextText)) return false;
-  if (!hasMeaningfulValue(prevText)) return true;
-  if (nextText.length >= prevText.length + 40) return true;
-  return false;
-}
-
-function shouldReplaceTopicValue(topicId, previousValue, candidateValue) {
-  const prev = String(previousValue || '').trim();
-  const next = String(candidateValue || '').trim();
-  if (!hasMeaningfulValue(next)) return false;
-  if (!hasMeaningfulValue(prev)) return true;
-  if (topicId === 'specialista') return shouldReplaceSpecialista(prev, next);
-  if (topicId === 'definice') {
-    if (isDefinitionLowQuality(next)) return false;
-    if (isDefinitionLowQuality(prev) && !isDefinitionLowQuality(next)) return true;
-    return isBetterGenericTopicValue(prev, next);
-  }
-  return isBetterGenericTopicValue(prev, next);
-}
-
-function preserveBetterTopicsAfterBatch(keys, previousMap) {
-  const topics = ['vyznam', 'definice', 'kjv', 'puvod', 'specialista'];
-  for (const key of (Array.isArray(keys) ? keys : [])) {
-    const current = state.translated[key];
-    if (!current) continue;
-    const previous = previousMap?.[key] || {};
-    for (const topicId of topics) {
-      const prevVal = String(previous[topicId] || '').trim();
-      const curVal = String(current[topicId] || '').trim();
-      const acceptCurrent = shouldReplaceTopicValue(topicId, prevVal, curVal);
-      if (!acceptCurrent && hasMeaningfulValue(prevVal)) {
-        current[topicId] = prevVal;
-      }
-    }
-  }
-}
 
 function getProviderCooldownLeftSec(prov) {
   const until = Number(state.providerCooldownUntil?.[prov] || 0);

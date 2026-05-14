@@ -298,9 +298,7 @@ for (const key of Object.keys(fields)) {
   return missingKeys;
 }
 
-export function escHtml(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+
 
 export function validateAPIResponse(d, p) {
   if (!d) throw new Error('Empty');
@@ -320,4 +318,4 @@ export function validateAPIResponse(d, p) {
 
 export { SYSTEM_MESSAGE, DEFAULT_PROMPT };
 
-export default { parseTXT, parseTranslations, buildPromptMessages, buildRetryMessages, SYSTEM_MESSAGE, DEFAULT_PROMPT, escHtml, validateAPIResponse };
+export default { parseTXT, parseTranslations, buildPromptMessages, buildRetryMessages, SYSTEM_MESSAGE, DEFAULT_PROMPT, validateAPIResponse };
