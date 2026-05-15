@@ -22,30 +22,31 @@ out['aiPrompts.core.userDefault'] = DEFAULT_PROMPT;
 
 out['aiPrompts.final.name'] = FINAL_PROMPT.name;
 out['aiPrompts.final.desc'] = FINAL_PROMPT.desc;
-out['aiPrompts.final.text'] = FINAL_PROMPT.text;
+// final.text se nyní řídí přes common.batchDefault fallback
 
 for (const k of Object.keys(CATEGORY_LABELS)) {
   out[`aiPrompts.category.${k}`] = CATEGORY_LABELS[k];
 }
 
+// Společný batch default — fallback pro všechny .text varianty
+out['aiPrompts.common.batchDefault'] = DEFAULT_PROMPT;
+
 const lib = PROMPT_LIBRARY_BASE;
 const defItem = (lib.default && lib.default[0]) || {};
 out['aiPrompts.lib.default.name'] = defItem.name || '';
 out['aiPrompts.lib.default.desc'] = defItem.desc || '';
-out['aiPrompts.lib.detailed.name'] = lib.detailed[0].name;
-out['aiPrompts.lib.detailed.desc'] = lib.detailed[0].desc;
-out['aiPrompts.lib.detailed.text'] = lib.detailed[0].text;
-out['aiPrompts.lib.concise.name'] = lib.concise[0].name;
-out['aiPrompts.lib.concise.desc'] = lib.concise[0].desc;
-out['aiPrompts.lib.concise.text'] = lib.concise[0].text;
-out['aiPrompts.lib.literal.name'] = lib.literal[0].name;
-out['aiPrompts.lib.literal.desc'] = lib.literal[0].desc;
-out['aiPrompts.lib.literal.text'] = lib.literal[0].text;
+// .text klíčů se nyní NEVYTUČÍVÁ — fallback chain: lib.*.text → common.batchDefault → DEFAULT_PROMPT
+// detailed/concise/literal
+for (const cat of ['detailed', 'concise', 'literal']) {
+  const item = (lib[cat] && lib[cat][0]) || {};
+  out[`aiPrompts.lib.${cat}.name`] = item.name || '';
+  out[`aiPrompts.lib.${cat}.desc`] = item.desc || '';
+}
+// library stack
 for (let i = 0; i < lib.library.length; i++) {
   const p = `aiPrompts.lib.stack${i}`;
   out[`${p}.name`] = lib.library[i].name;
   out[`${p}.desc`] = lib.library[i].desc;
-  out[`${p}.text`] = lib.library[i].text;
 }
 
 for (const [id, v] of Object.entries(MODEL_TEST_PROMPT_CATALOG)) {
