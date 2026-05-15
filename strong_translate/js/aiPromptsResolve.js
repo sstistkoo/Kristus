@@ -40,7 +40,7 @@ export function getResolvedDefaultPrompt() {
 }
 
 export function getResolvedFinalPrompt() {
-   const commonBatchDefault = tp('aiPrompts.common.batchDefault', DEFAULT_PROMPT);
+   const commonBatchDefault = tp('aiPrompts.common.batchDefault', core.DEFAULT_PROMPT);
    return {
      name: tp('aiPrompts.final.name', FINAL_PROMPT.name),
      desc: tp('aiPrompts.final.desc', FINAL_PROMPT.desc),
@@ -49,10 +49,10 @@ export function getResolvedFinalPrompt() {
  }
 
 export function getResolvedPromptLibraryBase() {
-     const base = JSON.parse(JSON.stringify(PROMPT_LIBRARY_BASE));
-     const defText = getResolvedDefaultPrompt();
-     const sysText = getResolvedSystemMessage();
-     const commonBatchDefault = tp('aiPrompts.common.batchDefault', DEFAULT_PROMPT);
+      const base = JSON.parse(JSON.stringify(PROMPT_LIBRARY_BASE));
+      const defText = getResolvedDefaultPrompt();
+      const sysText = getResolvedSystemMessage();
+      const commonBatchDefault = tp('aiPrompts.common.batchDefault', core.DEFAULT_PROMPT);
      if (base.default?.[0]) {
          const o = base.default[0];
          o.name = tp('aiPrompts.lib.default.name', o.name);
