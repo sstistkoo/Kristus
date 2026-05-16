@@ -217,8 +217,9 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);cursor:pointer}
 <body>
 
 <header>
-  <div class="logo">Strong's Překladač <sub>v2 · lexikon → libovolný jazyk</sub></div>
+  <div class="logo" id="uiLogo">Strong's Překladač <sub>v2 · lexikon → libovolný jazyk</sub></div>
   <div class="header-btns">
+    <button class="theme-btn" onclick="toggleUiLang()" id="uiLangBtn">🇬🇧 EN</button>
     <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀ Světlý</button>
   </div>
 </header>
@@ -230,8 +231,8 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);cursor:pointer}
   <div class="pt" style="justify-content:space-between">
     <span>⚙ Jazykové sloty překladu</span>
     <div style="display:flex;gap:.4rem;align-items:center">
-      <label class="chk-label" style="font-size:.75rem"><input type="checkbox" id="keepLxx" checked> Zachovat LXX, NT, OT…</label>
-      <label class="chk-label" style="font-size:.75rem"><input type="checkbox" id="keepStrong" checked> Zachovat Strong č.</label>
+      <label class="chk-label" style="font-size:.75rem"><input type="checkbox" id="keepLxx" checked> <span data-ui="keepLxx">Zachovat LXX, NT, OT…</span></label>
+      <label class="chk-label" style="font-size:.75rem"><input type="checkbox" id="keepStrong" checked> <span data-ui="keepStrong">Zachovat Strong č.</span></label>
     </div>
   </div>
 
@@ -301,15 +302,15 @@ input[type=radio],input[type=checkbox]{accent-color:var(--gold);cursor:pointer}
         </label>
 
         <div style="display:flex;flex-direction:column;gap:.25rem">
-          <span style="font-size:.8rem;color:var(--muted)">Za slovem:</span>
+          <span style="font-size:.8rem;color:var(--muted)" data-ui="startLabel">Za slovem:</span>
           <input type="text" id="extractStart" value="Definice:" style="width:145px"
             oninput="onExtractStartChange();updateRegexHint();reExtract()">
         </div>
 
         <div style="display:flex;flex-direction:column;gap:.25rem">
           <span style="font-size:.8rem;color:var(--muted)">
-            Před slovem:
-            <span style="font-size:.69rem;color:var(--muted)">(jeden na řádek — zkusí první nalezené)</span>
+            <span data-ui="endLabel">Před slovem:</span>
+            <span style="font-size:.69rem;color:var(--muted)" data-ui="endHint">(jeden na řádek — zkusí první nalezené)</span>
           </span>
           <textarea id="extractEnd" style="width:160px;min-height:58px;font-size:.82rem;font-family:'Consolas',monospace;resize:vertical"
             oninput="updateRegexHint();reExtract()">KJV
@@ -4456,9 +4457,174 @@ doBatch = async function() {
 };
 
 // ══════════════════════════════════════
-//  UTILS
+//  UI LANGUAGE  (CS / EN)
 // ══════════════════════════════════════
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+let uiLang = localStorage.getItem('strongs_ui_lang') || 'cs';
+
+const UI_STRINGS = {
+  cs: {
+    logo:           "Strong's Překladač",
+    logoSub:        'v2 · lexikon → libovolný jazyk',
+    tabBatch:       '📂 Google · Dávkový',
+    tabSingle:      '✏️ Google · Ruční',
+    tabMistral:     '🤖 Mistral AI',
+    tabAbbr:        '📖 Zkratky Bible',
+    tabGlossary:    '📝 Glosář',
+    tabDashboard:   '📊 Dashboard',
+    tabAutomation:  '⚙ Automatizace',
+    tabHistory:     '🕐 Historie',
+    ptTranslation:  '⚙ Nastavení překladu',
+    keepLxx:        'Zachovat LXX, NT, OT…',
+    keepStrong:     'Zachovat Strong č.',
+    btnTranslate:   '▶ Přeložit vše',
+    btnPause:       '⏸ Pozastavit',
+    btnResume:      '▶ Pokračovat',
+    btnSaveTxt:     '💾 TXT',
+    btnSaveCsv:     '📊 CSV',
+    btnSaveJson:    '{ } JSON',
+    btnCopy:        '📋 Kopírovat',
+    btnClear:       '✕ Vymazat',
+    btnSingle:      '▶ Přeložit',
+    patternTitle:   'Vzorec extrakce definic',
+    startLabel:     'Za slovem:',
+    endLabel:       'Před slovem:',
+    endHint:        '(jeden na řádek — zkusí první nalezené)',
+    includeStart:   'Připojit „Za slovem"',
+    trimWs:         'Ořezat mezery',
+    skipShort:      'Min.',
+    skipShortChars: 'znaků',
+    dedupe:         'Deduplikovat',
+    addLineNums:    'Přidat pořadí',
+    addOrigLine:    'Přidat č. řádku ze souboru',
+    previewTitle:   'Náhled extrakce — první 3 definice',
+    dropText:       'Přetáhněte TXT nebo JSON soubor(y) — více souborů = automatické sloučení',
+    autoLoaded:     'Auto-načteno:',
+    filterAll:      'Vše',
+    filterWait:     'Čekající',
+    filterDone:     'Hotové',
+    filterError:    'Chyby',
+    themeLight:     '☀ Světlý',
+    themeDark:      '🌙 Tmavý',
+    searchPlaceholder: 'Hledat v přeložených heslech…',
+    historyEmpty:   'Zatím žádná přeložená hesla.',
+    histClear:      '✕ Vymazat historii',
+  },
+  en: {
+    logo:           "Strong's Translator",
+    logoSub:        'v2 · lexicon → any language',
+    tabBatch:       '📂 Google · Batch',
+    tabSingle:      '✏️ Google · Single',
+    tabMistral:     '🤖 Mistral AI',
+    tabAbbr:        '📖 Bible Abbrev.',
+    tabGlossary:    '📝 Glossary',
+    tabDashboard:   '📊 Dashboard',
+    tabAutomation:  '⚙ Automation',
+    tabHistory:     '🕐 History',
+    ptTranslation:  '⚙ Translation Settings',
+    keepLxx:        'Keep LXX, NT, OT…',
+    keepStrong:     'Keep Strong no.',
+    btnTranslate:   '▶ Translate all',
+    btnPause:       '⏸ Pause',
+    btnResume:      '▶ Resume',
+    btnSaveTxt:     '💾 TXT',
+    btnSaveCsv:     '📊 CSV',
+    btnSaveJson:    '{ } JSON',
+    btnCopy:        '📋 Copy',
+    btnClear:       '✕ Clear',
+    btnSingle:      '▶ Translate',
+    patternTitle:   'Extraction Pattern',
+    startLabel:     'After word:',
+    endLabel:       'Before word:',
+    endHint:        '(one per line — first match wins)',
+    includeStart:   'Prepend "After word"',
+    trimWs:         'Trim whitespace',
+    skipShort:      'Min.',
+    skipShortChars: 'chars',
+    dedupe:         'Deduplicate',
+    addLineNums:    'Add sequence no.',
+    addOrigLine:    'Add source line no.',
+    previewTitle:   'Extraction preview — first 3 entries',
+    dropText:       'Drop TXT or JSON file(s) here — multiple files = auto-merge',
+    autoLoaded:     'Auto-loaded:',
+    filterAll:      'All',
+    filterWait:     'Waiting',
+    filterDone:     'Done',
+    filterError:    'Errors',
+    themeLight:     '☀ Light',
+    themeDark:      '🌙 Dark',
+    searchPlaceholder: 'Search translated entries…',
+    historyEmpty:   'No translated entries yet.',
+    histClear:      '✕ Clear history',
+  },
+};
+
+function t(key) { return UI_STRINGS[uiLang]?.[key] || UI_STRINGS.cs[key] || key; }
+
+function applyUiLang() {
+  const s = UI_STRINGS[uiLang];
+
+  // Logo
+  const logo = document.getElementById('uiLogo');
+  if (logo) logo.innerHTML = `${s.logo} <sub>${s.logoSub}</sub>`;
+
+  // Lang toggle button
+  const btn = document.getElementById('uiLangBtn');
+  if (btn) btn.textContent = uiLang === 'cs' ? '🇬🇧 EN' : '🇨🇿 CS';
+
+  // Theme button text
+  const themeBtn = document.getElementById('themeBtn');
+  if (themeBtn) {
+    themeBtn.textContent = document.documentElement.dataset.theme === 'dark' ? s.themeLight : s.themeDark;
+  }
+
+  // Tabs — match by position in TAB_NAMES order
+  const tabKeys = ['tabBatch','tabSingle','tabMistral','tabAbbr','tabGlossary','tabDashboard','tabAutomation','tabHistory'];
+  document.querySelectorAll('.tab').forEach((tab, i) => {
+    if (tabKeys[i] && s[tabKeys[i]]) tab.textContent = s[tabKeys[i]];
+  });
+
+  // data-ui elements — simplest and most reliable approach
+  document.querySelectorAll('[data-ui]').forEach(el => {
+    const key = el.dataset.ui;
+    if (s[key]) el.textContent = s[key];
+  });
+
+  // Buttons by ID
+  const btns = {
+    btnBatch: s.btnTranslate, btnPause: s.btnPause,
+    btnBatchSave: s.btnSaveTxt, btnBatchCSV: s.btnSaveCsv,
+    btnBatchJSON: s.btnSaveJson, btnBatchCopy: s.btnCopy,
+    btnSingle: s.btnSingle,
+  };
+  Object.entries(btns).forEach(([id, text]) => {
+    const el = document.getElementById(id);
+    if (el && !el.disabled) el.textContent = text;
+  });
+
+  // Filter chips
+  const chips = document.querySelectorAll('.filter-chip');
+  const chipKeys = ['filterAll','filterWait','filterDone','filterError'];
+  chips.forEach((c, i) => { if (chipKeys[i] && s[chipKeys[i]]) c.textContent = s[chipKeys[i]]; });
+
+  // Placeholders
+  const search = document.getElementById('searchInput');
+  if (search) search.placeholder = s.searchPlaceholder;
+
+  // History empty
+  const histEmpty = document.getElementById('historyEmpty');
+  if (histEmpty) histEmpty.textContent = s.historyEmpty;
+
+  // Document lang
+  document.documentElement.lang = uiLang === 'en' ? 'en' : 'cs';
+}
+
+function toggleUiLang() {
+  uiLang = uiLang === 'cs' ? 'en' : 'cs';
+  try { localStorage.setItem('strongs_ui_lang', uiLang); } catch(_) {}
+  applyUiLang();
+}
+
+
 async function clipCopy(text){try{await navigator.clipboard.writeText(text);}catch{const el=document.createElement('textarea');el.value=text;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);}}
 function flashBtn(id,label){const b=document.getElementById(id);if(!b)return;const orig=b.textContent;b.textContent=label;setTimeout(()=>b.textContent=orig,2200);}
 function downloadText(text,filename){const blob=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();}
@@ -4507,6 +4673,23 @@ window.addEventListener('DOMContentLoaded',()=>{
   // Init extraction start preview + regex hint
   onExtractStartChange();
   updateRegexHint();
+  // Auto-load strong_finalni_verze.txt from same folder (GitHub Pages)
+  fetch('strong_finalni_verze.txt')
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(text => {
+      loadedFileName = 'strong_finalni_verze.txt';
+      loadedFileText = text;
+      loadedJsonData = null;
+      document.getElementById('jsonFieldWrap').style.display = 'none';
+      document.getElementById('fileNameLabel').textContent = 'Auto-načteno: strong_finalni_verze.txt';
+      extractFromText(text, false);
+    })
+    .catch(() => {
+      // Soubor neexistuje nebo není dostupný — tichá chyba, uživatel načte ručně
+    });
+
+  // Apply UI language
+  applyUiLang();
   // History + glossary render
   renderHistory();
   renderAbbrLangTabs();
