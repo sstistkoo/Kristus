@@ -298,9 +298,9 @@ export function tryNormalizeNumberedOpenRouterResponse(raw, keys) {
   if (/###\s*[GH]?\d+\s*###/i.test(text)) return null;
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   if (!lines.length) return null;
-  const headerLine = lines.find(l => /^(?:\d+\.)?\s*[GH]\d+\b/i.test(l));
+  const headerLine = lines.find(l => /^(?:\d+\.)?\s*(?:[GH]?\d+)\b/i.test(l));
   if (!headerLine) return null;
-  const keyMatch = headerLine.match(/([GH]\d+)/i);
+  const keyMatch = headerLine.match(/([GH]?\d+)/);
   if (!keyMatch) return null;
   const foundKey = keyMatch[1].toUpperCase();
   if (Array.isArray(keys) && keys.length && !keys.includes(foundKey)) return null;

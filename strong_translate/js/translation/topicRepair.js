@@ -2230,7 +2230,7 @@ function normalizeAiTopicRawText(s) {
 function stripLeadingGHeaders(text) {
   let t = String(text || '');
   for (let i = 0; i < 8; i++) {
-    const next = t.replace(/^\s*#{2,6}\s*[gGhH]\d+\s*(?:#+\s*)?/i, '').trimStart();
+    const next = t.replace(/^\s*#{2,6}\s*[gGhH]?\d+\s*(?:#+\s*)?/i, '').trimStart();
     if (next === t) break;
     t = next;
   }
