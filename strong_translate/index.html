@@ -196,6 +196,7 @@
           </button>
           <button class="hbtn red hdr-close" onclick="clearProgress()" title="Smazat veškerý uložený průběh" aria-label="Smazat veškerý uložený průběh">Res.</button>
           <button class="hbtn red hdr-close" id="btnClearTranslations" onclick="clearTranslations()" title="Vymazat všechny uložené překlady (všechny sloty)" aria-label="Vymazat všechny uložené překlady">🗑 Vymazat</button>
+          <button class="hbtn hdr-close" id="btnTranslatorPrompts" onclick="showTranslatorPromptsModal()" title="Otevřít knihovnu promptů" aria-label="Otevřít knihovnu promptů">📚 Prompts</button>
           <button class="hbtn hdr-close is-hidden" id="btnRestoreBackup" onclick="restoreFromBackup('backup')" title="Obnovit ze zálohy" aria-label="Obnovit ze zálohy">↺ Záloha</button>
         </div>
       </div>
@@ -1042,7 +1043,28 @@
          </div>
        </div>
        <div id="editPromptStatus" class="i18n-tool-status" style="margin-top: 8px;"></div>
-     </div>
-   </div>
+</div>
+    </div>
 
-    <script type="module" src="js/main.js"></script>
+  <!-- Translator Prompts Modal -->
+  <div id="translatorPromptsModal">
+    <div class="help-modal-box">
+      <button class="close-modal-btn" onclick="closeTranslatorPromptsModal()" aria-label="Zavřít">×</button>
+      <div class="limits-title" id="translatorPromptsTitle">📚 Strong's Prompts</div>
+      <div class="help-block" style="text-align: center;">
+        <iframe src="https://sstistkoo.github.io/Kristus/strong_translate/translatory/index_translator_prompts.html"
+                width="100%" height="600" style="border:none;"></iframe>
+      </div>
+      <button class="modal-btn cancel modal-btn-full" onclick="closeTranslatorPromptsModal()">✕ Zavřít</button>
+    </div>
+  </div>
+
+  <script>
+    function showTranslatorPromptsModal() {
+      document.getElementById('translatorPromptsModal').classList.add('show');
+    }
+    function closeTranslatorPromptsModal() {
+      document.getElementById('translatorPromptsModal').classList.remove('show');
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>

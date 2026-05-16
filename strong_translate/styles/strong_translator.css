@@ -1252,8 +1252,20 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
      padding: 16px 0;
      overflow-y: auto;
    }
-   #helpModal.show { display: flex; }
-  .help-modal-box {
+#helpModal.show { display: flex; }
+    #translatorPromptsModal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.82);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      z-index: 1003;
+      padding: 16px 0;
+      overflow-y: auto;
+    }
+    #translatorPromptsModal.show { display: flex; }
+   .help-modal-box {
       background: var(--bg2);
       border: 1px solid var(--brd);
       border-radius: 8px;
