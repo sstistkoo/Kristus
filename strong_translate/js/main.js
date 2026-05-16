@@ -1329,45 +1329,57 @@ function loadTXT(input) {
 }
 
 function loadDefaultFile() {
-  const lastFile = localStorage.getItem(LAST_FILE_KEY) || DEFAULT_TXT_FILE;
-  const githubUrl = `${GITHUB_RAW_BASE}${encodeURIComponent(lastFile)}`;
-  const fallbacks = [lastFile, githubUrl, 'strong_greek_detailed.txt'];
+   const lastFile = localStorage.getItem(LAST_FILE_KEY) || DEFAULT_TXT_FILE;
+   const githubUrl = `${GITHUB_RAW_BASE}${encodeURIComponent(lastFile)}`;
+   const fallbacks = [lastFile, githubUrl, 'strong_greek_detailed.txt'];
+   
+   console.log('[DEBUG] loadDefaultFile: lastFile=', lastFile, 'githubUrl=', githubUrl);
 
-  const tryFetch = (idx) => {
-    if (idx >= fallbacks.length) {
-      throw new Error(t('error.fileNotFoundFallback'));
-    }
-    const target = fallbacks[idx];
-    return fetch(target)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
+   const tryFetch = (idx) => {
+     if (idx >= fallbacks.length) {
+       throw new Error(t('error.fileNotFoundFallback'));
+     }
+     const target = fallbacks[idx];
+     console.log(`[DEBUG] loadDefaultFile: trying fetch #${idx} from ${target}`);
+     return fetch(target)
+       .then(r => {
+         console.log(`[DEBUG] loadDefaultFile: fetch #${idx} status=${r.status} ok=${r.ok}`);
+         if (!r.ok) throw new Error(`HTTP ${r.status}`);
+         return r.text();
+       })
+       .then(text => {
+         console.log(`[DEBUG] loadDefaultFile: fetch #${idx} success, text length=${text.length}`);
+         return { text, source: target };
+       })
+       .catch(err => {
+         console.log(`[DEBUG] loadDefaultFile: fetch #${idx} failed:`, err);
+         return tryFetch(idx + 1);
+       });
+   };
+
+   tryFetch(0)
+     .then(({ text, source }) => {
+       console.log('[DEBUG] loadDefaultFile: parsed text, entries count=', text ? text.length : 0);
+       state.entries = parseTXT(text);
+       state.currentFileId = computeFileId(state.entries);
+       localStorage.setItem(LAST_FILE_KEY, lastFile);
+       document.getElementById('statusTXT').textContent = `? ${lastFile} � ${t('entries.count', { count: state.entries.length })}`;
+       document.getElementById('statusTXT').className = 'file-status ok';
+       document.getElementById('fileReady').style.display = 'block';
+       document.getElementById('startBtn').disabled = false;
+       checkResume();
+       if (source === githubUrl) {
+         showToast(t('toast.loaded.github'));
+       } else {
+         showToast(t('toast.loaded.fallback'));
+       }
       })
-      .then(text => ({ text, source: target }))
-      .catch(() => tryFetch(idx + 1));
-  };
-
-  tryFetch(0)
-    .then(({ text, source }) => {
-      state.entries = parseTXT(text);
-      state.currentFileId = computeFileId(state.entries);
-      localStorage.setItem(LAST_FILE_KEY, lastFile);
-      document.getElementById('statusTXT').textContent = `? ${lastFile} � ${t('entries.count', { count: state.entries.length })}`;
-      document.getElementById('statusTXT').className = 'file-status ok';
-      document.getElementById('fileReady').style.display = 'block';
-      document.getElementById('startBtn').disabled = false;
-      checkResume();
-      if (source === githubUrl) {
-        showToast(t('toast.loaded.github'));
-      } else {
-        showToast(t('toast.loaded.fallback'));
-      }
-     })
-    .catch(e => {
-      logError('loadDefaultFile', e, { file: lastFile, githubUrl });
-      document.getElementById('statusTXT').textContent = '? ' + e.message;
-    });
-}
+     .catch(e => {
+       console.error('[DEBUG] loadDefaultFile: all fetches failed:', e);
+       logError('loadDefaultFile', e, { file: lastFile, githubUrl });
+       document.getElementById('statusTXT').textContent = '? ' + e.message;
+     });
+ }
 
 function checkDefaultFile() {
   const lastFile = localStorage.getItem(LAST_FILE_KEY);
