@@ -266,6 +266,15 @@ export async function fetchUiDictionary(lang) {
  */
 export function getPromptPack(targetLang) {
   const langCode = String(targetLang || 'cz').toLowerCase();
+  if (langCode === 'personal') {
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('strong_personal_prompt_json') : null;
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch { /* fallback below */ }
+    }
+    return PROMPT_PACK_CACHE['cs'] || PROMPT_PACK_CACHE['en'] || {};
+  }
   const promptCode = TARGET_TO_PROMPT_CODE[langCode] || 'cs';
   return PROMPT_PACK_CACHE[promptCode] || PROMPT_PACK_CACHE['cs'] || PROMPT_PACK_CACHE['en'] || {};
 }

@@ -832,9 +832,14 @@
     </select>
   </div>
 
-      <div class="mobl-set-row prompt-lang-i18n-tool-row">
-        <button type="button" class="prompt-btn lang" id="btnI18nTranslateTool" onclick="showI18nToolModal()">🌍 Překladač/Editor Jazyka rozhraní</button>
-      </div>
+  <div class="mobl-set-row" id="personalPromptRow" style="display:none;">
+    <label id="personalPromptLabel">Vlastní jazykový prompt (JSON)</label>
+    <textarea id="personalPromptTextarea" class="personal-prompt-textarea" rows="12" placeholder='Např. {"aiPrompts.core.system":"...","aiPrompts.core.userDefault":"..."}'></textarea>
+  </div>
+
+        <div class="mobl-set-row prompt-lang-i18n-tool-row">
+          <button type="button" class="prompt-btn lang" id="btnI18nTranslateTool" onclick="showI18nToolModal()">🌍 Překladač/Editor Jazyka rozhraní</button>
+        </div>
        <div class="mobl-set-row">
          <label id="sourceLanguageLabel">Zdrojový jazyk</label>
         <select id="sourceLanguage" class="prompt-ai-select" aria-label="Zdrojový jazyk" title="Zdrojový jazyk">

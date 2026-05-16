@@ -64,3 +64,4 @@ export const API_KEY_PROFILES_PREFIX = 'strong_apikey_profiles_';
 export const API_KEY_ACTIVE_PROFILE_PREFIX = 'strong_apikey_active_';
 export const BATCH_SIZE_KEY = 'strong_batch_size';
 export const INTERVAL_KEY = 'strong_interval';
+export const PERSONAL_PROMPT_KEY = 'strong_personal_prompt_json';

@@ -20,10 +20,24 @@ function tTargetLang(key, fallback) {
     cz: 'cs', cs: 'cs', sk: 'sk', pl: 'pl', de: 'de', fr: 'fr', es: 'es', it: 'it',
     pt: 'pt', ru: 'ru', uk: 'uk', bg: 'bg', ro: 'ro', da: 'da', fi: 'fi', hu: 'hu',
     nl: 'nl', no: 'no', sv: 'sv', ar: 'ar', el: 'el', tr: 'tr', 'zh-cn': 'zh_CN',
-    ja: 'ja', ko: 'ko', he: 'he', en: 'en', gr: 'el'
+    ja: 'ja', ko: 'ko', he: 'he', en: 'en', gr: 'el', personal: 'personal'
   };
+
+  // Zpracování personal promptu – načíst z localStorage jako JSON
+  if (targetLang === 'personal') {
+    const stored = localStorage.getItem('strong_personal_prompt_json');
+    if (stored) {
+      try {
+        const pack = JSON.parse(stored);
+        const v = pack[key];
+        return v !== undefined ? v : fallback;
+      } catch { /* fallback below */ }
+    }
+    return fallback;
+  }
+
   const fileCode = langToFileCode[targetLang] || 'cs';
-  
+
   // Zkusíme načíst z UI_MESSAGES (byly načteny mergePromptPacksIntoLoaded)
   const UI_MESSAGES = window?.UI_MESSAGES || {};
   const promptMessages = UI_MESSAGES[fileCode] || UI_MESSAGES.cs || {};

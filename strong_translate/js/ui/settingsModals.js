@@ -1,6 +1,6 @@
 import { t, getUiLang, getDefaultContentTag, CONTENT_TAG_LANG_KEY, CONTENT_TAG_LANG_MANUAL_KEY } from '../i18n.js';
 import { safeSetLocalStorage, safeRemoveLocalStorage } from '../storage.js';
-import { BATCH_SIZE_KEY, INTERVAL_KEY } from '../config.js';
+import { BATCH_SIZE_KEY, INTERVAL_KEY, PERSONAL_PROMPT_KEY } from '../config.js';
 
 export function createSettingsModalsApi({ initRunSelects, updateSetupCompactSummary, initPipelineModelSelectors, initPipelineModelSelectorsInSettingsModal, showToast, refreshTopicLabels, renderList, saveProgress, refreshLanguageAwarePromptOptionLabels, applySystemPromptForCurrentTask, applyUiLanguage, DEFAULT_UI_LANG, UI_LANGS, UI_LANG_KEY, setPipelineModelForProvider, setPipelineSecondaryEnabled, syncSecondaryProviderToggles, updateAutoProviderCountdowns, updateStats }) {
 
@@ -59,7 +59,8 @@ const TARGET_LANGUAGE_CATALOG = [
   { code: 'zh-cn', name: 'Čínština', flag: '🇨🇳' },
   { code: 'ja', name: 'Japonština', flag: '🇯🇵' },
   { code: 'ko', name: 'Korejština', flag: '🇰🇷' },
-  { code: 'he', name: 'Hebrejština', flag: '🇮🇱' }
+  { code: 'he', name: 'Hebrejština', flag: '🇮🇱' },
+  { code: 'personal', name: 'Vlastní (Personal)', flag: '👤' }
 ];
 
 let uiLangAvailabilityCache = null;
@@ -355,27 +356,55 @@ function saveAISettings() {
   showToast(t('toast.ai.settings.saved'));
 }
 
-async function showPromptLangModal() {
-   const modal = document.getElementById('promptLangModal');
-   const savedLang = localStorage.getItem('strong_target_lang') || 'cz';
-   const savedSource = localStorage.getItem('strong_source_lang') || 'gr';
-   await populateUiLanguageSelect();
-   populateTargetLanguageSelect();
-   const savedUi = String(localStorage.getItem(UI_LANG_KEY) || getUiLang()).toLowerCase();
-   document.getElementById('targetLanguage').value = savedLang;
-   document.getElementById('sourceLanguage').value = savedSource;
-   const uiLanguageEl = document.getElementById('uiLanguage');
-   if (uiLanguageEl) uiLanguageEl.value = savedUi;
-   modal.style.display = 'flex';
-   // Close on backdrop click
-   modal.onclick = (e) => {
-     if (e.target === modal) closePromptLangModal();
-   };
- }
+   async function showPromptLangModal() {
+    const modal = document.getElementById('promptLangModal');
+    const savedLang = localStorage.getItem('strong_target_lang') || 'cz';
+    const savedSource = localStorage.getItem('strong_source_lang') || 'gr';
+    await populateUiLanguageSelect();
+    populateTargetLanguageSelect();
+    const savedUi = String(localStorage.getItem(UI_LANG_KEY) || getUiLang()).toLowerCase();
+    document.getElementById('targetLanguage').value = savedLang;
+    document.getElementById('sourceLanguage').value = savedSource;
+    const uiLanguageEl = document.getElementById('uiLanguage');
+    if (uiLanguageEl) uiLanguageEl.value = savedUi;
+    syncPersonalPromptVisibility();
+    // Zobraz/skryj personal textarea při změně jazyka
+    const targetSelect = document.getElementById('targetLanguage');
+    if (targetSelect && !targetSelect.dataset.personalBind) {
+      targetSelect.dataset.personalBind = '1';
+      targetSelect.addEventListener('change', syncPersonalPromptVisibility);
+    }
+    modal.style.display = 'flex';
+    // Close on backdrop click
+    modal.onclick = (e) => {
+      if (e.target === modal) closePromptLangModal();
+    };
+  }
 
-function closePromptLangModal() {
-   document.getElementById('promptLangModal').style.display = 'none';
- }
+ function closePromptLangModal() {
+    document.getElementById('promptLangModal').style.display = 'none';
+  }
+
+  function loadPersonalPromptIntoTextarea() {
+    const stored = localStorage.getItem(PERSONAL_PROMPT_KEY);
+    const textarea = document.getElementById('personalPromptTextarea');
+    if (textarea) {
+      textarea.value = stored || '';
+    }
+  }
+
+  function syncPersonalPromptVisibility() {
+    const targetSelect = document.getElementById('targetLanguage');
+    const personalRow = document.getElementById('personalPromptRow');
+    const textarea = document.getElementById('personalPromptTextarea');
+    if (!targetSelect || !personalRow || !textarea) return;
+    if (targetSelect.value === 'personal') {
+      personalRow.style.display = '';
+      loadPersonalPromptIntoTextarea();
+    } else {
+      personalRow.style.display = 'none';
+    }
+  }
 
 async function loadCustomLangFile(event) {
    const file = event.target.files[0];
@@ -409,19 +438,26 @@ function updatePromptLangButtonLabel() {
 }
 
 function saveLangSettings() {
-   const prevTarget = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
-   const target = document.getElementById('targetLanguage').value;
-   const source = document.getElementById('sourceLanguage').value;
-   const uiRaw = String(document.getElementById('uiLanguage')?.value || DEFAULT_UI_LANG).toLowerCase();
-   // Allow custom languages too (not just UI_LANGS whitelist)
-   const customMessages = typeof window !== 'undefined' ? window.__CUSTOM_UI_MESSAGES__ : null;
-   const ui = (UI_LANGS.has(uiRaw) || customMessages?.[uiRaw]) ? uiRaw : DEFAULT_UI_LANG;
-   console.log('[saveLangSettings] uiRaw:', uiRaw, 'ui:', ui, 'isCustom:', !!customMessages?.[uiRaw]);
-   safeSetLocalStorage('strong_target_lang', target, 'settingsModals');
-   safeSetLocalStorage('strong_source_lang', source, 'settingsModals');
-   safeSetLocalStorage(UI_LANG_KEY, ui, 'settingsModals');
-   safeRemoveLocalStorage(CONTENT_TAG_LANG_KEY, 'settingsModals');
-   safeRemoveLocalStorage(CONTENT_TAG_LANG_MANUAL_KEY, 'settingsModals');
+    const prevTarget = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+    const target = document.getElementById('targetLanguage').value;
+    const source = document.getElementById('sourceLanguage').value;
+    const uiRaw = String(document.getElementById('uiLanguage')?.value || DEFAULT_UI_LANG).toLowerCase();
+    // Allow custom languages too (not just UI_LANGS whitelist)
+    const customMessages = typeof window !== 'undefined' ? window.__CUSTOM_UI_MESSAGES__ : null;
+    const ui = (UI_LANGS.has(uiRaw) || customMessages?.[uiRaw]) ? uiRaw : DEFAULT_UI_LANG;
+    console.log('[saveLangSettings] uiRaw:', uiRaw, 'ui:', ui, 'isCustom:', !!customMessages?.[uiRaw]);
+    safeSetLocalStorage('strong_target_lang', target, 'settingsModals');
+    safeSetLocalStorage('strong_source_lang', source, 'settingsModals');
+    safeSetLocalStorage(UI_LANG_KEY, ui, 'settingsModals');
+    safeRemoveLocalStorage(CONTENT_TAG_LANG_KEY, 'settingsModals');
+    safeRemoveLocalStorage(CONTENT_TAG_LANG_MANUAL_KEY, 'settingsModals');
+    // Uložení personal promptu pokud je zvolen target 'personal'
+    if (target === 'personal') {
+      const textarea = document.getElementById('personalPromptTextarea');
+      if (textarea) {
+        safeSetLocalStorage(PERSONAL_PROMPT_KEY, textarea.value, 'settingsModals');
+      }
+    }
     refreshLanguageAwarePromptOptionLabels();
     applySystemPromptForCurrentTask();
     applyUiLanguage();
@@ -431,7 +467,7 @@ function saveLangSettings() {
     updateStats();
     closePromptLangModal();
     showToast(t('toast.lang.settings.saved'));
- }
+  }
 
   return { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile };
 }
