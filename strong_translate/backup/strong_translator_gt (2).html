@@ -236,6 +236,32 @@
   .fix-result-row .fold{color:var(--error);text-decoration:line-through;flex:1}
   .fix-result-row .fnew{color:var(--success);flex:1}
 
+  /* ═══ HELP TAB ═══ */
+  #tab-help{display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto}
+  .help-wrap{max-width:820px;margin:0 auto;padding:24px 28px 40px}
+  .help-h1{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--accent);
+    margin-bottom:6px;letter-spacing:.06em}
+  .help-h2{font-family:'Cinzel',serif;font-size:.9rem;color:var(--accent2);
+    margin:24px 0 8px;letter-spacing:.05em;border-bottom:1px solid var(--border);padding-bottom:4px}
+  .help-p{font-size:.92rem;line-height:1.75;color:var(--text);margin-bottom:8px}
+  .help-ul{padding-left:18px;margin-bottom:10px}
+  .help-ul li{font-size:.9rem;line-height:1.7;color:var(--text);margin-bottom:2px}
+  .help-ul li strong{color:var(--accent)}
+  .help-kbd{display:inline-block;background:var(--tag);border:1px solid var(--border);
+    border-radius:3px;padding:1px 6px;font-family:'JetBrains Mono',monospace;
+    font-size:.72rem;color:var(--accent2)}
+  .help-tip{background:var(--tag);border-left:3px solid var(--accent);
+    padding:8px 14px;border-radius:0 4px 4px 0;margin:10px 0;font-size:.86rem;line-height:1.6}
+  .help-workflow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:10px;margin:12px 0}
+  .help-step{background:var(--card);border:1px solid var(--border);border-radius:5px;
+    padding:12px 14px}
+  .help-step-n{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--accent);
+    opacity:.4;line-height:1}
+  .help-step-title{font-family:'Cinzel',serif;font-size:.78rem;color:var(--accent2);
+    margin:4px 0 6px}
+  .help-step p{font-size:.82rem;color:var(--muted);line-height:1.6}
+
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 </style>
@@ -256,10 +282,16 @@
 </div>
 
 <div class="tabs">
-  <button class="tab-btn active" data-tab="translate">🔤 Překladač</button>
-  <button class="tab-btn"        data-tab="viewer">📋 Prohlížeč</button>
-  <button class="tab-btn"        data-tab="batch">⚡ Batch pole</button>
-  <button class="tab-btn"        data-tab="fix">🔧 Korekce</button>
+  <button class="tab-btn active" data-tab="translate">🔤 <span data-i18n="tab_translate">Překladač</span></button>
+  <button class="tab-btn"        data-tab="viewer">📋 <span data-i18n="tab_viewer">Prohlížeč</span></button>
+  <button class="tab-btn"        data-tab="batch">⚡ <span data-i18n="tab_batch">Batch pole</span></button>
+  <button class="tab-btn"        data-tab="fix">🔧 <span data-i18n="tab_fix">Korekce</span></button>
+  <button class="tab-btn"        data-tab="help">❓ <span data-i18n="tab_help">Nápověda</span></button>
+  <div style="margin-left:auto;display:flex;align-items:center;padding:0 6px">
+    <button id="btnLang" style="background:var(--tag);border:1px solid var(--border);color:var(--muted);
+      padding:3px 10px;border-radius:3px;cursor:pointer;font-family:'JetBrains Mono',monospace;
+      font-size:.65rem;letter-spacing:.05em" title="Switch language / Přepnout jazyk">🌐 EN</button>
+  </div>
 </div>
 
 <!-- ═══════════ TAB PŘEKLADAČ ═══════════ -->
@@ -529,6 +561,84 @@ AI může odpovědět i volným textem — stránka se pokusí pravidla extrahov
     </div>
 
   </div>
+</div>
+
+<!-- ═══════════ TAB NÁPOVĚDA ═══════════ -->
+<div id="tab-help" style="display:none">
+<div class="help-wrap">
+
+  <div class="help-h1" data-i18n="help_title">Strong's Concordance Translator — Nápověda</div>
+  <div class="help-p" data-i18n="help_intro">Nástroj pro strojový překlad Strong's Concordance do libovolného jazyka přes Google Translate. Pracuje lokálně v prohlížeči, nevyžaduje server ani API klíč.</div>
+
+  <div class="help-h2" data-i18n="help_workflow_title">Základní workflow</div>
+  <div class="help-workflow">
+    <div class="help-step">
+      <div class="help-step-n">1</div>
+      <div class="help-step-title" data-i18n="help_step1_title">Načíst soubor</div>
+      <p data-i18n="help_step1">Klikni <strong>📂 Načíst .txt</strong> a vyber soubor Strong's ve formátu TXT. Volitelně načti i JSON s uloženými překlady přes <strong>📥 Načíst .json</strong>.</p>
+    </div>
+    <div class="help-step">
+      <div class="help-step-n">2</div>
+      <div class="help-step-title" data-i18n="help_step2_title">Nastavit překlad</div>
+      <p data-i18n="help_step2">Vyber sekci (G NT / G rozšířená / H), cílový jazyk a zpoždění mezi požadavky. Pak klikni <strong>▶ Auto překlad</strong> nebo přeloď hesla po jednom.</p>
+    </div>
+    <div class="help-step">
+      <div class="help-step-n">3</div>
+      <div class="help-step-title" data-i18n="help_step3_title">Průběžně ukládat</div>
+      <p data-i18n="help_step3">Překlady se automaticky ukládají do LocalStorage každých 20 hesel. Tlačítko <strong>💿 Uložit</strong> uloží ručně. <strong>📂 LS Sessions</strong> zobrazí správu sessions.</p>
+    </div>
+    <div class="help-step">
+      <div class="help-step-n">4</div>
+      <div class="help-step-title" data-i18n="help_step4_title">Korekce AI</div>
+      <p data-i18n="help_step4">V tabu <strong>🔧 Korekce</strong> vygeneruj prompt, přilož exportovaný TXT k AI chatu, odpověď vlož zpět a parsuj pravidla hromadných oprav.</p>
+    </div>
+    <div class="help-step">
+      <div class="help-step-n">5</div>
+      <div class="help-step-title" data-i18n="help_step5_title">Exportovat</div>
+      <p data-i18n="help_step5">Stáhni výsledek jako <strong>💾 JSON</strong> (pro další zpracování) nebo <strong>📄 TXT</strong> (čitelný formát kompatibilní se zpětným načtením).</p>
+    </div>
+  </div>
+
+  <div class="help-h2" data-i18n="help_tabs_title">Taby</div>
+  <ul class="help-ul">
+    <li><strong>🔤 Překladač</strong> — <span data-i18n="help_tab_translate">hlavní pracovní plocha. Levý panel = seznam hesel s filtry. Pravý panel = editor s originálními poli a přeloženými výstupy. Každé pole lze přeložit zvlášť tlačítkem 🔄 GT.</span></li>
+    <li><strong>📋 Prohlížeč</strong> — <span data-i18n="help_tab_viewer">zobrazí hesla v kartovém formátu. Navigace heslo po hesle nebo rozsahem. Zobrazí i překlady pokud existují.</span></li>
+    <li><strong>⚡ Batch pole</strong> — <span data-i18n="help_tab_batch">přeloží jedno vybrané pole (Význam / Definice / Původ / Poznámky / KJV) pro celou sekci najednou. Umožňuje iterativní doplňování.</span></li>
+    <li><strong>🔧 Korekce</strong> — <span data-i18n="help_tab_fix">systém hromadných oprav. Generuje prompt pro AI analýzu chyb, parsuje JSON pravidla zpět, aplikuje je s náhledem před potvrzením.</span></li>
+  </ul>
+
+  <div class="help-h2" data-i18n="help_files_title">Formáty souborů</div>
+  <ul class="help-ul">
+    <li><strong data-i18n="help_txt_in">TXT vstup</strong> — <span data-i18n="help_txt_in_desc">originální Strong's soubor. Parser rozumí polím BETA, Prepis, Tvaroslovi, Definice, KJV Významy, Cz, Poznámky (s Překlad/Etymol/Vysvětlení). Sekce G1–G5624 = NT řečtina, G6000+ = rozšířená, H = hebrejština.</span></li>
+    <li><strong data-i18n="help_txt_out">TXT export</strong> — <span data-i18n="help_txt_out_desc">pouze přeložená hesla. Překlady jsou pod sekcí <code>--- Translator Google (cs) ---</code> jako pole GT_Vyznam, GT_Definice atd. Lze znovu načíst — překlady se obnoví automaticky.</span></li>
+    <li><strong data-i18n="help_json">JSON export/import</strong> — <span data-i18n="help_json_desc">slovník ID→překlady. Při načtení se merguje do TXT dat. Ideální pro zálohu a pokračování práce.</span></li>
+  </ul>
+
+  <div class="help-h2" data-i18n="help_ls_title">LocalStorage sessions</div>
+  <div class="help-p" data-i18n="help_ls">Každý soubor má svou session (klíč = název souboru). Session přežije zavření prohlížeče. Po načtení stejného souboru stránka oznámí existující session — klikni <strong>📂 LS Sessions → Načíst</strong> pro obnovení.</div>
+  <div class="help-tip" data-i18n="help_ls_tip">⚠ LS má limit ~5 MB. Při překladu velkých sekcí exportuj průběžně do JSON a LS Sessions mažte po exportu.</div>
+
+  <div class="help-h2" data-i18n="help_fix_title">Workflow korekce s AI</div>
+  <ul class="help-ul">
+    <li data-i18n="help_fix_1">Stáhni exportovaný TXT s překlady.</li>
+    <li data-i18n="help_fix_2">V tabu Korekce vyber sekci a pole, klikni <strong>📋 Generovat prompt</strong>.</li>
+    <li data-i18n="help_fix_3">Zkopíruj prompt, otevři AI chat, přilož TXT soubor, odešli.</li>
+    <li data-i18n="help_fix_4">Odpověď AI vlož do pole <strong>2. Odpověď AI</strong> a klikni <strong>⚙ Parsovat pravidla</strong>.</li>
+    <li data-i18n="help_fix_5">Zkontroluj pravidla v tabulce (lze ručně upravit), klikni <strong>👁 Náhled</strong> a pak <strong>✅ Použít vše</strong>.</li>
+    <li data-i18n="help_fix_6">Opakuj — při dalším kole AI vidí stávající pravidla a může je upravit nebo doplnit.</li>
+  </ul>
+  <div class="help-tip" data-i18n="help_fix_tip">💡 Pravidla jsou hledání/nahrazení nad uloženými překlady v paměti — neměníš originální soubor. Po aplikaci ulož do LS nebo exportuj.</div>
+
+  <div class="help-h2" data-i18n="help_keys_title">Klávesové zkratky</div>
+  <ul class="help-ul">
+    <li><span class="help-kbd">↑</span> <span class="help-kbd">↓</span> — <span data-i18n="help_key_arrows">navigace v seznamu hesel (když není focus na poli)</span></li>
+    <li><span class="help-kbd">Ctrl+S</span> — <span data-i18n="help_key_save">uložit aktuální heslo</span></li>
+  </ul>
+
+  <div class="help-h2" data-i18n="help_csp_title">Provoz lokálně vs GitHub Pages</div>
+  <div class="help-p" data-i18n="help_csp">Stránka v claude.ai preview nemůže volat Google Translate API (CSP blokování). Pro plný provoz: stáhni HTML soubor a otevři lokálně v prohlížeči, nebo nahraj na GitHub Pages.</div>
+
+</div>
 </div>
 
 <!-- LS MODAL -->
@@ -1590,7 +1700,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    ['translate','viewer','batch','fix'].forEach(t=>{
+    ['translate','viewer','batch','fix','help'].forEach(t=>{
       $('tab-'+t).style.display=(t===btn.dataset.tab)?'flex':'none';
     });
   });
@@ -1619,6 +1729,13 @@ $('btnFixGenPrompt').addEventListener('click', () => {
   const secDone = secAll.filter(e => e.trans?.[field]);
   const pct     = secAll.length ? Math.round(secDone.length/secAll.length*100) : 0;
 
+  // Existující pravidla pro kontext AI
+  const existingRulesJson = fixRules.length
+    ? '\n\nSTÁVAJÍCÍ PRAVIDLA OPRAV (která již máme):\n```json\n' +
+      JSON.stringify(fixRules.map((r,i)=>({id:i, ...r})), null, 2) +
+      '\n```\nPro každé stávající pravidlo uveď v odpovědi zda ho PONECHAT, UPRAVIT nebo SMAZAT (s důvodem).'
+    : '';
+
   $('fixPromptBox').value =
 `Analyzuj přiložený soubor — jsou to strojové překlady pole "${FIELD_LABELS[field]}" ze Strong's Concordance (sekce: ${sec}) přeložené přes Google Translate do češtiny.
 
@@ -1632,45 +1749,56 @@ Struktura záznamu v souboru:
   ...původní pole...
   --- Translator Google (cs) ---
   Cz: původní český překlad (pokud existoval)
-  Význam: přeložené heslo (gramatika) — překlad
-  Definice: přeložená definice
-  Původ: přeložená etymologie
-  KJV: přeložený KJV název
+  GT_Vyznam: přeložené heslo (gramatika) — překlad
+  GT_Definice: přeložená definice
+  GT_Puvod: přeložená etymologie
+  GT_KJV: přeložený KJV název${existingRulesJson}
 
-ÚKOL 1 – OPAKUJÍCÍ SE CHYBY (JSON):
-Projdi všechna hesla v souboru a najdi chyby opravitelné automatickým hledáním a nahrazením.
-Hledej VZORY které se opakují u více hesel (min. 3+). Ignoruj chyby specifické pro jedno heslo.
+ÚKOL – PRAVIDLA OPRAV:
+Projdi všechna hesla a najdi chyby opravitelné automatickým hledáním a nahrazením (min. 3+ výskyty).
+Ignoruj chyby specifické pro jedno heslo. Vlastní jména neopravuj hromadně.
 
-Typické chyby GT které hledej:
+Typické chyby GT:
 - Gramatické tagy přeloženy jako jazyky: (sloveno)→(sloveso), (slovensky)→(sloveso), (slovinsky)→(sloveso)
-- Nepřeložené kódy: (G:ADV)→(příslovce), (G:N-M)→(podst.jm., m.r.) apod.
-- Tautologie v poli Význam: "— což znamená: X" nebo "— význam: X" kde X je totéž co překlad
-- Odborné termíny ponechané v angličtině: indecl., cf., metaph., sc., prop., viz také lat. zkratky
-- Zkratky biblických knih přeloženy špatně nebo nepřeloženy
-- Vlastní jména přeložena jako běžná slova
+- Nepřeložené kódy: (G:ADV)→(příslovce) apod.
+- Tautologie: "— což znamená: X" nebo "— význam: X"
+- Odborné termíny v angličtině: indecl., cf., metaph., sc., prop.
+- Zkratky biblických knih přeloženy špatně
 
-Odpověz ve DVOU blocích:
+Odpověz ve TŘECH blocích:
 
-BLOK 1 – JSON pravidla (pouze opakující se vzory, každé pravidlo uveď počet odhadovaných výskytů):
+BLOK 1 – NOVÁ pravidla (formát JSON, pole "akce":"pridat"):
 \`\`\`json
 [
   {
+    "akce": "pridat",
     "pole": "${field}",
-    "hledat": "přesný text k nalezení",
-    "nahradit": "náhrada (prázdný řetězec = smazat)",
+    "hledat": "přesný text",
+    "nahradit": "náhrada",
     "regex": false,
-    "popis": "co opravuje — odhadovaný počet výskytů"
+    "popis": "co opravuje — počet výskytů"
   }
 ]
 \`\`\`
 
-BLOK 2 – Hodnocení kvality (česky, 5–10 vět):
-Popiš celkovou kvalitu překladu pole "${FIELD_LABELS[field]}" v sekci ${sec}.
-Co GT zvládá dobře, co je systematicky špatně, jak moc je překlad použitelný pro biblický lexikon.
-Navrhni 2–3 konkrétní zlepšení.`;
+BLOK 2 – ÚPRAVY stávajících pravidel (pouze pokud jsou špatná nebo neúplná):
+\`\`\`json
+[
+  {
+    "akce": "upravit",
+    "id": 0,
+    "hledat": "nový text hledání",
+    "nahradit": "nová náhrada",
+    "popis": "proč a jak upraveno"
+  }
+]
+\`\`\`
+
+BLOK 3 – Hodnocení kvality (česky, 5–10 vět):
+Celková kvalita překladu, co funguje, co ne, návrhy na zlepšení.`;
 
   $('fixStatus').textContent = `${secDone.length} / ${secAll.length} hesel (${pct}%)`;
-  log(`Korekce: prompt vygenerován — ${pct}% sekce přeloženo`, 'inf');
+  log(`Korekce: prompt vygenerován — ${pct}% sekce přeloženo${fixRules.length ? `, ${fixRules.length} stávajících pravidel` : ''}`, 'inf');
 });
 
 $('btnFixCopyPrompt').addEventListener('click', () => {
@@ -1683,62 +1811,99 @@ $('btnFixCopyPrompt').addEventListener('click', () => {
 
 $('btnFixParseAi').addEventListener('click', () => {
   const raw = $('fixAiBox').value.trim(); if (!raw) return;
-  let rules = [];
 
-  // 1. Zkusit JSON v ```json ... ``` bloku
-  const fenceMatch = raw.match(/```json\s*([\s\S]*?)```/);
-  if (fenceMatch) {
-    try {
-      const parsed = JSON.parse(fenceMatch[1].trim());
-      if (Array.isArray(parsed)) rules = parsed.filter(r => r.hledat !== undefined);
-    } catch(e) {}
-  }
+  // Extrahovat všechny ```json ... ``` bloky
+  const fenceBlocks = [...raw.matchAll(/```json\s*([\s\S]*?)```/g)].map(m => {
+    try { return JSON.parse(m[1].trim()); } catch(e) { return null; }
+  }).filter(Boolean);
 
-  // 2. Fallback: holý JSON blok [ ... ]
-  if (!rules.length) {
+  let toAdd = [], toEdit = [];
+
+  fenceBlocks.forEach(parsed => {
+    if (!Array.isArray(parsed)) return;
+    parsed.forEach(r => {
+      if (!r) return;
+      if (r.akce === 'upravit' && r.id !== undefined) {
+        toEdit.push(r);
+      } else if (r.hledat !== undefined) {
+        // pridat nebo bez akce
+        toAdd.push(r);
+      }
+    });
+  });
+
+  // Fallback: holý [ ... ] pokud žádné bloky
+  if (!toAdd.length && !toEdit.length) {
     const jsonMatch = raw.match(/\[[\s\S]*?\]/);
     if (jsonMatch) {
       try {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed)) rules = parsed.filter(r => r.hledat !== undefined);
+        if (Array.isArray(parsed)) toAdd = parsed.filter(r => r.hledat !== undefined);
       } catch(e) {}
     }
   }
 
-  // 3. Fallback: "X" → "Y" patterny z textu
-  if (!rules.length) {
+  // Fallback: "X" → "Y" patterny
+  if (!toAdd.length && !toEdit.length) {
     const re = /[„""](.+?)["""] *[→\->:] *[„""](.*)["""]/g;
     let m;
     while ((m = re.exec(raw)) !== null)
-      rules.push({pole:$('fixField').value, hledat:m[1], nahradit:m[2]||'', regex:false, popis:''});
+      toAdd.push({pole:$('fixField').value, hledat:m[1], nahradit:m[2]||'', regex:false, popis:''});
   }
 
-  if (!rules.length) { log('Korekce: nepodařilo se parsovat pravidla','err'); return; }
+  if (!toAdd.length && !toEdit.length) {
+    log('Korekce: nepodařilo se parsovat pravidla','err'); return;
+  }
 
-  fixRules = rules.map(r => ({
-    pole:     r.pole     || $('fixField').value,
-    hledat:   String(r.hledat   || ''),
-    nahradit: String(r.nahradit !== undefined ? r.nahradit : ''),
-    regex:    !!r.regex,
-    scope:    r.scope    || 'all',
-    popis:    r.popis    || '',
-  }));
-  renderFixRules();
-  $('btnFixRun').disabled = $('btnFixPreview').disabled = false;
-
-  // Zobrazit hodnocení kvality pokud je v textu (BLOK 2)
-  const blok2 = raw.match(/BLOK\s*2[\s\S]*?(?=BLOK\s*[13]|$)/i) ||
-                raw.match(/Hodnocen[ií][\s\S]{20,}/i);
-  if (blok2) {
-    const hodnoceni = blok2[0].replace(/^BLOK\s*2[^\n]*\n?/i,'').trim();
-    if (hodnoceni.length > 30) {
-      log('─── Hodnocení kvality ───', 'inf');
-      hodnoceni.split('\n').filter(l=>l.trim()).forEach(l => log(l, ''));
-      log('────────────────────────', 'inf');
+  // Aplikovat úpravy stávajících pravidel
+  let editCnt = 0;
+  toEdit.forEach(edit => {
+    const idx = parseInt(edit.id);
+    if (idx >= 0 && idx < fixRules.length) {
+      if (edit.hledat   !== undefined) fixRules[idx].hledat   = edit.hledat;
+      if (edit.nahradit !== undefined) fixRules[idx].nahradit = edit.nahradit;
+      if (edit.pole     !== undefined) fixRules[idx].pole     = edit.pole;
+      if (edit.regex    !== undefined) fixRules[idx].regex    = !!edit.regex;
+      if (edit.popis    !== undefined) fixRules[idx].popis    = edit.popis;
+      editCnt++;
+      log(`Korekce: pravidlo #${idx} upraveno — ${fixRules[idx].popis||fixRules[idx].hledat}`, 'inf');
     }
+  });
+
+  // Přidat nová pravidla
+  const addCnt = toAdd.length;
+  toAdd.forEach(r => {
+    fixRules.push({
+      pole:     r.pole     || $('fixField').value,
+      hledat:   String(r.hledat   || ''),
+      nahradit: String(r.nahradit !== undefined ? r.nahradit : ''),
+      regex:    !!r.regex,
+      scope:    r.scope    || 'all',
+      popis:    r.popis    || '',
+    });
+  });
+
+  if (fixRules.length) {
+    renderFixRules();
+    $('btnFixRun').disabled = $('btnFixPreview').disabled = false;
   }
 
-  log(`Korekce: parsováno ${fixRules.length} pravidel`, 'ok');
+  // Hodnocení kvality z BLOK 3 nebo posledního textového bloku
+  const blok3 = raw.match(/BLOK\s*3([\s\S]*?)(?=BLOK\s*[12]|$)/i);
+  const hodnoceni = blok3
+    ? blok3[1].replace(/^[^\n]*\n/,'').trim()
+    : raw.replace(/```[\s\S]*?```/g,'').replace(/BLOK\s*[123][^\n]*/gi,'').trim();
+
+  if (hodnoceni.length > 40) {
+    log('─── Hodnocení kvality ───', 'inf');
+    hodnoceni.split('\n').filter(l=>l.trim()).slice(0,15).forEach(l => log(l.trim(), ''));
+    log('────────────────────────', 'inf');
+  }
+
+  const parts = [];
+  if (addCnt)  parts.push(`přidáno ${addCnt}`);
+  if (editCnt) parts.push(`upraveno ${editCnt}`);
+  log(`Korekce: ${parts.join(', ')} pravidel (celkem ${fixRules.length})`, 'ok');
 });
 
 function renderFixRules() {
@@ -1857,8 +2022,117 @@ $('btnFixRun').addEventListener('click', () => {
   setTimeout(() => { if (window._fixChanges?.length) $('btnFixApply').click(); }, 350);
 });
 
+// ═══════════════════════════════════════
+//  i18n – přepínání jazyka CS/EN
+// ═══════════════════════════════════════
+const I18N = {
+  cs: {
+    tab_translate:'Překladač', tab_viewer:'Prohlížeč', tab_batch:'Batch pole',
+    tab_fix:'Korekce', tab_help:'Nápověda',
+    help_title:'Strong\'s Concordance Translator — Nápověda',
+    help_intro:'Nástroj pro strojový překlad Strong\'s Concordance do libovolného jazyka přes Google Translate. Pracuje lokálně v prohlížeči, nevyžaduje server ani API klíč.',
+    help_workflow_title:'Základní workflow',
+    help_step1_title:'Načíst soubor',
+    help_step1:'Klikni <strong>📂 Načíst .txt</strong> a vyber soubor Strong\'s ve formátu TXT. Volitelně načti i JSON s uloženými překlady přes <strong>📥 Načíst .json</strong>.',
+    help_step2_title:'Nastavit překlad',
+    help_step2:'Vyber sekci (G NT / G rozšířená / H), cílový jazyk a zpoždění. Pak klikni <strong>▶ Auto překlad</strong> nebo přeložíš hesla po jednom.',
+    help_step3_title:'Průběžně ukládat',
+    help_step3:'Překlady se ukládají do LocalStorage každých 20 hesel. <strong>💿 Uložit</strong> uloží ručně. <strong>📂 LS Sessions</strong> zobrazí správu.',
+    help_step4_title:'Korekce AI',
+    help_step4:'V tabu <strong>🔧 Korekce</strong> vygeneruj prompt, přilož TXT k AI chatu, odpověď vlož zpět a parsuj pravidla hromadných oprav.',
+    help_step5_title:'Exportovat',
+    help_step5:'Stáhni <strong>💾 JSON</strong> (pro další zpracování) nebo <strong>📄 TXT</strong> (čitelný formát kompatibilní se zpětným načtením).',
+    help_tabs_title:'Taby',
+    help_tab_translate:'hlavní pracovní plocha. Levý panel = seznam hesel s filtry. Pravý panel = editor s originálními poli a přeloženými výstupy.',
+    help_tab_viewer:'zobrazí hesla v kartovém formátu. Navigace heslo po hesle nebo rozsahem.',
+    help_tab_batch:'přeloží jedno vybrané pole pro celou sekci najednou.',
+    help_tab_fix:'systém hromadných oprav s AI analýzou chyb.',
+    help_files_title:'Formáty souborů',
+    help_txt_in:'TXT vstup', help_txt_in_desc:'originální Strong\'s soubor. Sekce G1–G5624 = NT řečtina, G6000+ = rozšířená, H = hebrejština.',
+    help_txt_out:'TXT export', help_txt_out_desc:'překlady pod sekcí <code>--- Translator Google (cs) ---</code>. Lze znovu načíst.',
+    help_json:'JSON export/import', help_json_desc:'slovník ID→překlady. Merguje se do TXT dat.',
+    help_ls_title:'LocalStorage sessions',
+    help_ls:'Každý soubor má svou session (klíč = název souboru). Session přežije zavření prohlížeče.',
+    help_ls_tip:'⚠ LS má limit ~5 MB. Exportuj průběžně do JSON.',
+    help_fix_title:'Workflow korekce s AI',
+    help_fix_1:'Stáhni exportovaný TXT s překlady.',
+    help_fix_2:'V tabu Korekce vyber sekci a pole, klikni <strong>📋 Generovat prompt</strong>.',
+    help_fix_3:'Zkopíruj prompt, otevři AI chat, přilož TXT soubor, odešli.',
+    help_fix_4:'Odpověď AI vlož do pole <strong>2. Odpověď AI</strong> a klikni <strong>⚙ Parsovat pravidla</strong>.',
+    help_fix_5:'Zkontroluj pravidla, klikni <strong>👁 Náhled</strong> a pak <strong>✅ Použít vše</strong>.',
+    help_fix_6:'Opakuj — AI vidí stávající pravidla a může je upravit.',
+    help_fix_tip:'💡 Pravidla mění jen překlady v paměti. Po aplikaci ulož do LS nebo exportuj.',
+    help_keys_title:'Klávesové zkratky',
+    help_key_arrows:'navigace v seznamu hesel',
+    help_key_save:'uložit aktuální heslo',
+    help_csp_title:'Lokálně vs GitHub Pages',
+    help_csp:'Stránka v claude.ai nemůže volat GT API (CSP). Pro plný provoz otevři HTML lokálně nebo nahraj na GitHub Pages.',
+  },
+  en: {
+    tab_translate:'Translator', tab_viewer:'Viewer', tab_batch:'Batch field',
+    tab_fix:'Corrections', tab_help:'Help',
+    help_title:'Strong\'s Concordance Translator — Help',
+    help_intro:'A tool for machine translation of Strong\'s Concordance into any language via Google Translate. Runs locally in the browser, no server or API key required.',
+    help_workflow_title:'Basic workflow',
+    help_step1_title:'Load file',
+    help_step1:'Click <strong>📂 Load .txt</strong> and select a Strong\'s TXT file. Optionally load a JSON with saved translations via <strong>📥 Load .json</strong>.',
+    help_step2_title:'Configure translation',
+    help_step2:'Select section (G NT / G extended / H), target language and delay. Then click <strong>▶ Auto translate</strong> or translate entries one by one.',
+    help_step3_title:'Save progress',
+    help_step3:'Translations are auto-saved to LocalStorage every 20 entries. <strong>💿 Save</strong> saves manually. <strong>📂 LS Sessions</strong> shows session management.',
+    help_step4_title:'AI corrections',
+    help_step4:'In the <strong>🔧 Corrections</strong> tab, generate a prompt, attach the exported TXT to an AI chat, paste the response back and parse correction rules.',
+    help_step5_title:'Export',
+    help_step5:'Download as <strong>💾 JSON</strong> (for further processing) or <strong>📄 TXT</strong> (readable format compatible with re-import).',
+    help_tabs_title:'Tabs',
+    help_tab_translate:'main workspace. Left panel = entry list with filters. Right panel = editor with original fields and translated outputs.',
+    help_tab_viewer:'displays entries in card format. Navigate entry by entry or by range.',
+    help_tab_batch:'translates one selected field for the entire section at once.',
+    help_tab_fix:'bulk correction system with AI error analysis.',
+    help_files_title:'File formats',
+    help_txt_in:'TXT input', help_txt_in_desc:'original Strong\'s file. Sections G1–G5624 = NT Greek, G6000+ = extended, H = Hebrew.',
+    help_txt_out:'TXT export', help_txt_out_desc:'translations under <code>--- Translator Google (cs) ---</code> section. Can be re-imported.',
+    help_json:'JSON export/import', help_json_desc:'dictionary ID→translations. Merges into TXT data.',
+    help_ls_title:'LocalStorage sessions',
+    help_ls:'Each file has its own session (key = filename). Session survives browser close.',
+    help_ls_tip:'⚠ LS limit ~5 MB. Export to JSON periodically.',
+    help_fix_title:'AI correction workflow',
+    help_fix_1:'Download the exported TXT with translations.',
+    help_fix_2:'In the Corrections tab, select section and field, click <strong>📋 Generate prompt</strong>.',
+    help_fix_3:'Copy the prompt, open an AI chat, attach the TXT file, send.',
+    help_fix_4:'Paste the AI response into field <strong>2. AI Response</strong> and click <strong>⚙ Parse rules</strong>.',
+    help_fix_5:'Check the rules, click <strong>👁 Preview</strong> then <strong>✅ Apply all</strong>.',
+    help_fix_6:'Repeat — AI sees existing rules and can refine them.',
+    help_fix_tip:'💡 Rules only modify translations in memory. Save to LS or export after applying.',
+    help_keys_title:'Keyboard shortcuts',
+    help_key_arrows:'navigate entry list',
+    help_key_save:'save current entry',
+    help_csp_title:'Local vs GitHub Pages',
+    help_csp:'The page in claude.ai cannot call the GT API (CSP). For full operation open the HTML locally or host on GitHub Pages.',
+  }
+};
+
+let currentLang = localStorage.getItem('strongs_lang') || 'cs';
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = I18N[currentLang]?.[key];
+    if (val !== undefined) el.innerHTML = val;
+  });
+  $('btnLang').textContent = currentLang === 'cs' ? '🌐 EN' : '🌐 CS';
+}
+
+$('btnLang').addEventListener('click', () => {
+  currentLang = currentLang === 'cs' ? 'en' : 'cs';
+  localStorage.setItem('strongs_lang', currentLang);
+  applyI18n();
+  log(currentLang === 'en' ? 'Language: English' : 'Jazyk: Čeština', 'inf');
+});
+
 // INIT
 setTimeout(detectCSP, 1200);
+applyI18n();
 </script>
 </body>
 </html>
