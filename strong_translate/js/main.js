@@ -1301,7 +1301,7 @@ function applyAutoPanelSettings() {
 // -- LOAD TXT -----------------------------------------------------
 const LAST_FILE_KEY = 'strong_last_file';
 const DEFAULT_TXT_FILE = 'strong_finalni_verze.txt';
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/sstistkoo/stistko/main/';
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/sstistkoo/strong_translate/main/';
 
 function loadTXT(input) {
   const file = input.files[0];
