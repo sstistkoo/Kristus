@@ -406,7 +406,24 @@ function saveAISettings() {
     }
   }
 
-async function loadCustomLangFile(event) {
+  async function loadPersonalPromptFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const promptData = JSON.parse(text);
+      const textarea = document.getElementById('personalPromptTextarea');
+      if (textarea) {
+        textarea.value = text;
+        showToast(t('toast.lang.custom.loaded', { lang: file.name }));
+      }
+    } catch (err) {
+      showToast(t('toast.lang.custom.error', { error: String(err.message || err) }));
+    }
+    event.target.value = '';
+  }
+
+ async function loadCustomLangFile(event) {
    const file = event.target.files[0];
    if (!file) return;
    try {
@@ -469,5 +486,5 @@ function saveLangSettings() {
     showToast(t('toast.lang.settings.saved'));
   }
 
-  return { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile };
+  return { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile, loadPersonalPromptFile };
 }

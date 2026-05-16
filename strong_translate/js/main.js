@@ -2083,7 +2083,7 @@ const settingsModalsApi = createSettingsModalsApi({
   updateAutoProviderCountdowns: (...a) => updateAutoProviderCountdowns(...a),
   updateStats: headerApi.updateStats,
 });
-const { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile } = settingsModalsApi;
+const { showSettingsModal, closeSettingsModal, showPromptAIModal, closePromptAIModal, saveAISettings, showPromptLangModal, closePromptLangModal, updatePromptLangButtonLabel, saveLangSettings, loadCustomLangFile, loadPersonalPromptFile } = settingsModalsApi;
 
 const promptLibraryApi = createPromptLibraryApi({
     state,
@@ -2357,6 +2357,7 @@ window.showPromptLangModal = showPromptLangModal;
   window.closePromptLangModal = closePromptLangModal;
   window.saveLangSettings = saveLangSettings;
   window.loadCustomLangFile = loadCustomLangFile;
+  window.loadPersonalPromptFile = loadPersonalPromptFile;
 // Secondary prompts
  window.showSecondaryPromptsModal = promptLibraryApi.showSecondaryPromptsModal;
   window.closeSecondaryPromptsModal = promptLibraryApi.closeSecondaryPromptsModal;
