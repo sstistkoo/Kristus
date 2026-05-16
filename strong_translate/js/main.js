@@ -1329,43 +1329,43 @@ function loadTXT(input) {
 }
 
 function loadDefaultFile() {
-   // Always try to load the default file from GitHub first, bypassing localStorage cache
+   // Try local files first, then GitHub as fallback
    const githubUrl = `${GITHUB_RAW_BASE}${encodeURIComponent(DEFAULT_TXT_FILE)}`;
-   const fallbacks = [githubUrl, 'strong_greek_detailed.txt'];
+   const fallbacks = [DEFAULT_TXT_FILE, 'strong_greek_detailed.txt', githubUrl];
 
    const tryFetch = (idx) => {
-     if (idx >= fallbacks.length) {
-       throw new Error(t('error.fileNotFoundFallback'));
-     }
-     const target = fallbacks[idx];
-     return fetch(target)
-       .then(r => {
-         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-         return r.text();
-       })
-       .then(text => ({ text, source: target }))
-       .catch(() => tryFetch(idx + 1));
-   };
+      if (idx >= fallbacks.length) {
+        throw new Error(t('error.fileNotFoundFallback'));
+      }
+      const target = fallbacks[idx];
+      return fetch(target)
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          return r.text();
+        })
+        .then(text => ({ text, source: target }))
+        .catch(() => tryFetch(idx + 1));
+    };
 
-   tryFetch(0)
-     .then(({ text, source }) => {
-       state.entries = parseTXT(text);
-       state.currentFileId = computeFileId(state.entries);
-       localStorage.setItem(LAST_FILE_KEY, DEFAULT_TXT_FILE); // Update cache to what we actually loaded
-       document.getElementById('statusTXT').textContent = `? ${DEFAULT_TXT_FILE} � ${t('entries.count', { count: state.entries.length })}`;
-       document.getElementById('statusTXT').className = 'file-status ok';
-       document.getElementById('fileReady').style.display = 'block';
-       document.getElementById('startBtn').disabled = false;
-       checkResume();
-       if (source === githubUrl) {
-         showToast(t('toast.loaded.github'));
-       } else {
-         showToast(t('toast.loaded.fallback'));
-       }
-      })
-     .catch(e => {
-       logError('loadDefaultFile', e, { file: DEFAULT_TXT_FILE, githubUrl });
-       document.getElementById('statusTXT').textContent = '? ' + e.message;
+    tryFetch(0)
+      .then(({ text, source }) => {
+        state.entries = parseTXT(text);
+        state.currentFileId = computeFileId(state.entries);
+        localStorage.setItem(LAST_FILE_KEY, DEFAULT_TXT_FILE); // Update cache to what we actually loaded
+        document.getElementById('statusTXT').textContent = `? ${DEFAULT_TXT_FILE} � ${t('entries.count', { count: state.entries.length })}`;
+        document.getElementById('statusTXT').className = 'file-status ok';
+        document.getElementById('fileReady').style.display = 'block';
+        document.getElementById('startBtn').disabled = false;
+        checkResume();
+        if (source === githubUrl) {
+          showToast(t('toast.loaded.github'));
+        } else {
+          showToast(t('toast.loaded.fallback'));
+        }
+       })
+      .catch(e => {
+        logError('loadDefaultFile', e, { file: DEFAULT_TXT_FILE, githubUrl });
+        document.getElementById('statusTXT').textContent = '? ' + e.message;
      });
  }
 
