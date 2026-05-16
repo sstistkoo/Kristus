@@ -2133,6 +2133,27 @@ $('btnLang').addEventListener('click', () => {
 // INIT
 setTimeout(detectCSP, 1200);
 applyI18n();
+
+// Auto-načtení strong_finalni_verze.txt ze stejné složky
+(async () => {
+  try {
+    const r = await fetch('strong_finalni_verze.txt');
+    if (!r.ok) return; // soubor není k dispozici – tiché selhání
+    const text = await r.text();
+    allEntries = parseFile(text);
+    doneCnt = 0; errCnt = 0; currentIdx = -1;
+    $('fileInfo').textContent = `📄 strong_finalni_verze.txt — ${allEntries.length} záznamů`;
+    lsSetSession('strong_finalni_verze.txt');
+    $('btnStart').disabled = false;
+    $('btnStartAll').disabled = false;
+    $('btnBatchStart').disabled = false;
+    viewerFiltered = allEntries; vNavIdx = 0;
+    renderList();
+    log(`Auto-načteno: strong_finalni_verze.txt — ${allEntries.length} záznamů`, 'ok');
+  } catch(e) {
+    // Soubor není dostupný (lokální file:// protokol blokuje fetch) – ignorovat
+  }
+})();
 </script>
 </body>
 </html>
