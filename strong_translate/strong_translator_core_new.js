@@ -1,7 +1,7 @@
 /**
  * Strong Greek to Czech Translator - Core Module
  */
-import { SYSTEM_MESSAGE, DEFAULT_PROMPT } from './strong_prompts.js';
+import { getResolvedSystemMessage, getResolvedDefaultPrompt } from './js/aiPromptsResolve.js';
 
 export function parseTXT(text) {
   const lines = text.split('\n');
@@ -83,20 +83,23 @@ export function buildPromptMessages(batch) {
     const tvarPart = tvar ? ` (${tvar})` : '';
     return `${e.key} | ${e.greek}${tvarPart}\nD: ${def}`;
   }).join('\n\n');
-  const userContent = String(DEFAULT_PROMPT || '')
+  const sysMsg = getResolvedSystemMessage();
+  const userPrompt = getResolvedDefaultPrompt();
+  const userContent = String(userPrompt || '')
     .replace(/{TARGET_LANG}/g, 'češtiny')
     .replace(/{SOURCE_LANG}/g, 'řečtiny/hebrejštiny')
     .replace(/{HESLA}/g, items);
 
   return [
-    { role: 'system', content: SYSTEM_MESSAGE },
+    { role: 'system', content: sysMsg },
     { role: 'user', content: userContent || items }
   ];
 }
 
 export function buildRetryMessages(userContent) {
+  const sysMsg = getResolvedSystemMessage();
   return [
-    { role: 'system', content: SYSTEM_MESSAGE },
+    { role: 'system', content: sysMsg },
     { role: 'user', content: userContent }
   ];
 }
@@ -316,6 +319,4 @@ export function validateAPIResponse(d, p) {
   return true;
 }
 
-export { SYSTEM_MESSAGE, DEFAULT_PROMPT };
-
-export default { parseTXT, parseTranslations, buildPromptMessages, buildRetryMessages, SYSTEM_MESSAGE, DEFAULT_PROMPT, validateAPIResponse };
+export default { parseTXT, parseTranslations, buildPromptMessages, buildRetryMessages, validateAPIResponse };

@@ -500,12 +500,10 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
        { role: 'system', content: secondarySys },
        { role: 'user', content: userContent }
      ];
-   } else {
-     // fallback na p?vodní model-test prompt
-     const promptType = TOPIC_PROMPT_PRESET_MAP[topicId];
-     if (!promptType) return null;
-     messages = buildModelTestMessages([entry], 'auto-live', promptType, true);
-   }
+} else {
+      // použij stejný prompt jako Groq (z prompts.cs.json)
+      messages = buildPromptMessages([entry]);
+    }
 
   for (let i = 0; i < modelQueue.length; i++) {
     if (isSideFallbackAborted(abortVersion)) return null;
