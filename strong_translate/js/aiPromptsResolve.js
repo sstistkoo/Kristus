@@ -2,6 +2,7 @@
  * Překlady AI promptů z i18n (klíče aiPrompts.*) s fallbackem na strong_prompts / core.
  */
 import { t } from './i18n.js';
+import { getPromptPack } from './i18n.js';
 import core from '../strong_translator_core_new.js';
 import prompts from '../strong_prompts.js';
 
@@ -14,35 +15,41 @@ function tp(key, fallback) {
 
 // Načte překlad podle cílového jazyka překladu (strong_target_lang)
 function tTargetLang(key, fallback) {
-  const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
-  // Mapování na kód souboru prompts
-  const langToFileCode = {
-    cz: 'cs', cs: 'cs', sk: 'sk', pl: 'pl', de: 'de', fr: 'fr', es: 'es', it: 'it',
-    pt: 'pt', ru: 'ru', uk: 'uk', bg: 'bg', ro: 'ro', da: 'da', fi: 'fi', hu: 'hu',
-    nl: 'nl', no: 'no', sv: 'sv', ar: 'ar', el: 'el', tr: 'tr', 'zh-cn': 'zh_CN',
-    ja: 'ja', ko: 'ko', he: 'he', en: 'en', gr: 'el', personal: 'personal'
-  };
+   const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
 
-  // Zpracování personal promptu – načíst z localStorage jako JSON
-  if (targetLang === 'personal') {
-    const stored = localStorage.getItem('strong_personal_prompt_json');
-    if (stored) {
-      try {
-        const pack = JSON.parse(stored);
-        const v = pack[key];
-        return v !== undefined ? v : fallback;
-      } catch { /* fallback below */ }
-    }
-    return fallback;
-  }
+   // Zpracování personal promptu – načíst z localStorage jako JSON
+   if (targetLang === 'personal') {
+     const stored = localStorage.getItem('strong_personal_prompt_json');
+     if (stored) {
+       try {
+         const pack = JSON.parse(stored);
+         const v = pack[key];
+         return v !== undefined ? v : fallback;
+       } catch { /* fallback below */ }
+     }
+     return fallback;
+   }
 
-  const fileCode = langToFileCode[targetLang] || 'cs';
+   // Načtěme prompty pro cílový jazyk z cache (přes getPromptPack)
+   const pack = getPromptPack(targetLang);
+   if (pack && Object.prototype.hasOwnProperty.call(pack, key)) {
+     const v = pack[key];
+     if (v !== undefined) return v;
+   }
 
-  // Zkusíme načíst z UI_MESSAGES (byly načteny mergePromptPacksIntoLoaded)
-  const UI_MESSAGES = window?.UI_MESSAGES || {};
-  const promptMessages = UI_MESSAGES[fileCode] || UI_MESSAGES.cs || {};
-  const v = promptMessages[key];
-  return v !== undefined ? v : fallback;
+   // Fallback na cs a en balíčky
+   const csPack = getPromptPack('cs');
+   if (csPack && Object.prototype.hasOwnProperty.call(csPack, key)) {
+     const v = csPack[key];
+     if (v !== undefined) return v;
+   }
+   const enPack = getPromptPack('en');
+   if (enPack && Object.prototype.hasOwnProperty.call(enPack, key)) {
+     const v = enPack[key];
+     if (v !== undefined) return v;
+   }
+
+   return fallback;
 }
 
 export function getResolvedSystemMessage() {
