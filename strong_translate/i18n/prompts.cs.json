@@ -11,7 +11,7 @@
   "aiPrompts.final.name": "Finální",
   "aiPrompts.category.final": "Finální",
   "aiPrompts.final.desc": "Kompletní překlad se všemi poli",
-  "aiPrompts.lib.default.name": "Přelož následující slova z angličtiny a originálních jazyků do češtiny podle pravidel. Doplňuj české přepisy a překlad v závorkách i v rámci překladu definice. Vrať pouze data bez komentářů.\n\nHESLA:\n{HESLA}",
+  "aiPrompts.lib.default.name": "System",
   "aiPrompts.category.default": "Default",
   "aiPrompts.category.test": "Test",
   "aiPrompts.category.custom": "Custom",
