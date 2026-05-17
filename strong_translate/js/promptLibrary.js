@@ -292,7 +292,7 @@ export function createPromptLibraryApi(deps) {
       const map = { default: 'prompt.tab.default', sekundarni: 'prompt.tab.sekundarni' };
       return t(map[cat] || cat);
     };
-    const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom' && cat !== 'sekundarni' && cat !== 'test' && !['detailed', 'concise', 'literal', 'library'].includes(cat)).map((cat) => {
+    const baseTabs = Object.keys(state.PROMPT_LIBRARY).filter(cat => cat !== 'custom' && cat !== 'sekundarni' && cat !== 'test').map((cat) => {
        const btn = `<div class="prompt-tab ${cat === 'default' ? 'active' : ''}" data-category="${cat}">${getPromptTabLabel(cat)}</div>`;
        if (cat === 'default') {
          const topicTabs = TOPIC_IDS_ORDER.map(tid => 

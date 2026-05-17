@@ -70,39 +70,21 @@ export function getResolvedFinalPrompt() {
  }
 
 export function getResolvedPromptLibraryBase() {
-      const base = JSON.parse(JSON.stringify(PROMPT_LIBRARY_BASE));
-      const defText = getResolvedDefaultPrompt();
-      const sysText = getResolvedSystemMessage();
-      const commonBatchDefault = tp('aiPrompts.common.batchDefault', core.DEFAULT_PROMPT);
-     if (base.default?.[0]) {
-         const o = base.default[0];
-         o.name = tp('aiPrompts.lib.default.name', o.name);
-         o.desc = tp('aiPrompts.lib.default.desc', o.desc);
-         o.text = defText;
-         o.system = tp('aiPrompts.lib.default.system', sysText);
-     }
-     const simpleCats = ['detailed', 'concise', 'literal'];
-     for (const cat of simpleCats) {
-         if (base[cat]?.[0]) {
-             const o = base[cat][0];
-             o.name = tp(`aiPrompts.lib.${cat}.name`, o.name);
-             o.desc = tp(`aiPrompts.lib.${cat}.desc`, o.desc);
-             o.text = tp(`aiPrompts.lib.${cat}.text`, commonBatchDefault);
-             o.system = tp(`aiPrompts.lib.${cat}.system`, sysText);
-         }
-     }
-     if (Array.isArray(base.library)) {
-         for (let i = 0; i < base.library.length; i++) {
-             const p = `aiPrompts.lib.stack${i}`;
-             const o = base.library[i];
-             o.name = tp(`${p}.name`, o.name);
-             o.desc = tp(`${p}.desc`, o.desc);
-             o.text = tp(`${p}.text`, commonBatchDefault);
-             o.system = tp(`${p}.system`, sysText);
-         }
-     }
-     return base;
- }
+       const base = JSON.parse(JSON.stringify(PROMPT_LIBRARY_BASE));
+       const defText = getResolvedDefaultPrompt();
+       const sysText = getResolvedSystemMessage();
+       const commonBatchDefault = tp('aiPrompts.common.batchDefault', core.DEFAULT_PROMPT);
+      if (base.default?.[0]) {
+          const o = base.default[0];
+          o.name = tp('aiPrompts.lib.default.name', o.name);
+          o.desc = tp('aiPrompts.lib.default.desc', o.desc);
+          o.text = defText;
+          o.system = sysText;
+      }
+      // Ostatní kategorie (detailed, concise, literal, stack0-2) už nejsou podporovány
+      // Všechny odkazy na ně jsou odstraněny
+      return base;
+  }
 
 export function getResolvedModelTestCatalog(fallbackCat) {
   const out = {};

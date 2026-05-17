@@ -765,56 +765,27 @@ function enforceSpecialistaFormat(promptText) {
        return getActiveMainPromptTemplate('batch');
      }
 
-       function getActiveSystemMessage() {
-         // Check for custom system prompt first
-         const custom = localStorage.getItem('strong_custom_system_prompt');
-         if (custom && custom.trim()) return custom.trim();
-         
-          // Get current mode (default, detailed, concise, literal, library, or system)
-          const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
+function getActiveSystemMessage() {
+          // Check for custom system prompt first
+          const custom = localStorage.getItem('strong_custom_system_prompt');
+          if (custom && custom.trim()) return custom.trim();
           
-          // For custom mode, we fall back to core since there's no library prompt
-          if (mode === 'custom') {
-            // Check if there's a prompt pack for target language
-            const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
-            const targetPromptPack = getPromptPack(targetLang);
-            if (targetPromptPack && targetPromptPack['aiPrompts.core.system']) {
-              return targetPromptPack['aiPrompts.core.system'];
-            }
-            return getResolvedSystemMessage();
+          // Vždy použijeme univerzální core system prompt
+          const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+          const targetPromptPack = getPromptPack(targetLang);
+          if (targetPromptPack && targetPromptPack['aiPrompts.core.system']) {
+            return targetPromptPack['aiPrompts.core.system'];
           }
           
-          // For library modes, try to get language-specific system prompt for the mode
-         const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
-         const targetPromptPack = getPromptPack(targetLang);
-         if (targetPromptPack) {
-           // Try mode-specific system prompt first (e.g., aiPrompts.lib.default.system)
-           const modeSystemKey = `aiPrompts.lib.${mode}.system`;
-           const modeSystemPrompt = targetPromptPack[modeSystemKey];
-           if (modeSystemPrompt && typeof modeSystemPrompt === 'string') {
-             return String(modeSystemPrompt).trim();
-           }
-           
-           // Fall back to core system prompt in target language
-           const coreSystemKey = 'aiPrompts.core.system';
-           const coreSystemPrompt = targetPromptPack[coreSystemKey];
-           if (coreSystemPrompt && typeof coreSystemPrompt === 'string') {
-             return String(coreSystemPrompt).trim();
-           }
-         }
-         
-         // Fall back to English core system prompt
-         const enPromptPack = getPromptPack('en');
-         if (enPromptPack) {
-           const enSystemPrompt = enPromptPack['aiPrompts.core.system'];
-           if (enSystemPrompt && typeof enSystemPrompt === 'string') {
-             return String(enSystemPrompt).trim();
-           }
-         }
-         
-         // Final fallback to resolved system message
-         return getResolvedSystemMessage();
-       }
+          // Fall back to English core system prompt
+          const enPromptPack = getPromptPack('en');
+          if (enPromptPack && enPromptPack['aiPrompts.core.system']) {
+            return enPromptPack['aiPrompts.core.system'];
+          }
+          
+          // Final fallback
+          return getResolvedSystemMessage();
+        }
 
       function getActiveSecondarySystemMessage() {
         const secondary = localStorage.getItem('strong_secondary_system_prompt');
