@@ -1908,7 +1908,8 @@ function savePrompts() {
 function exportSourceJson() {
   if (!csData) { toast('Nejprve načti soubor', 'err'); return; }
   const fname = `prompts.${editLangCode}.json`;
-  download(fname, JSON.stringify(csData, null, 2));
+  const fixed = fixLockTokens(csData, editLangCode);
+  download(fname, JSON.stringify(fixed, null, 2));
   toast(`⬇ Staženo ${fname}`, 'ok');
 }
 
@@ -3487,25 +3488,40 @@ async function translateAll() {
 function exportLang(code) {
   const data = translations[code];
   if (!data) { toast('Nejprve přelož tento jazyk', 'err'); return; }
-  const json = JSON.stringify(data, null, 2);
-  download(`prompts.${code}.json`, json);
+  const fixed = fixLockTokens(data, code);
+  download(`prompts.${code}.json`, JSON.stringify(fixed, null, 2));
   toast(`⬇ Staženo prompts.${code}.json`, 'ok');
 }
 
 async function exportAll() {
   const langs = LANGUAGES.filter(l => translations[l.code]);
-  if (langs.length === 0) { toast('Nejprve přelož alespoň jeden jazyk', 'err'); return; }
+  const hasSource = !!csData;
+
+  if (langs.length === 0 && !hasSource) {
+    toast('Nejprve načti soubor nebo přelož alespoň jeden jazyk', 'err'); return;
+  }
 
   if (typeof JSZip === 'undefined') {
     toast('JSZip se nenačetl, zkus obnovit stránku', 'err'); return;
   }
 
   const zip = new JSZip();
-  for (const lang of langs) {
-    const json = JSON.stringify(translations[lang.code], null, 2);
-    zip.file(`prompts.${lang.code}.json`, json);
+
+  // Přidat zdrojový/editovaný soubor (csData)
+  if (hasSource) {
+    const sourceCode = editLangCode || 'cs';
+    const fixed = fixLockTokens(csData, sourceCode);
+    zip.file(`prompts.${sourceCode}.json`, JSON.stringify(fixed, null, 2));
   }
 
+  // Přidat přeložené jazyky + opravit lock tokeny
+  for (const lang of langs) {
+    if (lang.code === editLangCode) continue; // zdrojový už přidán výše
+    const fixed = fixLockTokens(translations[lang.code], lang.code);
+    zip.file(`prompts.${lang.code}.json`, JSON.stringify(fixed, null, 2));
+  }
+
+  const totalFiles = (hasSource ? 1 : 0) + langs.filter(l => l.code !== editLangCode).length;
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3513,7 +3529,36 @@ async function exportAll() {
   a.download = 'prompts_all.zip';
   a.click();
   URL.revokeObjectURL(url);
-  toast(`⬇ Staženo prompts_all.zip (${langs.length} souborů)`, 'ok');
+  toast(`⬇ Staženo prompts_all.zip (${totalFiles} souborů)`, 'ok');
+}
+
+// Opraví přeložené lock tokeny zpět na správný formát "RESPONSE FORMAT:"
+// Google Translate překládá "FORMÁT ODPOVĚDI:" jako __XYZ123__ v některých jazycích
+function fixLockTokens(data, langCode) {
+  // Mapa jazykových kódů → správný překlad "Formát odpovědi:"
+  const formatLabels = {
+    'zh-cn': '回答格式：',
+    'ar':    'تنسيق الإجابة:',
+    'de':    'Antwortformat:',
+    'ja':    '回答形式：',
+    'ko':    '응답 형식:',
+    'he':    'פורמט תשובה:',
+    'ru':    'Формат ответа:',
+    'uk':    'Формат відповіді:',
+    'el':    'Μορφή απάντησης:',
+    'tr':    'Yanıt formatı:',
+    'default': 'RESPONSE FORMAT:',
+  };
+  const label = formatLabels[langCode] || formatLabels['default'];
+
+  // Vzory pro přeložené lock tokeny různými jazyky
+  const lockPattern = /__([\w\u0400-\u04FF\u0600-\u06FF\u4E00-\u9FFF\uAC00-\uD7AF]+\d+)__[：:。]?/g;
+
+  const fixed = {};
+  for (const [k, v] of Object.entries(data)) {
+    fixed[k] = v.replace(lockPattern, label + '\n');
+  }
+  return fixed;
 }
 
 function download(filename, text) {
