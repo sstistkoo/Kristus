@@ -81,8 +81,9 @@ export function getResolvedPromptLibraryBase() {
           o.text = defText;
           o.system = sysText;
       }
-      // Ostatní kategorie (detailed, concise, literal, stack0-2) už nejsou podporovány
-      // Všechny odkazy na ně jsou odstraněny
+      // Odstranit nepodporované kategorie
+      const removeCategories = ["detailed", "concise", "literal", "library", "sekundarni"];
+      removeCategories.forEach(cat => delete base[cat]);
       return base;
   }
 
