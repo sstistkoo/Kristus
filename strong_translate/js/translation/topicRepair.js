@@ -3,101 +3,21 @@ import { isSideFallbackAborted, sleepMsWithAbort } from '../ai/fallback.js';
 import { hasMeaningfulValue, isDefinitionLowQuality, isDefinitionLikelyEnglish, fillMissingVyznamFromSource, fillMissingKjvFromSource, annotateEnglishDefinitionsInTranslated } from './utils.js';
 import { sleepMs } from '../utils.js';
 import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPromptsResolve.js';
-
-// ─── VÝCHOZÍ SYSTÉMOVÝ PROMPT PRO DÁVKOVOU OPRAVU TÉMAT ─── (načítá se dynamicky podle jazyka)
-
-// ─── TÉMAT-SPECIFICKÉ DOPLŇKY PRO SYSTÉMOVÝ PROMPT ─── (používají dynamicky načtený prompt)
-const TOPIC_SPECIFIC_SYSTEM_PROMPTS = {
-   definice: null, // načte se dynamicky
-   vyznam: null,
-   kjv: null,
-   puvod: null,
-   specialista: null,
-   all: null
-};
-
-// ─── TÉMATICKÉ BATCH ŠABLONY (inline – zajišťuje správné načtení bez cache) ───
-const TOPIC_BATCH_TEMPLATES = {
-  definice: `Přelož "Definice" (D) z daného hesla do češtiny. Doplňuj české překlady cizích slov (řečtina, hebrejština, aramejština) v závorce přímo v definici.
-NORMALIZACE: Nahraď __1. za 1. a __2. za 2.
-PŘEKLAD ODKAZŮ: Biblické zkratky v [ ] uvnitř pole D musí být v češtině (např. [Act] na [Sk], [Mat] na [Mt], [John] na [Jan]).
-DŮSLEDNOST: Přelož vše z EN do CZ (včetně termínů jako properly, figuratively, lit., spec.).
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-D: [překlad definice do češtiny]
-
-HESLA:
-{HESLA}`,
-
-   vyznam: `Přelož část "Význam" (V) z daného hesla do češtiny.
-Analýza: Identifikuj slovo a gramatiku (buď ze zadaného kódu, nebo vlastní analýzou).
-
-Význam: Definuj sémantické jádro podle Strongova slovníku.
-
-První slovo: Jako nejpřesnější překlad vyber ten, který nejlépe odpovídá gramatickému tvaru (viz G:V附) a biblickému úzu.
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-V: [česky význam]
-
-HESLA:
-{HESLA}`,
-
-   kjv: `Přelož do češitny  "KJV význam" (K) z daného hesla.
-
-Priorita: Jako úplně první věc v odpovědi uveď nejpřesnější český překlad následovaný čárkou.
-
-Analýza: Identifikuj slovo (G/H) a gramatiku (kmen u H, vid/pád u G).
-
-Význam: Definuj sémantické jádro podle Strongova slovníku.
-
-Korelace: Propoj původní význam s anglickým výrazem z KJV a četností výskytu.
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-K: [překlad KJV významu do češtiny]
-
-HESLA:
-{HESLA}`,
-
-   puvod: `"Původ" (P) – etymologii a původ slova
-Uveďte: původní jazyk, původní písmo (s českým překladem v závorce) a vývoj významu a co byl jeho původní doslovný význam.
-
-FORMÁT ODPOVĚDI:
-###[číslo]###
-P: [etymologii a původ slova]
-
-HESLA:
-{HESLA}`,
-
-  specialista: `S (SPECIALISTA): [detailní odstavec 3-7 vět jako biblický specialista]. Odstavec má vysvětlit teologický a biblický význam slova v kontextu. Nepiš body ani seznam, jen souvislý odstavec.
-
-  FORMÁT ODPOVĚDI:
-  ###[číslo]###
-  S: [odborný český výklad 3–7 vět]
-
-  HESLA:
-  {HESLA}`,
-
-  all: `Režim „Vše“: seznam řádků filtruješ zaškrtávkami výše. Hromadný překlad postupně použije uložený batch prompt (💾 Uložit prompt) pro každé zaškrtnuté téma — jedno téma vyber v seznamu, uprav text a ulož.
-
-  FORMÁT ODPOVĚDI:
-  ###[číslo]###
-  {TOPIC}: [překlad]`
-};
+import { t } from '../i18n.js';
 
 function getDefaultBatchTopicSystemPrompt(topicId) {
-   const resolved = getResolvedSystemMessage();
-   if (TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId]) {
-     return TOPIC_SPECIFIC_SYSTEM_PROMPTS[topicId];
-   }
-   return resolved || `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
- }
+   return getResolvedSystemMessage() || `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+}
 
 function getDefaultBatchTopicUserPrompt(topicId) {
-  const template = TOPIC_BATCH_TEMPLATES[topicId] || getResolvedDefaultPrompt() || '';
-  return String(template).trim();
+  // Načítá z i18n/prompts.*.json pomocí klíče aiPrompts.core.topicRepair.{topicId}.template
+  const i18nKey = `aiPrompts.core.topicRepair.${topicId}.template`;
+  const fromI18n = t(i18nKey);
+  if (fromI18n && fromI18n !== i18nKey) {
+    return String(fromI18n).trim();
+  }
+  // Fallback na výchozí prompt
+  return String(getResolvedDefaultPrompt() || '').trim();
 }
 
 export { getDefaultBatchTopicSystemPrompt, getDefaultBatchTopicUserPrompt };
@@ -1492,7 +1412,7 @@ function toggleTopicRepairBulkInclude(index, checked) {
 function setTopicRepairBulkIncludeAll(checked) {
   const topicRepairState = state.topicRepairState;
   if (!topicRepairState) return;
-  for (const t of topicRepairState.tasks) t.includeBulk = !!checked;
+  for (const task of topicRepairState.tasks) task.includeBulk = !!checked;
   updateTopicRepairModalUI();
 }
 
@@ -1503,6 +1423,13 @@ function getTopicPromptTemplateByPromptType(promptType) {
 }
 
 function getTopicPromptTemplate(topicId) {
+  // Nejdřív zkusíme i18n klíč (aiPrompts.core.topicRepair.{topicId}.template)
+  const i18nKey = `aiPrompts.core.topicRepair.${topicId}.template`;
+  const fromI18n = t(i18nKey);
+  if (fromI18n && fromI18n !== i18nKey) {
+    return String(fromI18n).trim();
+  }
+  // Pak fallback na TOPIC_PROMPT_PRESET_MAP
   const promptType = TOPIC_PROMPT_PRESET_MAP[topicId] || '';
   const fromTopicPreset = getTopicPromptTemplateByPromptType(promptType);
   if (fromTopicPreset) return fromTopicPreset;
