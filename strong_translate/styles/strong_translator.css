@@ -225,12 +225,6 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   padding: 3px 6px;
   font-size: 10px;
 }
-.menu-panel .hdr-close {
-  margin-left: 0;
-  padding: 7px 10px;
-  font-size: 11px;
-}
-
 .stat {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;

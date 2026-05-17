@@ -770,9 +770,9 @@ function enforceSpecialistaFormat(promptText) {
          const custom = localStorage.getItem('strong_custom_system_prompt');
          if (custom && custom.trim()) return custom.trim();
          
-         // Get current mode (default, detailed, concise, literal, library, or system)
-         const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
-         
+          // Get current mode (default, detailed, concise, literal, library, or system)
+          const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
+          
           // For custom mode, we fall back to core since there's no library prompt
           if (mode === 'custom') {
             // Check if there's a prompt pack for target language
