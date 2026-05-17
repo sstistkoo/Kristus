@@ -3,21 +3,22 @@ import { isSideFallbackAborted, sleepMsWithAbort } from '../ai/fallback.js';
 import { hasMeaningfulValue, isDefinitionLowQuality, isDefinitionLikelyEnglish, fillMissingVyznamFromSource, fillMissingKjvFromSource, annotateEnglishDefinitionsInTranslated } from './utils.js';
 import { sleepMs } from '../utils.js';
 import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPromptsResolve.js';
-import { t } from '../i18n.js';
+import { t, getPromptPack } from '../i18n.js';
 
 function getDefaultBatchTopicSystemPrompt(topicId) {
    return getResolvedSystemMessage() || `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
 }
 
 function getDefaultBatchTopicUserPrompt(topicId) {
-  // Načítá z i18n/prompts.*.json pomocí klíče aiPrompts.core.topicRepair.{topicId}.template
-  const i18nKey = `aiPrompts.core.topicRepair.${topicId}.template`;
-  const fromI18n = t(i18nKey);
-  if (fromI18n && fromI18n !== i18nKey) {
-    return String(fromI18n).trim();
-  }
-  // Fallback na výchozí prompt
-  return String(getResolvedDefaultPrompt() || '').trim();
+   const targetLang = localStorage.getItem('strong_target_lang') || 'cz';
+   const promptPack = getPromptPack(targetLang);
+   const i18nKey = `aiPrompts.core.topicRepair.${topicId}.template`;
+   const fromPack = promptPack[i18nKey];
+   if (fromPack && typeof fromPack === 'string') {
+     return String(fromPack).trim();
+   }
+   // Fallback na výchozí prompt
+   return String(getResolvedDefaultPrompt() || '').trim();
 }
 
 export { getDefaultBatchTopicSystemPrompt, getDefaultBatchTopicUserPrompt };

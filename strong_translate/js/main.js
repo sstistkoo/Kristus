@@ -34,19 +34,20 @@ API_KEY_PROFILES_PREFIX,
       BATCH_SIZE_KEY,
       INTERVAL_KEY
     } from './config.js';
-   import {
-     UI_LANG_KEY,
-     DEFAULT_UI_LANG,
-     UI_LANGS,
-     loadUiMessages,
-     getUiLang,
-     consumeUiLangFallback,
-     t,
-     uiLabel,
-     refreshStaticProviderSelectLabel,
-     getContentLangTag,
-     getDefaultContentTag
-   } from './i18n.js';
+import {
+  UI_LANG_KEY,
+  DEFAULT_UI_LANG,
+  UI_LANGS,
+  loadUiMessages,
+  getUiLang,
+  consumeUiLangFallback,
+  t,
+  uiLabel,
+  refreshStaticProviderSelectLabel,
+  getContentLangTag,
+  getDefaultContentTag,
+  preloadPromptPacks
+} from './i18n.js';
    import { sleepMs, sleep, debounce, formatAiResponseTime, escHtml } from './utils.js';
 import { getTranslationStateForKey } from './translation/utils.js';
    import { createCallApi } from './ai/call.js';

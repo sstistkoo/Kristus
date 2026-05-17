@@ -45,7 +45,7 @@ const PROMPT_PACK_CACHE = {};
 /**
  * Preloads all prompt packs needed for UI and target languages.
  */
-async function preloadPromptPacks() {
+export async function preloadPromptPacks() {
   const codes = new Set(Object.values(TARGET_TO_PROMPT_CODE));
   codes.add('cs');
   codes.add('en');
@@ -290,14 +290,7 @@ export function getPromptPack(targetLang) {
  * Načte AI prompt balíčky a přidá je do načtených UI zpráv.
  * Používá cache PROMPT_PACK_CACHE, které by mělo být předem načteno.
  */
-async function mergePromptPacksIntoLoaded(loaded) {
-  // Pro každý jazyk použijeme příslušný prompt pack z cache podle mapování
-  for (const lang of Array.from(UI_LANGS)) {
-    const promptCode = TARGET_TO_PROMPT_CODE[lang] || lang;
-    const pack = PROMPT_PACK_CACHE[promptCode] || PROMPT_PACK_CACHE['cs'] || {};
-    Object.assign(loaded[lang], pack);
-  }
-}
+
 
 export function validateUiMessages(messages) {
   const base = messages[DEFAULT_UI_LANG] || {};
@@ -317,26 +310,25 @@ export function loadUiMessages(force = false) {
   uiMessagesLoadPromise = (async () => {
     const fallback = INLINE_UI_MESSAGES;
     const loaded = { ...fallback };
-    try {
-      loaded[DEFAULT_UI_LANG] = await fetchUiDictionary(DEFAULT_UI_LANG);
-    } catch (err) {
-      loaded[DEFAULT_UI_LANG] = fallback[DEFAULT_UI_LANG] || {};
-    }
-    await Promise.all(Array.from(UI_LANGS).filter(lang => lang !== DEFAULT_UI_LANG).map(async lang => {
-      try {
-        loaded[lang] = await fetchUiDictionary(lang);
-      } catch (err) {
-        loaded[lang] = fallback[lang] || {};
-      }
-    }));
-    try {
-      // Preload all prompt packs into cache before merging
-      await preloadPromptPacks();
-      await mergePromptPacksIntoLoaded(loaded);
-    } catch (err) {
-      console.warn('[i18n] Failed to merge prompt packs:', err);
-    }
-    UI_MESSAGES = loaded;
+     try {
+       loaded[DEFAULT_UI_LANG] = await fetchUiDictionary(DEFAULT_UI_LANG);
+     } catch (err) {
+       loaded[DEFAULT_UI_LANG] = fallback[DEFAULT_UI_LANG] || {};
+     }
+     await Promise.all(Array.from(UI_LANGS).filter(lang => lang !== DEFAULT_UI_LANG).map(async lang => {
+       try {
+         loaded[lang] = await fetchUiDictionary(lang);
+       } catch (err) {
+         loaded[lang] = fallback[lang] || {};
+       }
+     }));
+     // Preload all prompt packs into cache (do not merge into UI messages)
+     try {
+       await preloadPromptPacks();
+     } catch (err) {
+       console.warn('[i18n] Failed to preload prompt packs:', err);
+     }
+     UI_MESSAGES = loaded;
     validateUiMessages(UI_MESSAGES);
     return UI_MESSAGES;
   })();
