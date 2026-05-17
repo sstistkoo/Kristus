@@ -6,7 +6,46 @@ import { getResolvedSystemMessage, getResolvedDefaultPrompt } from '../aiPrompts
 import { t, getPromptPack } from '../i18n.js';
 
 function getDefaultBatchTopicSystemPrompt(topicId) {
-   return getResolvedSystemMessage() || `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+    // Get current mode (default, detailed, concise, literal, library, or system/custom)
+    const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
+    
+    // For custom mode, we don't have a library system prompt, so fall back to core
+    if (mode === 'custom') {
+        return getResolvedSystemMessage() || `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+    }
+    
+    // Get target language
+    const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+    
+    // Try to get system prompt from language-specific prompt pack for the current mode
+    const targetPromptPack = getPromptPack(targetLang);
+    if (targetPromptPack) {
+        // Try mode-specific system prompt first (e.g., aiPrompts.lib.default.system)
+        const modeSystemKey = `aiPrompts.lib.${mode}.system`;
+        const modeSystemPrompt = targetPromptPack[modeSystemKey];
+        if (modeSystemPrompt && typeof modeSystemPrompt === 'string') {
+            return String(modeSystemPrompt).trim();
+        }
+        
+        // Fall back to core system prompt in target language
+        const coreSystemKey = 'aiPrompts.core.system';
+        const coreSystemPrompt = targetPromptPack[coreSystemKey];
+        if (coreSystemPrompt && typeof coreSystemPrompt === 'string') {
+            return String(coreSystemPrompt).trim();
+        }
+    }
+    
+    // Fall back to English core system prompt
+    const enPromptPack = getPromptPack('en');
+    if (enPromptPack) {
+        const enSystemPrompt = enPromptPack['aiPrompts.core.system'];
+        if (enSystemPrompt && typeof enSystemPrompt === 'string') {
+            return String(enSystemPrompt).trim();
+        }
+    }
+    
+    // Final fallback to hardcoded Czech system prompt
+    return `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
 }
 
 function getDefaultBatchTopicUserPrompt(topicId) {
@@ -518,23 +557,68 @@ async function processTopicRepairQueue() {
         await sleepMs(500);
         continue;
       }
-      nextTask.status = 'running';
-      nextTask.error = '';
-      updateTopicRepairModalUI();
-      let success = false;
-      for (const prov of enabledProviders) {
-        if (!state.topicRepairState || state.topicRepairState.closed || state.topicRepairState.paused) break;
-        const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value || '';
-        const apiKey = getCurrentApiKey(prov);
-        if (!apiKey) continue;
-        state.topicRepairState.currentTask = { provider: prov };
-        updateTopicRepairProviderStatus();
-        try {
-          nextTask.detectedTopics = [];
-          const messages = [
-            { role: 'system', content: getResolvedSystemMessage() },
-            { role: 'user', content: buildTopicPrompt(nextTask.key, nextTask.topicId) }
-          ];
+       nextTask.status = 'running';
+       nextTask.error = '';
+       updateTopicRepairModalUI();
+       let success = false;
+       for (const prov of enabledProviders) {
+         if (!state.topicRepairState || state.topicRepairState.closed || state.topicRepairState.paused) break;
+         const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value || '';
+         const apiKey = getCurrentApiKey(prov);
+         if (!apiKey) continue;
+         state.topicRepairState.currentTask = { provider: prov };
+         updateTopicRepairProviderStatus();
+         try {
+           nextTask.detectedTopics = [];
+           // Get system prompt based on current prompt mode
+           mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
+           if (mode === 'custom') {
+               // For custom mode, use the custom system prompt from localStorage or fall back to core
+               const customSys = localStorage.getItem('strong_custom_system_prompt');
+               systemContent = customSys && customSys.trim() ? customSys.trim() : getResolvedSystemMessage();
+           } else {
+               // For library modes, try to get language-specific system prompt for the mode
+               const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+               const targetPromptPack = getPromptPack(targetLang);
+               let found = false;
+               if (targetPromptPack) {
+                   const modeSystemKey = `aiPrompts.lib.${mode}.system`;
+                   const modeSystemPrompt = targetPromptPack[modeSystemKey];
+                   if (modeSystemPrompt && typeof modeSystemPrompt === 'string') {
+                       systemContent = String(modeSystemPrompt).trim();
+                       found = true;
+                   }
+               }
+               if (!found) {
+                   // Fall back to core system prompt in target language or English
+                   if (targetPromptPack) {
+                       const coreSystemKey = 'aiPrompts.core.system';
+                       const coreSystemPrompt = targetPromptPack[coreSystemKey];
+                       if (coreSystemPrompt && typeof coreSystemPrompt === 'string') {
+                           systemContent = String(coreSystemPrompt).trim();
+                           found = true;
+                       }
+                   }
+                   if (!found) {
+                       const enPromptPack = getPromptPack('en');
+                       if (enPromptPack) {
+                           const enSystemPrompt = enPromptPack['aiPrompts.core.system'];
+                           if (enSystemPrompt && typeof enSystemPrompt === 'string') {
+                               systemContent = String(enSystemPrompt).trim();
+                               found = true;
+                           }
+                       }
+                   }
+                   if (!found) {
+                       systemContent = getResolvedSystemMessage() || `Jsi expert na biblistiku, koine řečtinu, hebrejštinu, aramejštinu a angličtinu. Tvým úkolem je vědecký překlad Strongova slovníku do češtiny.`;
+                   }
+               }
+           }
+           
+           const messages = [
+             { role: 'system', content: systemContent },
+             { role: 'user', content: buildTopicPrompt(nextTask.key, nextTask.topicId) }
+           ];
           const raw = await callAIWithRetry(prov, apiKey, model, messages);
           const rawText = String(raw?.content || '').trim();
           log(t('topicRepair.log.rawRepairPrinted', { key: nextTask.key, topic: nextTask.topicId }));
