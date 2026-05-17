@@ -773,19 +773,18 @@ function enforceSpecialistaFormat(promptText) {
          // Get current mode (default, detailed, concise, literal, library, or system)
          const mode = String(localStorage.getItem('strong_prompt_mode') || 'system').toLowerCase();
          
-         // For custom mode, we fall back to core since there's no library prompt
-         if (mode === 'custom') {
-           // Check if there's a prompt pack for target language
-           const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
-           const targetPromptPack = getPromptPack(targetLang);
-           if (targetPromptPack && targetPromptPack['aiPrompts.core.system']) {
-             return targetPromptPack['aiPrompts.core.system'];
-           }
-           return getResolvedSystemMessage();
-        }
-        }
-         
-         // For library modes, try to get language-specific system prompt for the mode
+          // For custom mode, we fall back to core since there's no library prompt
+          if (mode === 'custom') {
+            // Check if there's a prompt pack for target language
+            const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
+            const targetPromptPack = getPromptPack(targetLang);
+            if (targetPromptPack && targetPromptPack['aiPrompts.core.system']) {
+              return targetPromptPack['aiPrompts.core.system'];
+            }
+            return getResolvedSystemMessage();
+          }
+          
+          // For library modes, try to get language-specific system prompt for the mode
          const targetLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase();
          const targetPromptPack = getPromptPack(targetLang);
          if (targetPromptPack) {

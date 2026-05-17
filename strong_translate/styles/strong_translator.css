@@ -225,6 +225,11 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   padding: 3px 6px;
   font-size: 10px;
 }
+.menu-panel .hdr-close {
+  margin-left: 0;
+  padding: 7px 10px;
+  font-size: 11px;
+}
 
 .stat {
   font-family: 'JetBrains Mono', monospace;
@@ -512,6 +517,82 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
 
 .show {
   display: block;
+}
+
+/* ══ MENU PANEL — rozbalovací dropdown ════════════════════════ */
+.menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 300;
+  background: var(--bg2);
+  border: 1px solid var(--brd2);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 200px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(212,168,72,0.08);
+}
+
+.menu-panel.is-hidden { display: none; }
+
+/* Všechna hbtn v menu */
+.menu-panel .hbtn {
+  font-size: 11px;
+  padding: 6px 11px;
+  border-radius: 5px;
+  border: 1px solid var(--brd);
+  background: var(--bg3);
+  color: var(--txt2);
+  white-space: nowrap;
+  text-align: left;
+  width: 100%;
+  display: block;
+  transition: border-color .15s, color .15s, background .15s;
+}
+
+.menu-panel .hbtn:hover {
+  background: var(--bg4);
+  border-color: var(--acc2);
+  color: var(--acc3);
+}
+
+.menu-panel .hbtn.grn {
+  border-color: rgba(90,154,108,0.5);
+  color: #6dbf80;
+  background: rgba(90,154,108,0.06);
+}
+.menu-panel .hbtn.grn:hover {
+  background: rgba(90,154,108,0.16);
+  border-color: var(--grn);
+  color: #8fd4a0;
+}
+
+.menu-panel .hbtn.red {
+  border-color: rgba(200,80,80,0.38);
+  color: #c07070;
+  background: rgba(180,60,60,0.07);
+}
+.menu-panel .hbtn.red:hover {
+  background: rgba(200,80,80,0.15);
+  border-color: #e06060;
+  color: #e08080;
+}
+
+/* Oddělovač před nebezpečnou skupinou */
+.menu-panel #btnCleanupBackups {
+  margin-top: 4px;
+  border-top: 1px solid var(--brd2) !important;
+  padding-top: 6px;
+}
+
+/* hdr-close fix v menu */
+.menu-panel .hdr-close {
+  margin-left: 0;
+  padding: 6px 11px;
+  font-size: 11px;
 }
 
 /* Auto panel */
