@@ -2670,14 +2670,23 @@ async function googleTranslate(text, targetLang) {
   const tl = gtLangMap[targetLang] || targetLang;
   const sl = sourceLang === 'en' ? 'en' : 'cs';
 
+  // Google gtx vrací 500 pro prázdné nebo velmi krátké řetězce — vrátíme originál
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.length < 2) return text;
+
   const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
 
   for (let attempt = 0; attempt <= 3; attempt++) {
-    const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    let resp;
+    try {
+      resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    } catch(e) {
+      if (attempt < 3) { await sleep(2000 * (attempt + 1)); continue; }
+      return text; // síťová chyba → vrátit originál
+    }
 
     if (resp.ok) {
       const data = await resp.json();
-      // Výsledek je pole polí — spoj přeložené části
       return data[0].map(s => s[0]).filter(Boolean).join('');
     }
 
@@ -2688,9 +2697,19 @@ async function googleTranslate(text, targetLang) {
       continue;
     }
 
-    throw new Error('Google Translate HTTP ' + resp.status);
+    if (resp.status === 500) {
+      // Google vrací 500 pro krátké/speciální řetězce — zkus s mezerou na konci
+      if (attempt === 0) {
+        text = text + ' ';
+        continue;
+      }
+      return text.trim(); // fallback na originál
+    }
+
+    // Ostatní chyby (400, 403...) → vrátit originál bez retry
+    return text;
   }
-  throw new Error('Google Translate: max retries');
+  return text;
 }
 
 async function gtTranslate(text, langCode) {
