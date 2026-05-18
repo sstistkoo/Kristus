@@ -187,7 +187,7 @@
             <button class="hbtn" id="btnEditPrompt" onclick="showPromptEditModal()" title="Zobrazit a upravit AI prompt" aria-label="Upravit AI prompt">📝 Prompt</button>
             <button class="hbtn" id="btnToggleList" onclick="toggleListPane()" title="Skrýt/ukázat seznam" aria-label="Skrýt/ukázat seznam">≡ Seznam</button>
             <button class="hbtn" id="btnDebugAICalls" onclick="printRecentAICalls()" aria-label="Vypsat AI logy do konzole">📋 AI Log</button>
-            <button class="hbtn" id="btnFillAllHeader" onclick="const k = getActiveKey(); if (k) fillAllTopics(k);" title="Doplnit témata aktuálního hesla" aria-label="Doplnit témata aktuálního hesla">✨ Doplnit</button>
+            <button class="hbtn" id="btnFillAllHeader" onclick="(function(k){ if (k) fillAllTopics(k); })(getActiveKey())" title="Doplnit témata aktuálního hesla" aria-label="Doplnit témata aktuálního hesla">✨ Doplnit</button>
             <button class="hbtn" id="btnTestModels" onclick="openModelTestModal()" title="Nastavit a spustit test modelů" aria-label="Test modelů">🧪 Test modelů</button>
             <button class="hbtn" id="btnBadTranslations" onclick="showBadTranslationsModal()" title="Seznam špatných překladů" aria-label="Zobrazit seznam špatných překladů">📖 Špatné překlady</button>
             <button class="hbtn" id="btnExportBadTranslations" onclick="exportBadTranslationsJSON()" title="Exportovat seznam špatných překladů do JSON" aria-label="Exportovat špatné překlady">⬇ Export JSON</button>
@@ -358,7 +358,7 @@
       <div class="mobl-modal-title" id="mobileActionsTitle">Akce</div>
       <button class="mobl-btn" id="btnMobileImport" onclick="closeMobileModal(); document.getElementById('importFileInput').click()" aria-label="Importovat TXT soubor">⬆ Import TXT</button>
       <button class="mobl-btn" id="btnMobileBatch" onclick="closeMobileModal(); translateNext()" aria-label="Přeložit další dávku">⚡ Dávka k překladu</button>
-      <button class="mobl-btn" id="btnMobileFillAll" onclick="closeMobileModal(); const k = getActiveKey(); if (k) fillAllTopics(k);" aria-label="Doplnit témata aktuálního hesla">✨ Doplnit</button>
+      <button class="mobl-btn" id="btnMobileFillAll" onclick="closeMobileModal(); (function(k){ if (k) fillAllTopics(k); })(getActiveKey())" aria-label="Doplnit témata aktuálního hesla">✨ Doplnit</button>
       <button class="mobl-btn" id="btnMobileSelectRange" onclick="closeMobileModal(); selectRange()" aria-label="Označit rozsah">☑ Výběr do překladače</button>
       <button class="mobl-btn" id="btnMobileMissingTopic" onclick="closeMobileModal(); filterMissingTopicsList()" aria-label="Filtrovat hesla s chybějícími tématy">⚠ Chybí téma</button>
       <button class="mobl-btn grn" id="btnMobileExportTxt" onclick="closeMobileModal(); exportTXT()" aria-label="Exportovat do TXT">⬇ Export TXT</button>
@@ -680,23 +680,23 @@
        </div>
 
         <!-- Dual prompt editor for system + user prompts -->
-       <div class="prompt-library-editor-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
-         <div style="display: flex; flex-direction: column; min-height: 0;">
-           <label for="librarySystemPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Systémový prompt (role: system)</label>
-           <textarea id="librarySystemPrompt" class="prompt-library-editor" style="font-size: 12px;" spellcheck="false"></textarea>
+       <div class="prompt-library-editor-wrap">
+         <div class="prompt-library-editor-panel">
+           <label for="librarySystemPrompt" class="prompt-library-editor-label">Systémový prompt (role: system)</label>
+           <textarea id="librarySystemPrompt" class="prompt-library-editor" spellcheck="false"></textarea>
          </div>
-         <div style="display: flex; flex-direction: column; min-height: 0;">
-           <label for="libraryUserPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Uživatelský prompt (role: user)</label>
-           <textarea id="libraryUserPrompt" class="prompt-library-editor" style="font-size: 12px;" spellcheck="false"></textarea>
+         <div class="prompt-library-editor-panel">
+           <label for="libraryUserPrompt" class="prompt-library-editor-label">Uživatelský prompt (role: user)</label>
+           <textarea id="libraryUserPrompt" class="prompt-library-editor" spellcheck="false"></textarea>
          </div>
        </div>
-        <div class="prompt-actions" style="margin-top: 8px; gap: 8px;">
+        <div class="prompt-actions prompt-actions-gap-8">
           <button type="button" class="prompt-btn" onclick="restoreLibraryPrompts()" title="Obnovit výchozí">🔄 Obnovit výchozí</button>
           <button type="button" class="prompt-btn" onclick="showAddCustomPromptModal()" title="Přidat nový vlastní prompt">➕ Nový</button>
           <button type="button" class="prompt-btn ok" onclick="saveLibraryPrompts()" title="Uložit prompt">💾 Uložit prompt</button>
           <button type="button" class="prompt-btn red" onclick="confirmClearLibraryPrompts()" title="Vymazat uložené prompty">🗑 Vymazat</button>
           <button class="prompt-btn ai" id="btnPromptAi" onclick="showPromptAIModal()">🤖 AI</button>
-          <span id="libraryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+          <span id="libraryPromptStatus" class="prompt-status"></span>
         </div>
     </div>
   </div>
@@ -707,28 +707,28 @@
        <button class="close-modal-btn" onclick="closeSecondaryPromptsModal()" aria-label="Zavřít sekundární prompty">×</button>
        <div class="prompt-modal-title" id="secondaryPromptsTitle">🔄 Sekundární prompty</div>
 
-      <div class="prompt-list" id="secondaryPromptList" style="max-height: 300px; overflow-y: auto; margin-bottom: 12px;">
+      <div class="prompt-list prompt-list-scroll" id="secondaryPromptList">
         <!-- Secondary prompts will be populated by JavaScript -->
       </div>
 
       <!-- Dual prompt editor for system + user prompts -->
-      <div class="prompt-library-editor-wrap" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
-        <div>
-          <label for="secondarySystemPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Systémový prompt (role: system)</label>
-          <textarea id="secondarySystemPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
+      <div class="prompt-library-editor-wrap">
+        <div class="prompt-library-editor-panel">
+          <label for="secondarySystemPrompt" class="prompt-library-editor-label">Systémový prompt (role: system)</label>
+          <textarea id="secondarySystemPrompt" class="prompt-library-editor prompt-library-editor-compact" spellcheck="false"></textarea>
         </div>
-        <div>
-          <label for="secondaryUserPrompt" style="font-size: 0.79rem; color: var(--txt2); display: block; margin-bottom: 4px;">Uživatelský prompt (role: user)</label>
-          <textarea id="secondaryUserPrompt" class="prompt-library-editor" style="min-height: 100px; font-size: 12px;" spellcheck="false"></textarea>
+        <div class="prompt-library-editor-panel">
+          <label for="secondaryUserPrompt" class="prompt-library-editor-label">Uživatelský prompt (role: user)</label>
+          <textarea id="secondaryUserPrompt" class="prompt-library-editor prompt-library-editor-compact" spellcheck="false"></textarea>
         </div>
       </div>
 
-       <div class="prompt-actions" style="margin-top: 8px; gap: 8px;">
+       <div class="prompt-actions prompt-actions-gap-8">
          <button type="button" class="prompt-btn" onclick="addSecondaryPrompt()" title="Přidat nový sekundární prompt">➕ Nový</button>
          <button type="button" class="prompt-btn ok" onclick="saveSecondaryPrompt()" title="Uložit nový prompt">💾 Uložit</button>
          <button type="button" class="prompt-btn" onclick="updateSecondaryPrompt()" title="Aktualizovat vybraný prompt">✏ Upravit</button>
          <button type="button" class="prompt-btn red" onclick="deleteSecondaryPrompt()" title="Smazat vybraný prompt">🗑 Smazat</button>
-         <span id="secondaryPromptStatus" style="font-size: 0.78rem; color: var(--grn); margin-left: 4px;"></span>
+         <span id="secondaryPromptStatus" class="prompt-status"></span>
        </div>
 
        <div class="prompt-actions">
@@ -740,7 +740,7 @@
 
     <!-- AI Settings Sub-modal -->
     <div id="promptAIModal" class="prompt-ai-modal">
-       <div class="prompt-modal-box prompt-ai-modal-box" style="max-height: calc(100vh - 32px);">
+       <div class="prompt-modal-box prompt-ai-modal-box">
         <button class="close-modal-btn" onclick="closePromptAIModal()" aria-label="Zavřít AI nastavení">×</button>
         <div class="prompt-modal-title" id="promptAiModalTitle">🤖 AI nastavení</div>
        <div class="mobl-set-row">
@@ -812,7 +812,7 @@
 
      <!-- Language Settings Sub-modal -->
     <div id="promptLangModal" class="prompt-lang-modal">
-      <div class="prompt-modal-box prompt-lang-modal-box" style="max-height: calc(100vh - 32px);">
+      <div class="prompt-modal-box prompt-lang-modal-box">
         <button class="close-modal-btn" onclick="closePromptLangModal()" aria-label="Zavřít nastavení jazyků">×</button>
         <div class="prompt-modal-title" id="promptLangModalTitle">🌐 Nastavení jazyků</div>
 <div class="mobl-set-row">
@@ -832,7 +832,7 @@
     </select>
   </div>
 
-   <div class="mobl-set-row" id="personalPromptRow" style="display:none;">
+   <div class="mobl-set-row is-hidden" id="personalPromptRow">
      <label id="personalPromptLabel">Vlastní jazykový prompt (JSON)</label>
      <button type="button" class="prompt-btn" id="btnLoadPersonalPromptFile" onclick="document.getElementById('loadPersonalPromptFileInput').click()">📂 Načíst prompt z JSON souboru</button>
      <input type="file" id="loadPersonalPromptFileInput" class="is-hidden" accept=".json,application/json" onchange="loadPersonalPromptFile(event)" aria-label="Načíst prompt JSON" title="Načíst prompt JSON">
@@ -1032,71 +1032,73 @@
   </div>
 
     <div id="editPromptModal" class="i18n-tool-lang-modal" onclick="if(event.target===this)closeEditPromptModal()">
-      <div class="prompt-modal-box i18n-tool-modal-box" style="max-width: 900px; max-height: calc(100vh - 32px);" onclick="event.stopPropagation()">
+      <div class="prompt-modal-box i18n-tool-modal-box i18n-tool-modal-large" onclick="event.stopPropagation()">
        <div class="prompt-modal-title">📝 Upravit AI prompt (systém + uživatelský)</div>
        <div class="prompt-actions prompt-actions-gap-0">
          <button type="button" class="prompt-btn" onclick="restoreDefaultPrompt()">🔄 Obnovit výchozí</button>
          <button type="button" class="prompt-btn ok" onclick="saveEditedPrompt()">💾 Uložit prompt</button>
          <button type="button" class="prompt-btn cancel" onclick="closeEditPromptModal()">✕ Zavřít</button>
        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: calc(100vh - 200px); overflow: auto;">
+        <div class="prompt-modal-grid">
          <div>
            <label for="editSystemPrompt" class="i18n-tool-label">Systémový prompt (role: system)</label>
-           <textarea id="editSystemPrompt" class="i18n-tool-cmd i18n-tool-ai-prompt" style="height: 32vh; font-size: 12px;" spellcheck="false"></textarea>
+           <textarea id="editSystemPrompt" class="i18n-tool-cmd i18n-tool-ai-prompt prompt-modal-textarea" spellcheck="false"></textarea>
          </div>
          <div>
            <label for="editUserPrompt" class="i18n-tool-label">Uživatelský prompt (role: user)</label>
-           <textarea id="editUserPrompt" class="i18n-tool-cmd i18n-tool-ai-prompt" style="height: 32vh; font-size: 12px;" spellcheck="false"></textarea>
+           <textarea id="editUserPrompt" class="i18n-tool-cmd i18n-tool-ai-prompt prompt-modal-textarea" spellcheck="false"></textarea>
          </div>
        </div>
-       <div id="editPromptStatus" class="i18n-tool-status" style="margin-top: 8px;"></div>
+       <div id="editPromptStatus" class="i18n-tool-status prompt-modal-status"></div>
 </div>
     </div>
 
   <!-- Translator Prompts Modal -->
-  <div id="translatorPromptsModal">
-    <div class="help-modal-box">
+  <div id="translatorPromptsModal" onclick="if(event.target===this) closeTranslatorPromptsModal()">
+    <div class="help-modal-box" onclick="event.stopPropagation()">
       <button class="close-modal-btn" onclick="closeTranslatorPromptsModal()" aria-label="Zavřít">×</button>
       <div class="limits-title" id="translatorPromptsTitle">📚 Strong's Prompts</div>
       <div class="tools-content">
 
-      <div class="section-label">🔧 Nástroje</div>
-      <div class="tools-grid">
-        <a class="tools-btn" href="translatory/strong_google_translator.html" target="_blank">🌐 Google Translator<small>strong_google_translator.html</small></a>
-        <a class="tools-btn" href="translatory/strongs_manager.html" target="_blank">🗄️ Strongs Manager<small>strongs_manager.html</small></a>
-        <a class="tools-btn" href="translatory/strongs-prekladac-definice.html" target="_blank">📖 Překladač definic<small>strongs-prekladac-definice.html</small></a>
-        <a class="tools-btn" href="translatory/prompts_Editor_translator.html" target="_blank">✏️ Prompts Editor<small>prompts_Editor_translator.html</small></a>
-      </div>
-
       <div class="section-label">🌍 Překladač</div>
       <div class="tools-grid tools-single">
-        <a class="tools-btn tools-highlight" href="https://translate.google.com/?sl=en&tl=cs" target="_blank">🌐 Google Translate (EN → CS)</a>
-      </div>
-
-      <div class="section-label">📚 Strong's Concordance — zdroje</div>
-      <div class="tools-grid">
-        <a class="tools-btn" href="https://www.blueletterbible.org/lexicon/h1/kjv/wlc/0-1/" target="_blank">📘 Blue Letter Bible — Hebrew</a>
-        <a class="tools-btn" href="https://www.blueletterbible.org/lexicon/g1/kjv/tr/0-1/" target="_blank">📗 Blue Letter Bible — Greek</a>
-        <a class="tools-btn" href="https://biblehub.com/hebrew/strongs.htm" target="_blank">🔍 BibleHub — Hebrew Strongs</a>
-        <a class="tools-btn" href="https://biblehub.com/greek/strongs.htm" target="_blank">🔍 BibleHub — Greek Strongs</a>
+        <a class="tools-btn tools-highlight" href="https://translate.google.com/?sl=en&tl=cs" target="_blank" rel="noopener noreferrer">🌐 Google Translate (EN → CS)</a>
       </div>
 
       <div class="section-label">🤖 AI Chaty</div>
       <div class="tools-grid">
-        <a class="tools-btn" href="https://chatgpt.com" target="_blank">💬 ChatGPT</a>
-        <a class="tools-btn" href="https://claude.ai" target="_blank">🧠 Claude</a>
-        <a class="tools-btn" href="https://gemini.google.com" target="_blank">✨ Gemini</a>
-        <a class="tools-btn" href="https://www.perplexity.ai" target="_blank">🔎 Perplexity</a>
-        <a class="tools-btn" href="https://huggingface.co/spaces" target="_blank">🤗 Hugging Face Spaces</a>
-        <a class="tools-btn" href="https://poe.com" target="_blank">⚡ Poe</a>
+        <a class="tools-btn" href="https://chatgpt.com" target="_blank" rel="noopener noreferrer">💬 ChatGPT</a>
+        <a class="tools-btn" href="https://claude.ai" target="_blank" rel="noopener noreferrer">🧠 Claude</a>
+        <a class="tools-btn" href="https://gemini.google.com" target="_blank" rel="noopener noreferrer">✨ Gemini</a>
+        <a class="tools-btn" href="https://www.perplexity.ai" target="_blank" rel="noopener noreferrer">🔎 Perplexity</a>
+        <a class="tools-btn" href="https://huggingface.co/spaces" target="_blank" rel="noopener noreferrer">🤗 Hugging Face Spaces</a>
+        <a class="tools-btn" href="https://poe.com" target="_blank" rel="noopener noreferrer">⚡ Poe</a>
       </div>
 
       <div class="section-label">📊 Limity / Usage</div>
       <div class="tools-grid">
-        <a class="tools-btn" href="https://console.groq.com/usage" target="_blank">⚡ Groq Usage</a>
-        <a class="tools-btn" href="https://openrouter.ai/activity" target="_blank">🔄 OpenRouter Activity</a>
-        <a class="tools-btn" href="https://aistudio.google.com/app/usage" target="_blank">🎨 AI Studio Limits</a>
-        <a class="tools-btn" href="https://console.mistral.ai/usage" target="_blank">🟦 Mistral AI Usage</a>
+        <a class="tools-btn" href="https://console.groq.com/usage" target="_blank" rel="noopener noreferrer">⚡ Groq Usage</a>
+        <a class="tools-btn" href="https://openrouter.ai/activity" target="_blank" rel="noopener noreferrer">🔄 OpenRouter Activity</a>
+        <a class="tools-btn" href="https://aistudio.google.com/app/usage" target="_blank" rel="noopener noreferrer">🎨 AI Studio Limits</a>
+        <a class="tools-btn" href="https://console.mistral.ai/usage" target="_blank" rel="noopener noreferrer">🟦 Mistral AI Usage</a>
+      </div>
+
+      <div class="section-label">🔧 Nástroje</div>
+      <div class="tools-grid">
+        <a class="tools-btn" href="translatory/strong_google_translator.html" target="_blank" rel="noopener noreferrer">🌐 Google Translator<small>strong_google_translator.html</small></a>
+        <a class="tools-btn" href="translatory/strongs_manager.html" target="_blank" rel="noopener noreferrer">🗄️ Strongs Manager<small>strongs_manager.html</small></a>
+        <a class="tools-btn" href="translatory/strongs-prekladac-definice.html" target="_blank" rel="noopener noreferrer">📖 Překladač definic<small>strongs-prekladac-definice.html</small></a>
+        <a class="tools-btn" href="translatory/prompts_Editor_translator.html" target="_blank" rel="noopener noreferrer">✏️ Prompts Editor<small>prompts_Editor_translator.html</small></a>
+        <a class="tools-btn" href="translatory/strongs_editor.html" target="_blank" rel="noopener noreferrer">🗂 Strong's Editor<small>strongs_editor.html</small></a>
+        <a class="tools-btn" href="translatory/strongs_tools.html" target="_blank" rel="noopener noreferrer">🛠 Strong's Tools<small>strongs_tools.html</small></a>
+      </div>
+
+      <div class="section-label">📚 Strong's Concordance — zdroje</div>
+      <div class="tools-grid">
+        <a class="tools-btn" href="https://www.blueletterbible.org/lexicon/h1/kjv/wlc/0-1/" target="_blank" rel="noopener noreferrer">📘 Blue Letter Bible — Hebrew</a>
+        <a class="tools-btn" href="https://www.blueletterbible.org/lexicon/g1/kjv/tr/0-1/" target="_blank" rel="noopener noreferrer">📗 Blue Letter Bible — Greek</a>
+        <a class="tools-btn" href="https://biblehub.com/hebrew/strongs.htm" target="_blank" rel="noopener noreferrer">🔍 BibleHub — Hebrew Strongs</a>
+        <a class="tools-btn" href="https://biblehub.com/greek/strongs.htm" target="_blank" rel="noopener noreferrer">🔍 BibleHub — Greek Strongs</a>
       </div>
 
     </div>
