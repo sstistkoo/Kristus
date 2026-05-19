@@ -1061,6 +1061,12 @@ async function translateBatchForProvider(allKeys, prov, apiKey, model) {
   const messages = buildPromptMessages(batch);
   const keys = filteredKeys; // použijeme filtrované
 
+  // Elapsed timer — spustit při prvním překladu
+  if (!state.startTime) {
+    state.startTime = Date.now();
+    startElapsedTimer();
+  }
+
   const reqStart = performance.now();
   try {
     const previousMap = {};

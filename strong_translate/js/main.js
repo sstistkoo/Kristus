@@ -1824,6 +1824,7 @@ const autoApi = createAutoApi({
   translateBatchForProvider: batchApi.translateBatchForProvider,
   getCurrentApiKey: (...a) => getCurrentApiKey(...a),
   getPipelineModelForProvider: (...a) => getPipelineModelForProvider(...a),
+  startElapsedTimer,
   updateStats,
   renderList,
   renderDetail
@@ -1832,6 +1833,8 @@ const autoApi = createAutoApi({
 const {
   toggleAuto,
   stopAuto,
+  toggleAutoSequential,
+  stopAutoSequential,
   isAutoProviderEnabled,
   setAutoProviderEnabled,
   initAutoProviderToggles,
@@ -4891,7 +4894,8 @@ function printRecentAICalls() {
   
   // Expose toggleMenu to global scope
   let _menuOutsideHandler = null;
-  window.toggleMenu = function() {
+  window.toggleAutoSequential = toggleAutoSequential;
+window.toggleMenu = function() {
     const menuPanel = document.getElementById('menuPanel');
     const isHidden = menuPanel.classList.contains('is-hidden');
     menuPanel.classList.toggle('is-hidden');

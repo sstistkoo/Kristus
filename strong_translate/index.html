@@ -173,6 +173,7 @@
         <input type="file" id="importFileInput" class="is-hidden" accept=".txt,.json,application/json,text/plain" onchange="importFile(this)" aria-label="Výběr TXT nebo JSON souboru k importu">
         <button class="hbtn grn" id="btnExportAll" onclick="exportAllLocalStorage()" title="Exportovat všechny překlady z localStorage" aria-label="Exportovat všechny překlady">⬇ Vše</button>
         <button class="hbtn auto" id="btnAuto" onclick="toggleAuto()" aria-label="Spustit automatický překlad">▶ AUTO</button>
+        <button class="hbtn auto" id="btnAutoSeq" onclick="toggleAutoSequential()" aria-label="Spustit postupný překlad (provider za providerem)">↻ Postupně</button>
         <button class="hbtn" id="btnAISettingsDesktop" onclick="showSettingsModal()" title="Nastavení AI (provider, model, dávka)" aria-label="Nastavení AI">⚙ Nastavení AI</button>
         <!-- Vždy viditelné: stavové/akční tlačítka -->
         <button class="hbtn red" id="btnFailedEntries" onclick="showFailedEntries()" title="Zobrazit neúspěšné překlady" aria-label="Zobrazit neúspěšné překlady">⚠ Neus. <span id="failedCount"></span></button>
