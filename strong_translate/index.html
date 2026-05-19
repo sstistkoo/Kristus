@@ -208,12 +208,16 @@
   <!-- Auto panel -->
   <div class="auto-panel" id="autoPanel">
     <div class="auto-info">
-      <span id="autoInfoPrefix">AUTO: dávka</span> <b id="autoBatch">—</b>,
-      <span id="autoInfoSettings">nastavení</span>
-      <input type="number" id="autoBatchSizeInput" class="auto-small-input" min="1" max="200" step="1" value="10" onchange="applyAutoPanelSettings()" aria-label="AUTO: velikost dávky" title="AUTO: velikost dávky">
-      /
-      <input type="number" id="autoIntervalInput" class="auto-small-input" min="1" max="600" step="1" value="20" onchange="applyAutoPanelSettings()" aria-label="AUTO: interval mezi dávkami (s)" title="AUTO: interval mezi dávkami (s)">
-      <span id="autoInfoSeconds">s</span> (<span id="autoInfoInterval">interval</span> <b id="autoInterval">—</b>s)
+      <div class="auto-info-row">
+        <span id="autoInfoPrefix">AUTO:</span>
+        <span id="autoBatch">—</span>
+      </div>
+      <div class="auto-info-row">
+        <input type="number" id="autoBatchSizeInput" class="auto-small-input" min="1" max="200" step="1" value="10" onchange="applyAutoPanelSettings()" aria-label="AUTO: velikost dávky" title="AUTO: velikost dávky">
+        <span>/</span>
+        <input type="number" id="autoIntervalInput" class="auto-small-input" min="1" max="600" step="1" value="20" onchange="applyAutoPanelSettings()" aria-label="AUTO: interval mezi dávkami (s)" title="AUTO: interval mezi dávkami (s)">
+        <span id="autoInfoSeconds">s</span>
+      </div>
     </div>
     <div class="countdown" id="countdown">—</div>
     <div id="autoProviderCountdowns" class="auto-provider-countdowns">

@@ -605,8 +605,24 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   color: var(--txt2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
 }
 .auto-info b { color: var(--acc3); }
+.auto-info-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+#autoBatch {
+  display: inline-block;
+  min-width: 9ch;
+  font-weight: bold;
+  color: var(--acc3);
+}
 
 .countdown {
   font-family: 'JetBrains Mono', monospace;

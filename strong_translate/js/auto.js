@@ -79,9 +79,16 @@ export function createAutoApi(deps) {
      stopElapsedTimer();
    }
 
+  const PROVIDER_LABELS = { groq: 'Groq', gemini: 'Gemini', openrouter: 'OpenRouter' };
+
   function setAutoProviderCountdownLabel(prov, text) {
-    const el = document.getElementById(`autoCountdown_${prov}`);
+    const el = document.getElementById('autoCountdown_' + prov);
     if (el) el.textContent = text;
+  }
+
+  function setProviderStatus(prov, suffix) {
+    const label = PROVIDER_LABELS[prov] || prov;
+    setAutoProviderCountdownLabel(prov, label + ': ' + suffix);
   }
 
   function isAutoProviderEnabled(prov) {
@@ -123,49 +130,28 @@ export function createAutoApi(deps) {
   }
 
   function updateAutoProviderCountdowns() {
-    const mainLeft = Math.max(0, parseInt(document.getElementById('countdown')?.textContent || '0', 10) || 0);
-    const providerLabel = (prov) => String(PROVIDERS[prov]?.label || prov).split(' ')[0];
-    const groqLabel = 'Groq';
+    // Když běží AUTO nebo sequential, workeři si spravují labely sami —
+    // ticker přepisuje jen zakázané nebo failed providery, ostatní nechá být.
+    const isRunning = state.autoRunning || state.autoSeqRunning;
 
-    if (!isAutoProviderEnabled('groq')) {
-      setAutoProviderCountdownLabel('groq', t('provider.status.disabled', { label: groqLabel }));
-    } else if (state.autoRunning) {
-      setAutoProviderCountdownLabel(
-        'groq',
-        mainLeft > 0
-          ? t('provider.status.nextIn', { label: groqLabel, seconds: mainLeft })
-          : t('provider.status.running', { label: groqLabel })
-      );
-    } else {
-      setAutoProviderCountdownLabel('groq', t('provider.status.ready', { label: groqLabel }));
-    }
+    ['groq', 'gemini', 'openrouter'].forEach((prov) => {
+      const label = PROVIDER_LABELS[prov] || prov;
 
-    ['gemini', 'openrouter'].forEach((prov) => {
-      if (Date.now() < Number(state.providerFailBadgeUntil[prov] || 0)) {
-        setAutoProviderCountdownLabel(prov, t('provider.status.failed', { label: providerLabel(prov) }));
+      // Failed badge — vždy přepsat
+      if (Date.now() < Number(state.providerFailBadgeUntil?.[prov] || 0)) {
+        setAutoProviderCountdownLabel(prov, t('provider.status.failed', { label }));
         return;
       }
+      // Zakázaný — vždy přepsat
       if (!isAutoProviderEnabled(prov)) {
-        setAutoProviderCountdownLabel(prov, t('provider.status.disabled', { label: providerLabel(prov) }));
+        setAutoProviderCountdownLabel(prov, t('provider.status.disabled', { label }));
         return;
       }
-      const pending = Math.max(0, Number(state.providerFallbackPendingCount?.[prov] || 0));
-      if (pending > 0) {
-        setAutoProviderCountdownLabel(
-          prov,
-          t('auto.provider.processingPartial', { label: providerLabel(prov), pending })
-        );
-        return;
-      }
-      const nextState = getSecondaryNextOperationState(prov);
-      if (nextState.exhausted && nextState.nextSec > 0) {
-        setAutoProviderCountdownLabel(
-          prov,
-          t('auto.provider.waitingNextAttempt', { label: providerLabel(prov), seconds: nextState.nextSec })
-        );
-        return;
-      }
-      setAutoProviderCountdownLabel(prov, t('provider.status.ready', { label: providerLabel(prov) }));
+      // Běží — workeři si píšou sami, ticker nepřepisuje
+      if (isRunning) return;
+
+      // Klidový stav — zobraz připraven
+      setAutoProviderCountdownLabel(prov, t('provider.status.ready', { label }));
     });
   }
 
@@ -257,8 +243,11 @@ export function createAutoApi(deps) {
           }
 
           log('[' + prov + '] prekladam: ' + batch[0] + '–' + batch[batch.length - 1]);
-          const autoBatch = document.getElementById('autoBatch');
-          if (autoBatch) autoBatch.textContent = batch[0] + '–' + batch[batch.length - 1];
+          // autoBatch label aktualizuje jen Groq — ostatní by způsobovali poskakování
+          if (prov === 'groq') {
+            const autoBatch = document.getElementById('autoBatch');
+            if (autoBatch) autoBatch.textContent = batch[0] + '–' + batch[batch.length - 1];
+          }
 
           const result = await translateBatchForProvider(batch, prov, apiKey, model);
 
@@ -271,18 +260,24 @@ export function createAutoApi(deps) {
           let delay = intervalMs;
           if (result && result.rateLimited) {
             delay = Math.max(intervalMs, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
-            log('[' + prov + '] rate limit, cekam ' + Math.round(delay / 1000) + 's');
+            log('[' + (PROVIDER_LABELS[prov]||prov) + '] rate limit, cekam ' + Math.round(delay / 1000) + 's');
           }
-          setAutoProviderCountdownLabel(prov, prov + ': ' + Math.round(delay / 1000) + 's');
-
-          // Čekat interval — každý provider čeká svůj vlastní, nezávisle na ostatních
+          // Čekat interval s živým odpočítáváním
           const waitUntil = Date.now() + delay;
           while (state.autoRunning && Date.now() < waitUntil) {
+            const remSec = Math.ceil((waitUntil - Date.now()) / 1000);
+            setProviderStatus(prov, remSec + 's');
+            // Groq dostane i hlavní countdown element
+            if (prov === 'groq') {
+              const countdown = document.getElementById('countdown');
+              if (countdown) countdown.textContent = String(remSec);
+            }
             const left = Math.min(500, waitUntil - Date.now());
             await new Promise(resolve => setTimeout(resolve, left));
           }
+          setProviderStatus(prov, 'překládám...');
         }
-        setAutoProviderCountdownLabel(prov, prov + ': hotovo');
+        setProviderStatus(prov, 'hotovo');
       }
 
       await Promise.all(activeProviders.map(prov => runProviderWorkerAtomic(prov)));
@@ -370,7 +365,7 @@ export function createAutoApi(deps) {
         const nextAllowed = state.seqProviderNextAllowed[prov] || 0;
         if (now < nextAllowed) {
           const waitSec = Math.ceil((nextAllowed - now) / 1000);
-          setAutoProviderCountdownLabel(prov, prov + ': čeká ' + waitSec + 's');
+          setProviderStatus(prov, 'čeká ' + waitSec + 's');
           continue; // tento provider ještě nesmí, zkusíme další
         }
 
@@ -400,7 +395,7 @@ export function createAutoApi(deps) {
         const autoBatch = document.getElementById('autoBatch');
         if (autoBatch) autoBatch.textContent = batch[0] + '–' + batch[batch.length - 1];
         log('[' + prov + '] postupně: ' + batch[0] + '–' + batch[batch.length - 1]);
-        setAutoProviderCountdownLabel(prov, prov + ': překládám...');
+        setProviderStatus(prov, 'překládám...');
 
         const result = await translateBatchForProvider(batch, prov, apiKey, model);
         anyTranslated = true;
@@ -413,7 +408,7 @@ export function createAutoApi(deps) {
         let cooldown = intervalMs;
         if (result && result.rateLimited) {
           cooldown = Math.max(intervalMs, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
-          log('[' + prov + '] rate limit, cooldown ' + Math.round(cooldown / 1000) + 's');
+          log('[' + (PROVIDER_LABELS[prov]||prov) + '] rate limit, cooldown ' + Math.round(cooldown / 1000) + 's');
         }
         state.seqProviderNextAllowed[prov] = Date.now() + cooldown;
 
