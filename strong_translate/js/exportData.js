@@ -7,6 +7,18 @@ export function createExportApi({ state, t, showToast }) {
     return 'CZ';
   }
 
+  // Vrátí kód cílového jazyka pro název souboru (např. "cz", "sk", "pl", "en", "bg"...)
+  function getTargetLangCode() {
+    return String(localStorage.getItem('strong_target_lang') || 'cz')
+      .toLowerCase()
+      .replace(/^cs$/, 'cz');   // normalizace cs → cz
+  }
+
+  // Vrátí kód zdrojového jazyka pro název souboru (např. "gr", "he", "both")
+  function getSourceLangCode() {
+    return String(localStorage.getItem('strong_source_lang') || 'gr').toLowerCase();
+  }
+
   function download(name, content, type) {
     const blob = new Blob([content], { type });
     const a = document.createElement('a');
@@ -41,7 +53,7 @@ export function createExportApi({ state, t, showToast }) {
       ].join('\n');
     });
 
-    download('strong_gr_cz_v2.txt', lines.join('\n'), 'text/plain');
+    download(`strong_${getSourceLangCode()}_${getTargetLangCode()}_v2.txt`, lines.join('\n'), 'text/plain');
     showToast(t('toast.exported.count', { count: done.length }));
   }
 
@@ -51,7 +63,7 @@ export function createExportApi({ state, t, showToast }) {
       if (!state.translated[e.key]) continue;
       out[e.key] = { greek: e.greek, ...state.translated[e.key] };
     }
-    download('strong_gr_cz_v2.json', JSON.stringify(out, null, 2), 'application/json');
+    download(`strong_${getSourceLangCode()}_${getTargetLangCode()}_v2.json`, JSON.stringify(out, null, 2), 'application/json');
     showToast(t('toast.exported.count', { count: Object.keys(out).length }));
   }
 
@@ -82,7 +94,7 @@ export function createExportApi({ state, t, showToast }) {
       ].join('\n');
     });
 
-    download(`strong_gr_cz_G${from}-G${to}.txt`, lines.join('\n'), 'text/plain');
+    download(`strong_${getSourceLangCode()}_${getTargetLangCode()}_G${from}-G${to}.txt`, lines.join('\n'), 'text/plain');
     showToast(t('toast.exported.range', { count: done.length, from: `G${from}`, to: `G${to}` }));
   }
 
@@ -167,7 +179,7 @@ const lines = done.map(e => {
         ].join('\n');
       });
 
-     download('strong_gr_cz_all_translations.txt', lines.join('\n'), 'text/plain');
+     download(`strong_${getSourceLangCode()}_${getTargetLangCode()}_all_translations.txt`, lines.join('\n'), 'text/plain');
      showToast(t('toast.exported.count', { count: done.length }));
    }
 

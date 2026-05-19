@@ -4886,9 +4886,32 @@ function printRecentAICalls() {
   });
   
   // Expose toggleMenu to global scope
+  let _menuOutsideHandler = null;
   window.toggleMenu = function() {
     const menuPanel = document.getElementById('menuPanel');
+    const isHidden = menuPanel.classList.contains('is-hidden');
     menuPanel.classList.toggle('is-hidden');
+
+    if (isHidden) {
+      // Panel se právě otevřel — zaregistruj click-outside
+      setTimeout(() => {
+        _menuOutsideHandler = function(e) {
+          const btn = document.getElementById('btnMenu');
+          if (!menuPanel.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
+            menuPanel.classList.add('is-hidden');
+            document.removeEventListener('click', _menuOutsideHandler, true);
+            _menuOutsideHandler = null;
+          }
+        };
+        document.addEventListener('click', _menuOutsideHandler, true);
+      }, 0);
+    } else {
+      // Panel se zavřel tlačítkem — odregistruj handler
+      if (_menuOutsideHandler) {
+        document.removeEventListener('click', _menuOutsideHandler, true);
+        _menuOutsideHandler = null;
+      }
+    }
   };
 // Pri skryt� tabu tak� flushni, aby se nic neztratilo
 document.addEventListener('visibilitychange', () => {
