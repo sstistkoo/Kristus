@@ -149,8 +149,9 @@ function applyUiLanguage() {
       if (el) el.setAttribute(attr, value);
     };
     const uiTitleLang = getUiLangTag();
-    document.title = formatAppTitleWithTargetLang(t('app.title', { lang: uiTitleLang }), uiTitleLang);
-    setText('setupTitle', formatAppTitleWithTargetLang(t('setup.title', { lang: uiTitleLang }), uiTitleLang));
+    const targetTitleLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase().replace(/^cs$/, 'cz').toUpperCase();
+    document.title = formatAppTitleWithTargetLang(t('app.title', { lang: targetTitleLang }), targetTitleLang);
+    setText('setupTitle', formatAppTitleWithTargetLang(t('setup.title', { lang: targetTitleLang }), targetTitleLang));
     setText('setupAdvancedSummary', t('setup.advanced'));
     setAttr('setupCompactSummary', 'title', t('setup.compact.title'));
     const providerForLabel = String(document.getElementById('provider')?.value || 'groq');
