@@ -39,6 +39,10 @@ export function createAutoApi(deps) {
   }
 
   function startAuto() {
+    if (state.autoSeqRunning) {
+      showToast('Nejdřív zastav postupný překlad (↻ Postupně)');
+      return;
+    }
     state.autoRunning = true;
     document.getElementById('btnAuto')?.classList.add('active');
     const btnAuto = document.getElementById('btnAuto');
@@ -75,6 +79,9 @@ export function createAutoApi(deps) {
      }
      const countdown = document.getElementById('countdown');
      if (countdown) countdown.textContent = '—';
+     // Resetovat i sequential tlačítko pokud bylo aktivní
+     const btnAutoSeq = document.getElementById('btnAutoSeq');
+     if (btnAutoSeq) btnAutoSeq.textContent = '↻ Postupně';
      updateAutoProviderCountdowns();
      stopElapsedTimer();
    }
@@ -206,8 +213,8 @@ export function createAutoApi(deps) {
         return;
       }
 
-      const batchSize = state.currentBatchSize;
-      const intervalMs = state.currentInterval * 1000;
+      const batchSize = Math.max(1, Number(state.currentBatchSize) || 5);
+      const intervalMs = Math.max(1000, (Number(state.currentInterval) || 20) * 1000);
 
       // Elapsed timer
       if (!state.startTime) {
@@ -328,8 +335,8 @@ export function createAutoApi(deps) {
         return;
       }
 
-      const batchSize = state.currentBatchSize;
-      const intervalMs = state.currentInterval * 1000;
+      const batchSize = Math.max(1, Number(state.currentBatchSize) || 5);
+      const intervalMs = Math.max(1000, (Number(state.currentInterval) || 20) * 1000);
 
       if (!state.startTime) {
         state.startTime = Date.now();
@@ -349,8 +356,6 @@ export function createAutoApi(deps) {
         state.seqProviderIndex = 0;
       }
 
-      let anyTranslated = false;
-      let roundStart = state.seqProviderIndex;
       let checked = 0;
 
       while (state.autoSeqRunning && checked < activeProviders.length) {
@@ -398,8 +403,6 @@ export function createAutoApi(deps) {
         setProviderStatus(prov, 'překládám...');
 
         const result = await translateBatchForProvider(batch, prov, apiKey, model);
-        anyTranslated = true;
-
         updateStats();
         renderList();
         if (state.activeKey && state.translated[state.activeKey]) renderDetail();
@@ -434,10 +437,7 @@ export function createAutoApi(deps) {
       const minWait = waits.length ? Math.min(...waits) : 0; // min čekání = nejdřívější provider
       const nextIn = Math.min(Math.max(0, minWait), 1000); // kontrolovat max každou sekundu
       updateAutoProviderCountdowns();
-      state.autoTimer = setTimeout(() => {
-        state.autoStepRunning = false;
-        runSequentialStep();
-      }, Math.max(100, nextIn));
+      state.autoTimer = setTimeout(runSequentialStep, Math.max(100, nextIn));
 
     } finally {
       state.autoStepRunning = false;
