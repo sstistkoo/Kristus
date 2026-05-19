@@ -1262,14 +1262,20 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
   log(t('topicRepair.log.bulkRepairStart', { topic: TOPIC_LABELS[topicId] || topicId, count: keys.length, batch: bs, seconds: iv0 }));
   log('Paraleln\u00ed bulk oprava [' + topicId + ']: ' + enabledProviders.join(', ') + ' | d\u00e1vka ' + bs + ' | interval ' + iv0 + 's');
 
-  // Sdílená fronta klíčů — každý worker si bere další dávku atomicky
+  // Atomický index — každý worker si bere svou část bez race condition
+  // (JS single-thread: slice+increment proběhne bez přerušení, žádný await uvnitř)
   let queueIndex = 0;
   let totalProcessed = 0;
 
-  function getNextBulkBatch() {
+  function takeNextBulkBatch() {
     if (queueIndex >= keys.length) return null;
     const batch = keys.slice(queueIndex, queueIndex + bs);
     queueIndex += bs;
+    // Označit hned jako running — bez await, takže atomicky
+    for (const key of batch) {
+      const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
+      if (task) task.status = 'running';
+    }
     return batch;
   }
 
@@ -1305,24 +1311,23 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
     updateTopicRepairModalUI();
   }
 
-  // Worker pro jeden provider — bere dávky z fronty dokud jsou
+  // Worker pro jeden provider — bere dávky ze sdílené fronty, každý čeká svůj interval
   async function bulkProviderWorker(prov) {
     const apiKey = getCurrentApiKey(prov);
     const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
-    if (!apiKey || !model) return;
+    if (!apiKey || !model) {
+      log('[' + prov + '] chybí klíč nebo model, worker se nespustí');
+      return;
+    }
 
     while (true) {
       if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-      const batchKeys = getNextBulkBatch();
+
+      // Atomicky vzít dávku (bez await uvnitř = bezpečné)
+      const batchKeys = takeNextBulkBatch();
       if (!batchKeys) break;
 
-      // Označit jako running
-      for (const key of batchKeys) {
-        const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
-        if (task) task.status = 'running';
-      }
       updateTopicRepairModalUI();
-
       log('[' + prov + '] bulk ' + topicId + ': ' + batchKeys[0] + '-' + batchKeys[batchKeys.length - 1]);
 
       try {
@@ -1342,33 +1347,36 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
         const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
         applyBulkBatchResult(prov, batchKeys, parsedMap, rawText, null);
 
+        // Vlastní interval — každý provider čeká nezávisle
+        const waitUntil = Date.now() + iv0 * 1000;
+        while (Date.now() < waitUntil) {
+          if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+          await sleepMs(Math.min(500, waitUntil - Date.now()));
+        }
+
       } catch (e) {
         logError('bulkProviderWorker', e, { prov, batchKeys, topicId });
         applyBulkBatchResult(prov, batchKeys, {}, '', e.message);
-        // Při rate limitu delší pauza
+
+        // Rate limit — delší cooldown jen pro tohoto providera
         const msgL = (e.message || '').toLowerCase();
         const isRate = msgL.includes('429') || msgL.includes('rate limit') || msgL.includes('quota') || msgL.includes('too many') || msgL.includes('resource_exhausted');
-        if (isRate) {
-          let cooldown = 60;
-          const retryMatch = (e.message || '').match(/retry.after[:\s]*(\d+)/i);
-          if (retryMatch) cooldown = Math.max(cooldown, parseInt(retryMatch[1], 10) || 0);
-          if (msgL.includes('resource_exhausted')) cooldown = Math.max(cooldown, 20 * 60);
-          log('[' + prov + '] bulk rate limit, cekam ' + cooldown + 's');
-          const rl = Date.now() + cooldown * 1000;
-          while (Date.now() < rl) {
-            if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-            await sleepMs(500);
-          }
-          continue; // bez normálního intervalu
-        }
-      }
+        const cooldown = isRate
+          ? (() => {
+              let c = 60;
+              const m = (e.message || '').match(/retry.after[:\s]*(\d+)/i);
+              if (m) c = Math.max(c, parseInt(m[1], 10) || 0);
+              if (msgL.includes('resource_exhausted')) c = Math.max(c, 20 * 60);
+              return c;
+            })()
+          : iv0;
 
-      // Normální interval mezi dávkami
-      if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-      const stopAt = Date.now() + iv0 * 1000;
-      while (Date.now() < stopAt) {
-        if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-        await sleepMs(100);
+        if (isRate) log('[' + prov + '] rate limit, cekam ' + cooldown + 's');
+        const waitUntil = Date.now() + cooldown * 1000;
+        while (Date.now() < waitUntil) {
+          if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+          await sleepMs(Math.min(500, waitUntil - Date.now()));
+        }
       }
     }
   }
