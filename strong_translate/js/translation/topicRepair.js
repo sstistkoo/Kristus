@@ -529,7 +529,7 @@ async function processTopicRepairQueue() {
         await sleepMs(350);
         continue;
       }
-      const nextTask = findNextTopicRepairWaitingTask(state.topicRepairState);
+      const nextTask = findNextTopicRepairWaitingTask(state);
       if (!nextTask) break;
       const enabledProviders = ['groq', 'gemini', 'openrouter'].filter(p => state.topicRepairState?.providerEnabled?.[p]);
       if (!enabledProviders.length) {
@@ -671,11 +671,13 @@ nextTask.detectedTopics = [];
        }
        updateTopicRepairModalUI();
        await saveProgress();
-       await sleepMs(state.currentInterval * 1000);
+       // Interval mezi úkoly — fallback na DOM nebo 20s pokud state.currentInterval není nastaven
+       const seqInterval = Math.max(5, Number(state.currentInterval) || parseInt(document.getElementById('intervalRun')?.value, 10) || parseInt(document.getElementById('interval')?.value, 10) || 20);
+       await sleepMs(seqInterval * 1000);
     }
     updateTopicRepairModalUI();
     if (state.topicRepairState && !state.topicRepairState.closed) {
-      const waitingVis = getTopicRepairModalVisibleTasks(state.topicRepairState).filter(t => t.status === 'waiting').length;
+      const waitingVis = getTopicRepairModalVisibleTasks(state).filter(t => t.status === 'waiting').length;
       if (waitingVis === 0) showToast(t('toast.topicRepair.visibleDone'));
     }
   } finally {
@@ -1239,98 +1241,141 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
     keys = state.topicRepairState.tasks.filter(t => t && !t.hidden).map(t => t.key);
     const uniqueKeys = [...new Set(keys)];
     if (uniqueKeys.length) {
-      log(`🔧 Relaxed filter: using all ${uniqueKeys.length} keys for ${topicId}`);
+      log('Relaxed filter: using all ' + uniqueKeys.length + ' keys for ' + topicId);
     }
   }
   if (!keys.length) return { count: 0 };
 
-  const iv0 = parseInt(document.getElementById('intervalRun')?.value, 10) || 20;
+  const enabledProviders = ['groq', 'gemini', 'openrouter'].filter(p => {
+    if (!state.topicRepairState?.providerEnabled?.[p]) return false;
+    const k = getCurrentApiKey(p);
+    return k && k.trim().length > 0;
+  });
+  if (!enabledProviders.length) {
+    throw new Error(t('toast.topicRepair.enableProvider') || 'No provider enabled for topic repair');
+  }
+
+  const iv0 = parseInt(document.getElementById('intervalRun')?.value, 10) || parseInt(document.getElementById('interval')?.value, 10) || 20;
+  const sysContent = String(systemPrompt || getResolvedSystemMessage() || '').trim();
+  const abortVersion = Number(state.topicRepairBulkAbortVersion || 0);
+
   log(t('topicRepair.log.bulkRepairStart', { topic: TOPIC_LABELS[topicId] || topicId, count: keys.length, batch: bs, seconds: iv0 }));
+  log('Paraleln\u00ed bulk oprava [' + topicId + ']: ' + enabledProviders.join(', ') + ' | d\u00e1vka ' + bs + ' | interval ' + iv0 + 's');
 
-   let processed = 0;
-   const abortVersion = Number(state.topicRepairBulkAbortVersion || 0);
-   while (processed < keys.length) {
-     if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-     const batchKeys = keys.slice(processed, processed + bs);
+  // Sdílená fronta klíčů — každý worker si bere další dávku atomicky
+  let queueIndex = 0;
+  let totalProcessed = 0;
 
-     try {
-       const hesla = buildTopicRepairBatchHeslaText(batchKeys, topicId);
-       const userContent = userPromptTemplate.includes('{HESLA}')
-         ? userPromptTemplate.replace(/{HESLA}/g, hesla)
-         : `${userPromptTemplate}\n\n${hesla}`;
+  function getNextBulkBatch() {
+    if (queueIndex >= keys.length) return null;
+    const batch = keys.slice(queueIndex, queueIndex + bs);
+    queueIndex += bs;
+    return batch;
+  }
 
-        const enabledProviders = ['groq', 'gemini', 'openrouter'].filter(p => state.topicRepairState?.providerEnabled?.[p]);
-        if (!enabledProviders.length) {
-          throw new Error(t('toast.topicRepair.enableProvider') || 'No provider enabled for topic repair');
+  // Aplikuje výsledky jedné dávky do tasků
+  function applyBulkBatchResult(prov, batchKeys, parsedMap, rawText, error) {
+    for (const key of batchKeys) {
+      const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
+      if (!task) continue;
+      if (error) {
+        task.status = 'failed';
+        task.error = error;
+        continue;
+      }
+      const numericKey = key.replace(/^[GH]/, '');
+      const val = String(parsedMap[key] || parsedMap[numericKey] || '').trim();
+      if (hasMeaningfulValue(val)) {
+        task.candidateValue = val;
+        task.provider = prov;
+        task.status = 'done';
+        task.error = '';
+        task.checked = shouldAutoCheckTopicRepairTask(topicId, task.currentValue, val);
+        const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
+        if (task.topicId === 'specialista') {
+          syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
         }
-        const prov = enabledProviders[0];
-       const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
-       const apiKey = getCurrentApiKey(prov);
-       if (!apiKey) {
-         showToast(t('toast.apiKey.enterForProvider', { provider: prov }));
-         throw new Error('missing_api_key');
-       }
-
-       const sysContent = String(systemPrompt || getResolvedSystemMessage() || '').trim();
-       const raw = await callAIWithRetry(prov, apiKey, model, [
-         { role: 'system', content: sysContent },
-         { role: 'user', content: enforceSpecialistaFormat(userContent) }
-       ]);
-       if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-
-       const rawText = String(raw?.content || '').trim();
-       log(t('topicRepair.log.rawBatchPrinted', { topic: topicId }));
-
-       const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
-       for (const key of batchKeys) {
-         const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
-         if (!task) continue;
-         const numericKey = key.replace(/^[GH]/, '');
-         const val = String(parsedMap[key] || parsedMap[numericKey] || '').trim();
-         if (hasMeaningfulValue(val)) {
-           task.candidateValue = val;
-           task.provider = prov;
-           task.status = 'done';
-           task.error = '';
-           task.checked = shouldAutoCheckTopicRepairTask(topicId, task.currentValue, val);
-           const blockRaw = extractTopicRepairBatchBlockForKey(rawText, key) || rawText;
-           if (task.topicId === 'specialista') {
-             syncTopicRepairTaskSpecialistaFromRaw(task, blockRaw);
-           }
-         } else {
-           task.status = 'failed';
-           task.error = t('topicRepair.error.noValueForEntry');
-         }
-       }
-
-       saveProgress();
-       updateTopicRepairModalUI();
-     } catch (e) {
-       logError('runTopicRepairBulkTranslationCore', e, { batchKeys, topicId });
-       showToast(t('toast.error.withMessage', { message: e.message }));
-       for (const key of batchKeys) {
-         const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
-         if (task) {
-           task.status = 'failed';
-           task.error = e.message;
-         }
-       }
-       saveProgress();
-       updateTopicRepairModalUI();
-     } finally {
-       processed += batchKeys.length;
-     }
-
-      if (processed < keys.length) {
-        const interval = parseInt(document.getElementById('intervalRun')?.value, 10) || parseInt(document.getElementById('interval')?.value, 10) || 20;
-        const stopAt = Date.now() + Math.max(0, interval) * 1000;
-        while (Date.now() < stopAt) {
-          if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
-          await sleepMs(100);
-        }
+      } else {
+        task.status = 'failed';
+        task.error = t('topicRepair.error.noValueForEntry');
       }
     }
-   return { count: processed };
+    totalProcessed += batchKeys.length;
+    saveProgress();
+    updateTopicRepairModalUI();
+  }
+
+  // Worker pro jeden provider — bere dávky z fronty dokud jsou
+  async function bulkProviderWorker(prov) {
+    const apiKey = getCurrentApiKey(prov);
+    const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
+    if (!apiKey || !model) return;
+
+    while (true) {
+      if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+      const batchKeys = getNextBulkBatch();
+      if (!batchKeys) break;
+
+      // Označit jako running
+      for (const key of batchKeys) {
+        const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
+        if (task) task.status = 'running';
+      }
+      updateTopicRepairModalUI();
+
+      log('[' + prov + '] bulk ' + topicId + ': ' + batchKeys[0] + '-' + batchKeys[batchKeys.length - 1]);
+
+      try {
+        const hesla = buildTopicRepairBatchHeslaText(batchKeys, topicId);
+        const userContent = userPromptTemplate.includes('{HESLA}')
+          ? userPromptTemplate.replace(/{HESLA}/g, hesla)
+          : (userPromptTemplate + '\n\n' + hesla);
+
+        const raw = await callAIWithRetry(prov, apiKey, model, [
+          { role: 'system', content: sysContent },
+          { role: 'user', content: enforceSpecialistaFormat(userContent) }
+        ]);
+
+        if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+
+        const rawText = String(raw?.content || '').trim();
+        const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
+        applyBulkBatchResult(prov, batchKeys, parsedMap, rawText, null);
+
+      } catch (e) {
+        logError('bulkProviderWorker', e, { prov, batchKeys, topicId });
+        applyBulkBatchResult(prov, batchKeys, {}, '', e.message);
+        // Při rate limitu delší pauza
+        const msgL = (e.message || '').toLowerCase();
+        const isRate = msgL.includes('429') || msgL.includes('rate limit') || msgL.includes('quota') || msgL.includes('too many') || msgL.includes('resource_exhausted');
+        if (isRate) {
+          let cooldown = 60;
+          const retryMatch = (e.message || '').match(/retry.after[:\s]*(\d+)/i);
+          if (retryMatch) cooldown = Math.max(cooldown, parseInt(retryMatch[1], 10) || 0);
+          if (msgL.includes('resource_exhausted')) cooldown = Math.max(cooldown, 20 * 60);
+          log('[' + prov + '] bulk rate limit, cekam ' + cooldown + 's');
+          const rl = Date.now() + cooldown * 1000;
+          while (Date.now() < rl) {
+            if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+            await sleepMs(500);
+          }
+          continue; // bez normálního intervalu
+        }
+      }
+
+      // Normální interval mezi dávkami
+      if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+      const stopAt = Date.now() + iv0 * 1000;
+      while (Date.now() < stopAt) {
+        if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+        await sleepMs(100);
+      }
+    }
+  }
+
+  // Spustit všechny workery paralelně
+  await Promise.all(enabledProviders.map(prov => bulkProviderWorker(prov)));
+  return { count: totalProcessed };
 }
 
 async function runTopicRepairBulkTranslation() {

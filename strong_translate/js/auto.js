@@ -21,6 +21,9 @@ export function createAutoApi(deps) {
     getNextBatch,
     updateETA,
     translateBatch,
+    translateBatchForProvider,
+    getCurrentApiKey,
+    getPipelineModelForProvider,
     updateStats,
     renderList,
     renderDetail
@@ -175,25 +178,71 @@ export function createAutoApi(deps) {
     state.autoProviderCountdownTimer = null;
   }
 
-   async function runAutoStep() {
-     if (!state.autoRunning || state.autoStepRunning) return;
-     if (!state.autoRunning) return;
-     state.autoStepRunning = true;
+  // ── POMOCNÉ: Zjistí aktivní providery s klíčem ──────────────────────────────
+  function getActiveParallelProviders() {
+    const all = ['groq', 'gemini', 'openrouter'];
+    return all.filter(prov => {
+      if (!isAutoProviderEnabled(prov)) return false;
+      const key = getCurrentApiKey(prov);
+      return key && key.trim().length > 0;
+    });
+  }
+
+  // ── WORKER: jeden provider bere dávky dokud jsou hesla ──────────────────────
+  async function runProviderWorker(prov, batchSize, intervalMs) {
+    const apiKey = getCurrentApiKey(prov);
+    const model = getPipelineModelForProvider(prov);
+    if (!apiKey || !model) return;
+
+    while (state.autoRunning) {
+      if (isAutoTokenLimitReached()) break;
+
+      const batch = getNextBatch(batchSize);
+      if (!batch.length) break;
+
+      // Označit jako _processing HNED aby ostatní workeři nevzali stejné klíče
+      for (const key of batch) {
+        if (!state.translated[key]) {
+          state.translated[key] = { vyznam: null, _processing: true };
+        }
+      }
+
+      log('[' + prov + '] prekladam: ' + batch[0] + '–' + batch[batch.length - 1]);
+      const result = await translateBatchForProvider(batch, prov, apiKey, model);
+
+      updateStats();
+      renderList();
+      if (state.activeKey && state.translated[state.activeKey]) renderDetail();
+
+      if (!state.autoRunning) break;
+
+      // Pauza mezi dávkami — při rate limitu delší cooldown
+      let delay = intervalMs;
+      if (result && result.rateLimited) {
+        delay = Math.max(intervalMs, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
+        log('[' + prov + '] rate limit, cekam ' + Math.round(delay / 1000) + 's');
+      }
+
+      // Countdown ticker pro UI (jen pokud je jeden provider)
+      const countdown = document.getElementById('countdown');
+      let remaining = Math.round(delay / 1000);
+      if (countdown) countdown.textContent = String(remaining);
+      clearInterval(state.autoCountTimer);
+      state.autoCountTimer = setInterval(() => {
+        remaining--;
+        if (countdown) countdown.textContent = String(Math.max(0, remaining));
+        if (remaining <= 0) clearInterval(state.autoCountTimer);
+      }, 1000);
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  async function runAutoStep() {
+    if (!state.autoRunning || state.autoStepRunning) return;
+    state.autoStepRunning = true;
 
     try {
-      if (!isAutoProviderEnabled('groq')) {
-        stopAuto();
-        log(t('auto.log.stoppedGroqDisabled'));
-        const groqHint = t('auto.groqEnableHint');
-        const autoLogEl = document.getElementById('autoLog');
-        if (autoLogEl) autoLogEl.textContent = groqHint;
-        setAutoProviderCountdownLabel('groq', groqHint);
-        if (window.innerWidth <= 600) {
-          document.getElementById('autoPanel')?.classList.add('show');
-        }
-        showToast(t('toast.auto.enableGroq'));
-        return;
-      }
       if (isAutoTokenLimitReached()) {
         stopAuto();
         log(t('auto.log.stoppedTokenLimit'));
@@ -201,41 +250,57 @@ export function createAutoApi(deps) {
         return;
       }
 
-      const batch = getNextBatch(state.currentBatchSize);
-      if (!batch.length) {
+      const activeProviders = getActiveParallelProviders();
+
+      // Pokud není ani Groq ani nikdo jiný
+      if (!activeProviders.length) {
+        stopAuto();
+        log(t('auto.log.stoppedGroqDisabled'));
+        const groqHint = t('auto.groqEnableHint');
+        const autoLogEl = document.getElementById('autoLog');
+        if (autoLogEl) autoLogEl.textContent = groqHint;
+        showToast(t('toast.auto.enableGroq'));
+        return;
+      }
+
+      // Zkontroluj jestli vůbec jsou hesla
+      const check = getNextBatch(1);
+      if (!check.length) {
         stopAuto();
         showToast(t('toast.translation.done'));
         return;
       }
 
-      const autoBatch = document.getElementById('autoBatch');
-      if (autoBatch) autoBatch.textContent = `${batch[0]}–${batch[batch.length - 1]}`;
-      log(t('auto.log.translatingRange', { from: batch[0], to: batch[batch.length - 1] }));
+      const batchSize = state.currentBatchSize;
+      const intervalMs = state.currentInterval * 1000;
+
+      log('Paralelní překlad: ' + activeProviders.join(', ') + ' (dávka ' + batchSize + ')');
       updateETA();
 
-      const result = await translateBatch(batch);
+      // Spustit všechny providery paralelně jako workery
+      await Promise.all(
+        activeProviders.map(prov => runProviderWorker(prov, batchSize, intervalMs))
+      );
+
       updateStats();
       renderList();
       if (state.activeKey && state.translated[state.activeKey]) renderDetail();
+
       if (!state.autoRunning) return;
 
-      const done = Object.values(state.translated).filter(tr => tr && tr.vyznam && tr.vyznam !== '—').length;
-      const total = state.entries.length;
-      log(`${done}/${total}`);
+      // Všichni workeři skončili = vše přeloženo nebo token limit
+      if (isAutoTokenLimitReached()) {
+        stopAuto();
+        showToast(t('toast.auto.stoppedTokenLimit'));
+        return;
+      }
 
-      const delaySeconds = result?.rateLimited ? (result.cooldownSeconds || 60) : state.currentInterval;
-      let remaining = delaySeconds;
-      const countdown = document.getElementById('countdown');
-      if (countdown) countdown.textContent = String(remaining);
-      clearInterval(state.autoCountTimer);
-      state.autoCountTimer = setInterval(() => {
-        remaining--;
-        if (countdown) countdown.textContent = String(remaining);
-        if (remaining <= 0) clearInterval(state.autoCountTimer);
-      }, 1000);
-      updateAutoProviderCountdowns();
+      const remaining2 = getNextBatch(1);
+      if (!remaining2.length) {
+        stopAuto();
+        showToast(t('toast.translation.done'));
+      }
 
-      state.autoTimer = setTimeout(runAutoStep, delaySeconds * 1000);
     } finally {
       state.autoStepRunning = false;
     }

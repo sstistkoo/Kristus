@@ -54,13 +54,13 @@ export function createBatchApi(deps) {
   } = deps;
 function formatPreviewRawTranslation(rawDef) {
   const text = String(rawDef || '').trim();
-  if (!text) return '—';
+  if (!text) return 'ï¿½';
   const esc = escHtml(text);
   const formatted = esc
-    .replace(/(VİZNAM:|Vıznam:)/g, '<br><b>$1</b>')
+    .replace(/(Vï¿½ZNAM:|Vï¿½znam:)/g, '<br><b>$1</b>')
     .replace(/(DEFINICE:|Definice:)/g, '<br><b>$1</b>')
-    .replace(/(POUIT[ÍI]:|Pouit[íi]:)/g, '<br><b>$1</b>')
-    .replace(/(SPECIALISTA:|Specialista:|VİKLAD:|Vıklad:)/g, '<br><b>$1</b>');
+    .replace(/(POUï¿½IT[ï¿½I]:|Pouï¿½it[ï¿½i]:)/g, '<br><b>$1</b>')
+    .replace(/(SPECIALISTA:|Specialista:|Vï¿½KLAD:|Vï¿½klad:)/g, '<br><b>$1</b>');
   return formatted.replace(/^<br>/, '');
 }
 
@@ -173,7 +173,7 @@ function syncTopicRepairTaskSpecialistaFromRaw(task, rawText) {
   }
 }
 
-// -- PREKLAD — SINGLE --------------------------------------------
+// -- PREKLAD ï¿½ SINGLE --------------------------------------------
 async function translateSingle(key) {
   const btn = document.querySelector('.translate-btn');
   if (btn) { btn.disabled = true; btn.textContent = t('translate.single.translating'); }
@@ -229,15 +229,15 @@ ORIG: ${e.orig || ''}`;
   renderList();
 }
 
-// -- PREKLAD — ZNOVU --------------------------------------------
+// -- PREKLAD ï¿½ ZNOVU --------------------------------------------
 async function retranslateSingle(key) {
   if (!confirm(t('confirm.retranslate', { key }))) return;
   
-  // Oznac jako nepreloené pro další zpracování
+  // Oznac jako nepreloï¿½enï¿½ pro dalï¿½ï¿½ zpracovï¿½nï¿½
   delete state.translated[key];
   saveProgress();
   
-  // Vyber jen tento klíc
+  // Vyber jen tento klï¿½c
   state.selectedKeys.clear();
   state.selectedKeys.add(key);
   renderList();
@@ -246,7 +246,7 @@ async function retranslateSingle(key) {
   await translateSelected();
 }
 
-// -- PREKLAD — DÁVKA ----------------------------------------------
+// -- PREKLAD ï¿½ Dï¿½VKA ----------------------------------------------
 async function translateNext() {
   if (state.autoRunning) return;
   const activeProvider = resolveMainBatchProvider(document.getElementById('provider')?.value || '');
@@ -255,7 +255,7 @@ async function translateNext() {
     return;
   }
   
-  // Retry mode - pouij state.retryKeysList místo getNextBatch
+  // Retry mode - pouï¿½ij state.retryKeysList mï¿½sto getNextBatch
   let batch;
   if (state.retryMode && state.retryKeysList.length > 0) {
     batch = state.retryKeysList.slice(0, state.currentBatchSize);
@@ -278,7 +278,7 @@ async function translateNext() {
     return; 
   }
   
-  // Info o retry módu
+  // Info o retry mï¿½du
   if (state.retryMode) {
     document.getElementById('btnStep').title = t('batch.retry.remaining', { count: state.retryKeysList.length + batch.length });
   }
@@ -300,18 +300,18 @@ function jumpToStart() {
   const found = state.entryMap.get(key);
   if (!found) { showToast(t('toast.entry.notFoundInFile', { key: `G${num}` })); return; }
 
-   // Oznac všechna hesla PRED tímto císlem jako preskocená (zachováme existující preklady)
+   // Oznac vï¿½echna hesla PRED tï¿½mto cï¿½slem jako preskocenï¿½ (zachovï¿½me existujï¿½cï¿½ preklady)
    for (const e of state.entries) {
      const n = parseInt(e.key.slice(1));
      if (n < num && !state.translated[e.key]) {
-       state.translated[e.key] = { vyznam: '—', definice: '(preskoceno)', puvod: '—', skipped: true };
+       state.translated[e.key] = { vyznam: 'ï¿½', definice: '(preskoceno)', puvod: 'ï¿½', skipped: true };
      }
    }
    saveProgress();
    updateStats();
    renderList();
    showToast(t('toast.translation.resumeFrom', { key: `G${num}` }));
-   // Scroll na heslo v listu (virtuální)
+   // Scroll na heslo v listu (virtuï¿½lnï¿½)
    setTimeout(() => {
      const scroll = document.getElementById('listScroll');
      const idx = state.filteredKeys.indexOf(key);
@@ -331,9 +331,9 @@ function getNextBatch(size) {
   for (const e of state.entries) {
     if (result.length >= size) break;
     const existing = state.translated[e.key];
-    // P?esko?it pokud existuje a není skipped, nebo pokud je ozna?eno jako _processing
+    // P?esko?it pokud existuje a nenï¿½ skipped, nebo pokud je ozna?eno jako _processing
     if (existing && !existing.skipped) {
-      // Ve AUTO reimu respektovat i _processing flag (p?edchozí p?eklad ješt? nebyl dokon?en)
+      // Ve AUTO reï¿½imu respektovat i _processing flag (p?edchozï¿½ p?eklad jeï¿½t? nebyl dokon?en)
       if (state.autoRunning && existing._processing) {
         continue;
       }
@@ -433,8 +433,8 @@ function getSecondaryRetryDelayMsByError(msgLower) {
 function getSecondaryCooldownSecByError(prov, rawMsg) {
   const msg = String(rawMsg || '');
   const low = msg.toLowerCase();
-  if (prov === 'gemini' && (/resource_exhausted|429|high demand|limit vycerpán/.test(low))) {
-    // U Gemini dríme cooldown hlavne per-model, ne per-provider.
+  if (prov === 'gemini' && (/resource_exhausted|429|high demand|limit vycerpï¿½n/.test(low))) {
+    // U Gemini drï¿½ï¿½me cooldown hlavne per-model, ne per-provider.
     return 0;
   }
   if (/503|service unavailable|api timeout/.test(low)) return 5;
@@ -451,7 +451,7 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
   const retryAfter = rateInfoFromErrorMessage(msg)?.retryAfterSec || 0;
   const minMatch = low.match(/(\d+)\s*min/);
   const fromMinutes = minMatch ? (Number(minMatch[1]) || 0) * 60 : 0;
-  if (prov === 'gemini' && (/limit vycerpán|resource_exhausted/.test(low))) {
+  if (prov === 'gemini' && (/limit vycerpï¿½n|resource_exhausted/.test(low))) {
     // Prefer explicit Retry-After from API over textual "~20min" hint.
     const preferred = retryAfter || fromMinutes || (20 * 60);
     return Math.max(20, Math.min(25 * 60, preferred));
@@ -474,13 +474,13 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
    const entry = state.entryMap.get(key);
    if (!entry) return null;
 
-   // ?? VYTVO?ENÍ MESSAGES ????????????????????????????????????????????????????
+   // ?? VYTVO?ENï¿½ MESSAGES ????????????????????????????????????????????????????
    const secondarySys = localStorage.getItem('strong_secondary_system_prompt');
    const secondaryUser = localStorage.getItem('strong_secondary_user_prompt');
 
    let messages;
    if (secondarySys && secondaryUser) {
-     // Pouij secondary prompty
+     // Pouï¿½ij secondary prompty
      log(`? Secondary prompts apply: ${prov} for ${key}.${topicId}`);
      const currentTopic = (state.translated[key] || {})[topicId] || '';
      const targetLang = (localStorage.getItem('strong_target_lang') || 'cz').toUpperCase();
@@ -501,15 +501,15 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
        { role: 'user', content: userContent }
      ];
 } else {
-      // pouij stejnı prompt jako Groq (z prompts.cs.json)
+      // pouï¿½ij stejnï¿½ prompt jako Groq (z prompts.cs.json)
       messages = buildPromptMessages([entry]);
     }
 
   for (let i = 0; i < modelQueue.length; i++) {
     if (isSideFallbackAborted(abortVersion)) return null;
     const model = modelQueue[i];
-    // Pokud je provider nebo model v cooldownu, neblokujeme frontu cekáním –
-    // vrátíme null okamite a témata pokracují pres druhı provider nebo príšte.
+    // Pokud je provider nebo model v cooldownu, neblokujeme frontu cekï¿½nï¿½m ï¿½
+    // vrï¿½tï¿½me null okamï¿½ite a tï¿½mata pokracujï¿½ pres druhï¿½ provider nebo prï¿½te.
     if (getProviderCooldownLeftSec(prov) > 0) return null;
     const modelCooldownLeft = getModelCooldownLeftSec(prov, model);
     if (modelCooldownLeft > 0) {
@@ -533,7 +533,7 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
         log(`? Fallback ${prov}/${model} ${key}.${topicId} OK (${reqMs}ms)`);
         return { prov, model, value: candidate, reqMs };
       }
-      log(`? Fallback ${prov}/${model} ${key}.${topicId}: odpoved neprošla kvalitou, zkouším další model.`);
+      log(`? Fallback ${prov}/${model} ${key}.${topicId}: odpoved neproï¿½la kvalitou, zkouï¿½ï¿½m dalï¿½ï¿½ model.`);
     } catch (e) {
       const msg = String(e?.message || '');
       const msgLower = msg.toLowerCase();
@@ -543,9 +543,9 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
       if (modelCooldownSec > 0) setModelCooldown(prov, model, modelCooldownSec);
       if (cooldownSec > 0) setProviderCooldown(prov, cooldownSec, isRate ? 'rate limit' : 'provider error');
       state.providerFailBadgeUntil[prov] = Date.now() + 10000;
-        // Pokud provider spadl do delšího cooldownu, fallback hned ukoncíme,
-        // aby neblokoval další Groq dávky.
-      // aby neblokoval další Groq dávky.
+        // Pokud provider spadl do delï¿½ï¿½ho cooldownu, fallback hned ukoncï¿½me,
+        // aby neblokoval dalï¿½ï¿½ Groq dï¿½vky.
+      // aby neblokoval dalï¿½ï¿½ Groq dï¿½vky.
       if (cooldownSec >= 45) {
         return null;
       }
@@ -554,7 +554,7 @@ function getSecondaryModelCooldownSecByError(prov, rawMsg) {
         const waitMs = getSecondaryRetryDelayMsByError(msgLower);
         const cooldownMs = getProviderCooldownLeftSec(prov) * 1000;
         const effectiveWaitMs = Math.max(waitMs, cooldownMs);
-        // Retry detail necháváme pouze v konzoli, AUTO rádek zustává strucnı.
+        // Retry detail nechï¿½vï¿½me pouze v konzoli, AUTO rï¿½dek zustï¿½vï¿½ strucnï¿½.
         const keptRunning = await sleepMsWithAbort(effectiveWaitMs, abortVersion);
         if (!keptRunning) return null;
       }
@@ -569,13 +569,13 @@ async function runParallelTopicFallback(keys, abortVersion) {
   if (!keyList.length) return;
   const sideProviders = ['gemini', 'openrouter'].filter(prov => isPipelineSecondaryEnabled(prov));
   if (!sideProviders.length) {
-    log('? Sekundární fallback vypnutı (ádnı provider není zaškrtnut).');
+    log('? Sekundï¿½rnï¿½ fallback vypnutï¿½ (ï¿½ï¿½dnï¿½ provider nenï¿½ zaï¿½krtnut).');
     return;
   }
-  // Kadı klíc zpracuj paralelne, uvnitr klíce témata také paralelne.
-  // Kadı provider má vlastní sekvencní frontu (runProviderFallbackTaskSequential),
-  // take rate limit je chránen – soubená témata se jen seradí do fronty providera.
-  // Dríve: témata sekvencní ? pomalı OpenRouter blokoval Gemini pro další témata.
+  // Kaï¿½dï¿½ klï¿½c zpracuj paralelne, uvnitr klï¿½ce tï¿½mata takï¿½ paralelne.
+  // Kaï¿½dï¿½ provider mï¿½ vlastnï¿½ sekvencnï¿½ frontu (runProviderFallbackTaskSequential),
+  // takï¿½e rate limit je chrï¿½nen ï¿½ soubeï¿½nï¿½ tï¿½mata se jen seradï¿½ do fronty providera.
+  // Drï¿½ve: tï¿½mata sekvencnï¿½ ? pomalï¿½ OpenRouter blokoval Gemini pro dalï¿½ï¿½ tï¿½mata.
   await Promise.all(keyList.map(async (key) => {
     if (isSideFallbackAborted(abortVersion)) return;
     const t = state.translated[key] || {};
@@ -583,7 +583,7 @@ async function runParallelTopicFallback(keys, abortVersion) {
     if (!failedTopics.length) return;
      await Promise.all(failedTopics.map(async (topicId) => {
        if (isSideFallbackAborted(abortVersion)) return;
-       // Spustit všechny enabled secondary providery paraleln?, vybrat prvního úsp?šného
+       // Spustit vï¿½echny enabled secondary providery paraleln?, vybrat prvnï¿½ho ï¿½sp?ï¿½nï¿½ho
        const results = await Promise.all(
          sideProviders.map(async (prov) => {
            return await runProviderFallbackTaskSequential(
@@ -627,7 +627,7 @@ async function runOpenRouterBatchFallbackTranslation(keys) {
   const modelQueue = getSecondaryProviderModelQueue(prov);
   
   if (!apiKey || !modelQueue.length) {
-    log('? OpenRouter fallback: chybí API klí? nebo modely');
+    log('? OpenRouter fallback: chybï¿½ API klï¿½? nebo modely');
     return;
   }
   
@@ -644,7 +644,7 @@ try {
       log(`? OpenRouter fallback: ${keys.length} hesel p?es ${model}`);
       const raw = await callOnce(prov, apiKey, model, messages);
       
-      // Nejd?ív parsovat odpov?? do state.translated
+      // Nejd?ï¿½v parsovat odpov?? do state.translated
       parseTranslations(raw.content, keys);
       fillMissingVyznamFromSource(keys);
       fillMissingKjvFromSource(keys);
@@ -652,7 +652,7 @@ try {
       
       const translatedCount = keys.filter(k => isTranslationComplete(state.translated[k])).length;
       if (translatedCount > 0) {
-        log(`? OpenRouter fallback: úsp?šn? p?eloeno ${translatedCount}/${keys.length} hesel`);
+        log(`? OpenRouter fallback: ï¿½sp?ï¿½n? p?eloï¿½eno ${translatedCount}/${keys.length} hesel`);
         break;
       }
     } catch (e) {
@@ -671,14 +671,14 @@ async function translateBatch(keys, depth = 0) {
   const preferredProvider = document.getElementById('provider')?.value || '';
   const prov   = resolveMainBatchProvider(preferredProvider);
   const model  = getPipelineModelForProvider(prov) || document.getElementById('model').value;
-  // Klíc vdy dle aktuálního run providera
+  // Klï¿½c vï¿½dy dle aktuï¿½lnï¿½ho run providera
   const apiKey = getCurrentApiKey(prov);
   state.currentInterval = parseInt(document.getElementById('intervalRun').value);
   state.currentBatchSize = parseInt(document.getElementById('batchSizeRun').value);
 
   if (!apiKey) { showToast(t('toast.apiKey.enterForProvider', { provider: prov })); return { ok: false }; }
 
-  // Start timer pri prvním prekladu
+  // Start timer pri prvnï¿½m prekladu
   if (!state.startTime) {
     state.startTime = Date.now();
     startElapsedTimer();
@@ -687,7 +687,7 @@ async function translateBatch(keys, depth = 0) {
   const batch = keys.map(k => state.entryMap.get(k)).filter(Boolean);
   const messages = buildPromptMessages(batch);
 
-   // Ozna?it klí?e jako "p?ekládané" hned na za?átku, aby se nepouily znovu
+   // Ozna?it klï¿½?e jako "p?eklï¿½danï¿½" hned na za?ï¿½tku, aby se nepouï¿½ily znovu
    const processingKeys = [...keys];
    for (const key of keys) {
      if (!state.translated[key]) {
@@ -705,7 +705,7 @@ async function translateBatch(keys, depth = 0) {
     const reqMs = performance.now() - reqStart;
     const content = raw.content;
     log(`?? Preklad: ${getTranslationEngineLabel(raw, prov, model)}`);
-    // Verbose logy pouze kdy je aktivní reim pro debug (window.DEBUG_AI = true v konzoli)
+    // Verbose logy pouze kdyï¿½ je aktivnï¿½ reï¿½im pro debug (window.DEBUG_AI = true v konzoli)
     if (window.DEBUG_AI) {
     }
     let missingKeys = parseTranslations(content, keys);
@@ -724,24 +724,24 @@ async function translateBatch(keys, depth = 0) {
       logTokenEntry(prov, inT, outT, total);
     }
     
-    // Log do konzoly pro úspešné
+    // Log do konzoly pro ï¿½speï¿½nï¿½
     for (const key of keys) {
       const t = state.translated[key];
-      if (t?.vyznam && t.vyznam !== '—') {
+      if (t?.vyznam && t.vyznam !== 'ï¿½') {
       }
     }
     logEntry(keys, content);
     
-    // Ulo raw odpoved pro kadı klíc (pro pozdejší zobrazení chyb)
+    // Uloï¿½ raw odpoved pro kaï¿½dï¿½ klï¿½c (pro pozdejï¿½ï¿½ zobrazenï¿½ chyb)
     for (const key of keys) {
       if (state.translated[key]) {
         state.translated[key].raw = content;
       }
     }
     
-     // Pokud neco chybí, zkus opravnı retry
+     // Pokud neco chybï¿½, zkus opravnï¿½ retry
 if (missingKeys.length > 0) {
-        log(`? Pokus o opravu formátu pro ${missingKeys.join(', ')}...`);
+        log(`? Pokus o opravu formï¿½tu pro ${missingKeys.join(', ')}...`);
        const entries = keys.map((k) => {
          const e = state.entryMap.get(k);
          return e ? `${e.key} | ${e.greek}\nD: ${e.definice || e.def || ''}\nKJV: ${e.kjv || ''}` : '';
@@ -757,19 +757,19 @@ if (missingKeys.length > 0) {
         annotateEnglishDefinitionsInTranslated(keys);
         const retryCount = keys.length - missingKeys.length;
         if (retryCount > 0) {
-          log(`? Opravnı preklad: ${retryCount} hesel, chybí: ${missingKeys.length > 0 ? missingKeys.join(', ') : 'nic'}`);
+          log(`? Opravnï¿½ preklad: ${retryCount} hesel, chybï¿½: ${missingKeys.length > 0 ? missingKeys.join(', ') : 'nic'}`);
         } else {
-          log(`? Opravnı preklad nepomohl, chybí: ${missingKeys.join(', ')}`);
+          log(`? Opravnï¿½ preklad nepomohl, chybï¿½: ${missingKeys.join(', ')}`);
         }
       } catch(e2) {
-        log(`? Opravnı pokus selhal: ${e2.message}`);
+        log(`? Opravnï¿½ pokus selhal: ${e2.message}`);
       }
     }
     
-    // Fallback strategie: pokud po retry chybí cást dávky, zkus menší dávku.
-    // V AUTO reimu vypnuto - mohlo by zp?sobit p?ehnanı po?et API volání.
+    // Fallback strategie: pokud po retry chybï¿½ cï¿½st dï¿½vky, zkus menï¿½ï¿½ dï¿½vku.
+    // V AUTO reï¿½imu vypnuto - mohlo by zp?sobit p?ehnanï¿½ po?et API volï¿½nï¿½.
     if (missingKeys.length > 0 && keys.length > 1 && depth < 4 && !state.autoRunning) {
-      log(`? Fallback dávky: delím ${missingKeys.length} klícu na menší bloky (úroven ${depth + 1})`);
+      log(`? Fallback dï¿½vky: delï¿½m ${missingKeys.length} klï¿½cu na menï¿½ï¿½ bloky (ï¿½roven ${depth + 1})`);
       const pivot = Math.ceil(missingKeys.length / 2);
       const chunks = [missingKeys.slice(0, pivot), missingKeys.slice(pivot)].filter(ch => ch.length > 0);
       for (const chunk of chunks) {
@@ -777,8 +777,8 @@ if (missingKeys.length > 0) {
       }
     }
 
-      // Sekundární fallback spouštej a po dokoncení všech pokusu hlavního providera pro danou dávku
-      // V AUTO reimu zapnut podle poadavku - OpenRouter jede paraleln? i v AUTO
+      // Sekundï¿½rnï¿½ fallback spouï¿½tej aï¿½ po dokoncenï¿½ vï¿½ech pokusu hlavnï¿½ho providera pro danou dï¿½vku
+      // V AUTO reï¿½imu zapnut podle poï¿½adavku - OpenRouter jede paraleln? i v AUTO
       if (depth === 0) {
         const keysBeforeSideFallback = keys.filter(k => !isTranslationComplete(state.translated[k]));
         if (keysBeforeSideFallback.length > 0) {
@@ -788,8 +788,8 @@ if (missingKeys.length > 0) {
               logError('GeminiRotation', err, { keys: keysBeforeSideFallback });
             });
           }
-           // OpenRouter m?e z?stat batch (seriáln?) nebo taky paraleln?
-           // ZP?TNA KOMPATIBILITA: pokud chceš i OpenRouter paraleln?, zm?? na
+           // OpenRouter m?ï¿½e z?stat batch (seriï¿½ln?) nebo taky paraleln?
+           // ZP?TNA KOMPATIBILITA: pokud chceï¿½ i OpenRouter paraleln?, zm?? na
            // runOpenRouterTopicRotationFallback(keysBeforeSideFallback)
            if (isPipelineSecondaryEnabled('openrouter')) {
             const filteredKeys = keysBeforeSideFallback.filter(k => {
@@ -837,24 +837,24 @@ if (missingKeys.length > 0) {
       avgLatencyMs: reqMs
     });
     if (translatedCount < keys.length) {
-      // Oznac chybející hesla jako neúspešná
+      // Oznac chybejï¿½cï¿½ hesla jako neï¿½speï¿½nï¿½
       for (const key of keys) {
         if (!isTranslationComplete(state.translated[key])) {
           state.translated[key] = state.translated[key] || {};
-          if (!state.translated[key].vyznam || state.translated[key].vyznam === '—') {
-            state.translated[key].vyznam = '—';
+          if (!state.translated[key].vyznam || state.translated[key].vyznam === 'ï¿½') {
+            state.translated[key].vyznam = 'ï¿½';
           }
         }
       }
-      log(`? Pozor: Preloeno ${translatedCount}/${keys.length} hesel. Zkuste menší dávku.`);
+      log(`? Pozor: Preloï¿½eno ${translatedCount}/${keys.length} hesel. Zkuste menï¿½ï¿½ dï¿½vku.`);
       showToast(t('toast.translated.partial', { translated: translatedCount, total: keys.length }));
     }
     
 saveProgress();
       updateFailedCount();
       // logEntry already called above after initial parse
- log(`? Preloeno ${keys.length} hesel (${keys[0]}–${keys[keys.length-1]})`);
-      // Vy?istit _processing flagy po dokon?ení
+ log(`? Preloï¿½eno ${keys.length} hesel (${keys[0]}ï¿½${keys[keys.length-1]})`);
+      // Vy?istit _processing flagy po dokon?enï¿½
       for (const key of keys) {
         if (state.translated[key] && state.translated[key]._processing) {
           delete state.translated[key]._processing;
@@ -883,7 +883,7 @@ saveProgress();
           avgLatencyMs: reqMs
         });
         const cooldownSeconds = Math.max(state.currentInterval, 60);
-        logWarn('translateBatch', `Rate limit dávky ${keys[0]}-${keys[keys.length-1]}, odklad ${cooldownSeconds}s`, {
+        logWarn('translateBatch', `Rate limit dï¿½vky ${keys[0]}-${keys[keys.length-1]}, odklad ${cooldownSeconds}s`, {
           provider: prov,
           keyRange: `${keys[0]}-${keys[keys.length-1]}`,
           cooldownSeconds,
@@ -898,10 +898,10 @@ saveProgress();
         provider: prov,
         batchSize: keys.length
       });
-      // Oznac chybná hesla jako neúspešná, aby šla zobrazit v "Neúspešné preklady"
+      // Oznac chybnï¿½ hesla jako neï¿½speï¿½nï¿½, aby ï¿½la zobrazit v "Neï¿½speï¿½nï¿½ preklady"
       for (const key of keys) {
         if (!state.translated[key]) {
-          state.translated[key] = { vyznam: '—', definice: '', puvod: '', specialista: '', raw: `CHYBA: ${e.message}` };
+          state.translated[key] = { vyznam: 'ï¿½', definice: '', puvod: '', specialista: '', raw: `CHYBA: ${e.message}` };
         }
       }
       saveProgress();
@@ -926,7 +926,7 @@ async function runGeminiTopicRotationFallback(keys, abortVersion) {
   const model = getPipelineModelForProvider(prov) || 'gemini-3.1-flash-lite-preview';
   if (!apiKey) return;
 
-  // Seskupit keys podle chyb?jících témat
+  // Seskupit keys podle chyb?jï¿½cï¿½ch tï¿½mat
   const topicMap = new Map();
   for (const key of keys) {
     const t = state.translated[key] || {};
@@ -938,7 +938,7 @@ async function runGeminiTopicRotationFallback(keys, abortVersion) {
   }
   if (!topicMap.size) return;
 
-  // Po?adí témat
+  // Po?adï¿½ tï¿½mat
   const topicOrder = ['definice', 'vyznam', 'kjv', 'puvod', 'specialista'];
   let topicIdx = 0;
   while (topicIdx < topicOrder.length) {
@@ -956,7 +956,7 @@ async function runGeminiTopicRotationFallback(keys, abortVersion) {
       continue;
     }
 
-    // Vezmi dávku
+    // Vezmi dï¿½vku
     const batchKeys = keysForTopic.slice(0, state.currentBatchSize);
     const remaining = keysForTopic.slice(state.currentBatchSize);
     if (remaining.length > 0) {
@@ -966,10 +966,10 @@ async function runGeminiTopicRotationFallback(keys, abortVersion) {
       topicIdx++;
     }
 
-    // P?eklad dávky
+    // P?eklad dï¿½vky
     await translateTopicBatchWithGemini(batchKeys, topicId);
 
-    // Interval mezi dávkami
+    // Interval mezi dï¿½vkami
     const intervalSec = state.currentInterval || 20;
     if (intervalSec > 0) {
       await sleepMs(intervalSec * 1000);
@@ -991,7 +991,7 @@ async function translateTopicBatchWithGemini(keys, topicId) {
   const model = getPipelineModelForProvider(prov) || 'gemini-3.1-flash-lite-preview';
   if (!apiKey) return;
 
-  // Na?íst batch prompty z localStorage
+  // Na?ï¿½st batch prompty z localStorage
   const sysPrompt = localStorage.getItem(getTopicRepairSystemPromptStorageKey(topicId)) ||
                     getDefaultBatchTopicSystemPrompt(topicId);
   const usrPromptTemplate = localStorage.getItem(getTopicRepairUserPromptStorageKey(topicId)) ||
@@ -1019,7 +1019,7 @@ async function translateTopicBatchWithGemini(keys, topicId) {
       const val = String(parsedMap[key] || parsedMap[key.replace(/^[GH]/, '')] || '').trim();
       await addTopicBatchResult(key, topicId, val, prov, model);
 
-      // Specialista navíc
+      // Specialista navï¿½c
       if (topicId === 'specialista') {
         syncTopicRepairTaskSpecialistaFromRaw({ key }, rawText);
       }
@@ -1032,12 +1032,119 @@ async function translateTopicBatchWithGemini(keys, topicId) {
     logError('translateTopicBatchWithGemini', e, { keys, topicId });
     for (const key of keys) {
       state.translated[key] = state.translated[key] || {};
-      state.translated[key][topicId] = '—';
+      state.translated[key][topicId] = 'ï¿½';
     }
   }
 }
+
+// â”€â”€ PARALELNÃ PÅ˜EKLAD â€” provider jako parametr â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// StejnÃ¡ logika jako translateBatch, ale provider/model/apiKey jsou danÃ© zvenku.
+// PouÅ¾Ã­vÃ¡ se z auto.js pro soubÄ›Å¾nÃ½ pÅ™eklad vÃ­ce providery najednou.
+async function translateBatchForProvider(allKeys, prov, apiKey, model) {
+  if (!allKeys.length || !apiKey) return { ok: false };
+
+  // PÅ™eskoÄit klÃ­Äe co jiÅ¾ majÃ­ pÅ™eklad nebo jsou zpracovÃ¡vÃ¡ny jinÃ½m workerem
+  // (worker je oznaÄil _processing pÅ™ed volÃ¡nÃ­m tÃ©to funkce)
+  const filteredKeys = allKeys.filter(k => {
+    const tr = state.translated[k];
+    if (!tr) return true;
+    if (tr._processing && tr.vyznam === null) return true; // naÅ¡e vlastnÃ­ _processing
+    if (tr.skipped) return false;
+    if (tr.vyznam && tr.vyznam !== null) return false; // jiÅ¾ pÅ™eloÅ¾eno
+    return true;
+  });
+  if (!filteredKeys.length) return { ok: true, translatedCount: 0, total: 0 };
+
+  const batch = filteredKeys.map(k => state.entryMap.get(k)).filter(Boolean);
+  if (!batch.length) return { ok: false };
+
+  const messages = buildPromptMessages(batch);
+  const keys = filteredKeys; // pouÅ¾ijeme filtrovanÃ©
+
+  const reqStart = performance.now();
+  try {
+    const previousMap = {};
+    for (const key of keys) {
+      previousMap[key] = cloneTranslationTopicFields(state.translated[key]);
+    }
+
+    const raw = await callAIWithRetry(prov, apiKey, model, messages);
+    const reqMs = performance.now() - reqStart;
+    log('ParalelnÃ­ pÅ™eklad [' + prov + ']: ' + getTranslationEngineLabel(raw, prov, model));
+
+    let missingKeys = parseTranslations(raw.content, keys);
+    preserveBetterTopicsAfterBatch(keys, previousMap);
+    fillMissingVyznamFromSource(keys);
+    fillMissingKjvFromSource(keys);
+    annotateEnglishDefinitionsInTranslated(keys);
+
+    // Token log
+    const usage = raw.usage || raw.usageMetadata;
+    if (usage) {
+      const inT = usage.prompt_tokens || usage.promptTokenCount || 0;
+      const outT = usage.completion_tokens || usage.candidatesTokenCount || 0;
+      logTokenEntry(prov, inT, outT, inT + outT);
+    }
+
+    // Retry pro chybÄ›jÃ­cÃ­
+    if (missingKeys.length > 0) {
+      try {
+        const entries = keys.map(k => {
+          const e = state.entryMap.get(k);
+          return e ? (e.key + ' | ' + e.greek + '\nD: ' + (e.definice || e.def || '') + '\nKJV: ' + (e.kjv || '')) : '';
+        }).join('\n\n');
+        const retryContent = t('batch.retry.missingG', { entries });
+        const raw2 = await callOnce(prov, apiKey, model, buildRetryMessages(retryContent));
+        missingKeys = parseTranslations(raw2.content, keys);
+        preserveBetterTopicsAfterBatch(keys, previousMap);
+        fillMissingVyznamFromSource(keys);
+        fillMissingKjvFromSource(keys);
+        annotateEnglishDefinitionsInTranslated(keys);
+      } catch (e2) {
+        log('OpravnÃ½ pokus [' + prov + '] selhal: ' + e2.message);
+      }
+    }
+
+    // VyÄistit _processing flagy
+    for (const key of keys) {
+      if (state.translated[key] && state.translated[key]._processing) {
+        delete state.translated[key]._processing;
+      }
+    }
+
+    saveProgress();
+    updateFailedCount();
+    logEntry(keys, raw.content);
+
+    const translatedCount = keys.filter(k => isTranslationComplete(state.translated[k])).length;
+    return { ok: true, translatedCount, total: keys.length, reqMs };
+
+  } catch (e) {
+    const msg = (e && e.message ? e.message : '').toLowerCase();
+    const isRate = msg.includes('429') || msg.includes('rate limit') || msg.includes('quota') || msg.includes('too many');
+    for (const key of keys) {
+      if (state.translated[key] && state.translated[key]._processing) {
+        delete state.translated[key]._processing;
+      }
+      if (!state.translated[key]) {
+        state.translated[key] = { vyznam: '\u2014', definice: '', puvod: '', specialista: '', raw: 'CHYBA: ' + e.message };
+      }
+    }
+    saveProgress();
+    // ZkusÃ­me vyÄÃ­st doporuÄenou dobu ÄekÃ¡nÃ­ z error message
+    let cooldownSeconds = isRate ? 60 : 0;
+    const retryMatch = (e.message || '').match(/retry.after[:\s]*(\d+)/i) || (e.message || '').match(/(\d+)\s*sec/i);
+    if (retryMatch) cooldownSeconds = Math.max(cooldownSeconds, parseInt(retryMatch[1], 10) || 0);
+    if (msg.includes('resource_exhausted') || msg.includes('limit vycerpan')) cooldownSeconds = Math.max(cooldownSeconds, 20 * 60);
+    logError('translateBatchForProvider', e, { prov, keys: keys.slice(0, 5) });
+    if (!isRate) showToast(t('toast.error.withMessage', { message: e.message }));
+    return { ok: false, rateLimited: isRate, cooldownSeconds };
+  }
+}
+
   return {
     translateSingle,
+    translateBatchForProvider,
     retranslateSingle,
     translateNext,
     jumpToStart,

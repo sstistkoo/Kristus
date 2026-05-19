@@ -1821,6 +1821,9 @@ const autoApi = createAutoApi({
   getNextBatch,
   updateETA,
   translateBatch,
+  translateBatchForProvider: batchApi.translateBatchForProvider,
+  getCurrentApiKey: (...a) => getCurrentApiKey(...a),
+  getPipelineModelForProvider: (...a) => getPipelineModelForProvider(...a),
   updateStats,
   renderList,
   renderDetail
