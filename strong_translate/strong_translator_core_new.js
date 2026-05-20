@@ -81,7 +81,7 @@ export function buildPromptMessages(batch) {
     const def = e.definice || e.def || '';
     const tvar = e.orig || e.tvaroslovi || '';
     const tvarPart = tvar ? ` (${tvar})` : '';
-    return `${e.key} | ${e.greek}${tvarPart}\nD: ${def}`;
+    return `${e.key} | ${e.greek}${tvarPart}\nEN: ${def}`;
   }).join('\n\n');
   const sysMsg = getResolvedSystemMessage();
   const userPrompt = getResolvedDefaultPrompt();

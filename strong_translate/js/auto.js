@@ -256,6 +256,15 @@ export function createAutoApi(deps) {
         while (state.autoRunning) {
           if (isAutoTokenLimitReached()) break;
 
+          // Zkontrolovat request limit pro Gemini a OpenRouter
+          if ((prov === 'gemini' || prov === 'openrouter') && typeof window !== 'undefined' && window.checkProviderRequestLimit) {
+            if (window.checkProviderRequestLimit(prov)) {
+              log('[' + (PROVIDER_LABELS[prov]||prov) + '] dosažen limit požadavků — zastavuji worker');
+              setProviderStatus(prov, 'limit req');
+              break;
+            }
+          }
+
           // Atomicky vzít dávku a okamžitě označit _processing
           // (žádný await mezi getNextBatch a nastavením _processing = bezpečné)
           const batch = getNextBatch(batchSize);
@@ -394,6 +403,16 @@ export function createAutoApi(deps) {
           const waitSec = Math.ceil((nextAllowed - now) / 1000);
           setProviderStatus(prov, 'čeká ' + waitSec + 's');
           continue; // tento provider ještě nesmí, zkusíme další
+        }
+
+        // Zkontrolovat request limit
+        if ((prov === 'gemini' || prov === 'openrouter') && typeof window !== 'undefined' && window.checkProviderRequestLimit) {
+          if (window.checkProviderRequestLimit(prov)) {
+            log('[' + (PROVIDER_LABELS[prov]||prov) + '] dosažen limit požadavků');
+            setProviderStatus(prov, 'limit req');
+            state.seqProviderNextAllowed[prov] = Date.now() + 24 * 60 * 60 * 1000; // blokovat na zbytek session
+            continue;
+          }
         }
 
         // Nejdřív ověřit klíč a model PŘED getNextBatch — jinak by se klíče ztratily

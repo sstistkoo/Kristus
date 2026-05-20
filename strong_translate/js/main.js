@@ -5194,8 +5194,7 @@ window.checkProviderRequestLimit = function(prov) {
   const reqLimit = limits[prov]?.reqs;
   if (!reqLimit || reqLimit <= 0) return false;
   const key = 'provider_req_count_' + prov;
-  const count = parseInt(sessionStorage.getItem(key) || '0', 10) + 1;
-  sessionStorage.setItem(key, String(count));
+  const count = parseInt(sessionStorage.getItem(key) || '0', 10);
   return count >= reqLimit;
 };
 
@@ -5203,13 +5202,26 @@ window.incrementProviderReqCount = function(prov) {
   const key = 'provider_req_count_' + prov;
   const count = parseInt(sessionStorage.getItem(key) || '0', 10) + 1;
   sessionStorage.setItem(key, String(count));
+  const limits = getProviderLimits();
+  const limit = limits[prov]?.reqs;
+  const limitReached = limit && count >= limit;
+
   // Zobrazit počítadlo u OpenRouter
   if (prov === 'openrouter') {
     const el = document.getElementById('orReqCount');
     if (el) {
-      const limits = getProviderLimits();
-      const limit = limits.openrouter?.reqs;
       el.textContent = count + (limit ? '/' + limit : '') + ' req';
+      el.style.color = limitReached ? 'var(--err, #ff4444)' : '';
+    }
+  }
+
+  // Při dosažení limitu - zastavit countdown a zobrazit stav
+  if (limitReached) {
+    const label = { groq: 'Groq', gemini: 'Gemini', openrouter: 'OpenRouter' }[prov] || prov;
+    const countdownEl = document.getElementById('autoCountdown_' + prov);
+    if (countdownEl) {
+      countdownEl.textContent = label + ': limit ' + count + '/' + limit + ' req ✓';
+      countdownEl.style.color = 'var(--acc3, orange)';
     }
   }
 };
