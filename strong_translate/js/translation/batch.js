@@ -331,13 +331,10 @@ function getNextBatch(size) {
   for (const e of state.entries) {
     if (result.length >= size) break;
     const existing = state.translated[e.key];
-    // P?esko?it pokud existuje a nen� skipped, nebo pokud je ozna?eno jako _processing
-    if (existing && !existing.skipped) {
-      // Ve AUTO re�imu respektovat i _processing flag (p?edchoz� p?eklad je�t? nebyl dokon?en)
-      if (state.autoRunning && existing._processing) {
-        continue;
-      }
-      continue;
+    if (existing) {
+      if (existing.skipped) continue;        // explicitně přeskočené
+      if (existing._processing) continue;    // zpracovává jiný worker
+      if (existing.vyznam && existing.vyznam !== null) continue; // již přeloženo
     }
     const startsWithG = e.key.startsWith('G');
     const startsWithH = e.key.startsWith('H');

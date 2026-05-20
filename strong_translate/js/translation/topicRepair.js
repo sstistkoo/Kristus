@@ -1236,12 +1236,12 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
   } else {
     picked = tasks;
   }
-  let keys = picked.map(t => t.key);
+  let keys = [...new Set(picked.map(t => t.key))]; // deduplikace
   if (!keys.length) {
-    keys = state.topicRepairState.tasks.filter(t => t && !t.hidden).map(t => t.key);
-    const uniqueKeys = [...new Set(keys)];
-    if (uniqueKeys.length) {
-      log('Relaxed filter: using all ' + uniqueKeys.length + ' keys for ' + topicId);
+    const fallback = state.topicRepairState.tasks.filter(t => t && !t.hidden).map(t => t.key);
+    keys = [...new Set(fallback)];
+    if (keys.length) {
+      log('Relaxed filter: using all ' + keys.length + ' keys for ' + topicId);
     }
   }
   if (!keys.length) return { count: 0 };
