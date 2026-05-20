@@ -142,13 +142,30 @@ function getFallbackModels(provider) {
 }
 
 async function callAIWithRetry(provider, apiKey, model, messages) {
-  let candidateModels;
-
+  // Rotační mód — jeden model, jeden pokus, statistika, vrátit výsledek/chybu
   if (provider === 'openrouter' && model === 'openrouter/rotate') {
-    // Round-robin rotace — getFallbackModels vrátí seznam začínající od dalšího modelu
     const rotated = getFallbackModels(provider);
-    candidateModels = rotated.length > 0 ? rotated : ['meta-llama/llama-3.3-70b-instruct:free'];
-  } else if (provider === 'gemini' || (provider === 'openrouter' && model === 'openrouter/free')) {
+    const m = rotated.find(x => !isModelBlocked(provider, x)) || rotated[0];
+    if (!m) throw new Error(t('ai.error.noModelAvailable'));
+    try {
+      const res = await callOnce(provider, apiKey, m, messages);
+      if (typeof window !== 'undefined' && window.recordOrModelStat) {
+        window.recordOrModelStat(res.resolvedModel || m, true);
+      }
+      return { ...res, providerUsed: provider, requestedModel: model, attemptedModel: m, resolvedModel: res.resolvedModel || m };
+    } catch(e) {
+      if (typeof window !== 'undefined' && window.recordOrModelStat) {
+        window.recordOrModelStat(m, false);
+      }
+      const msg = (e.message || '').toLowerCase();
+      const isRate = msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('too many');
+      logWarn('callAIWithRetry', 'OpenRouter rotate: ' + m + ' selhal (' + (e.message||'') + ')', { provider, model: m });
+      throw Object.assign(e, { rateLimited: isRate, cooldownSeconds: isRate ? 60 : 0 });
+    }
+  }
+
+  let candidateModels;
+  if (provider === 'gemini' || (provider === 'openrouter' && model === 'openrouter/free')) {
     candidateModels = [model];
   } else {
     candidateModels = [...new Set([model, ...getFallbackModels(provider).filter(m => m !== model)])];
@@ -164,7 +181,6 @@ async function callAIWithRetry(provider, apiKey, model, messages) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await callOnce(provider, apiKey, m, messages);
-        // Zaznamenat úspěch do statistik
         if (provider === 'openrouter' && typeof window !== 'undefined' && window.recordOrModelStat) {
           window.recordOrModelStat(res.resolvedModel || m, true);
         }
@@ -179,9 +195,13 @@ async function callAIWithRetry(provider, apiKey, model, messages) {
          lastErr = e;
          const msg = (e.message || '').toLowerCase();
          const isRate = msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('too many');
-         // Zaznamenat selhání do statistik (rate limit i jiné chyby)
+         const isBadRequest = msg.includes('400') || msg.includes('bad request');
          if (provider === 'openrouter' && typeof window !== 'undefined' && window.recordOrModelStat) {
            window.recordOrModelStat(m, false);
+         }
+         if (isBadRequest && provider === 'openrouter') {
+           log('Model ' + m + ' vrátil 400, přeskakuji');
+           break; // přeskočit na další model
          }
          const isBanned = msg.includes('restricted') || msg.includes('organization');
          const is404 = msg.includes('404') || msg.includes('not found');

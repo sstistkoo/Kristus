@@ -420,6 +420,17 @@ export function createAutoApi(deps) {
         setProviderStatus(prov, 'překládám...');
 
         const result = await translateBatchForProvider(batch, prov, apiKey, model);
+
+        // Při selhání vrátit _processing zpět aby getNextBatch klíče znovu viděl
+        if (!result || !result.ok) {
+          for (const key of batch) {
+            if (state.translated[key] && state.translated[key]._processing) {
+              delete state.translated[key]._processing;
+              if (!state.translated[key].vyznam) delete state.translated[key];
+            }
+          }
+        }
+
         updateStats();
         renderList();
         if (state.activeKey && state.translated[state.activeKey]) renderDetail();
@@ -448,13 +459,15 @@ export function createAutoApi(deps) {
 
       if (!state.autoSeqRunning) return;
 
-      // Naplánovat další kolo — hned nebo až nejdříve povolený provider bude ready
+      // Naplánovat další kolo — hned nebo až nejdřívější provider bude ready
+      if (!state.autoSeqRunning) return;
       const now = Date.now();
       const waits = activeProviders.map(p => Math.max(0, (state.seqProviderNextAllowed[p] || 0) - now));
-      const minWait = waits.length ? Math.min(...waits) : 0; // min čekání = nejdřívější provider
-      const nextIn = Math.min(Math.max(0, minWait), 1000); // kontrolovat max každou sekundu
+      const minWait = waits.length ? Math.min(...waits) : 0;
+      // Čekat alespoň 1s ale max do nejbližšího dostupného providera (max 30s kroky)
+      const nextIn = minWait > 0 ? Math.min(minWait, 30000) : 1000;
       updateAutoProviderCountdowns();
-      state.autoTimer = setTimeout(runSequentialStep, Math.max(100, nextIn));
+      state.autoTimer = setTimeout(runSequentialStep, nextIn);
 
     } finally {
       state.autoStepRunning = false;
@@ -534,7 +547,8 @@ export function createAutoApi(deps) {
    function isAutoTokenLimitReached() {
      const limit = getAutoTokenLimit();
      if (limit <= 0) return false;
-     const total = state.totalTokens.total;
+     // Porovnáváme jen Groq tokeny — limit 350000 je Groq denní kvóta
+     const total = state.groqTokens.total;
      return total >= limit;
    }
 
@@ -542,13 +556,18 @@ export function createAutoApi(deps) {
     const el = document.getElementById('tokenStats');
     if (!el) return;
     const limit = getAutoTokenLimit();
-    const suffix = limit > 0 ? ` / limit ${limit}` : '';
+    const suffix = limit > 0 ? ' / limit ' + limit : '';
     el.textContent = t('stats.tokens', {
       input: state.groqTokens.in,
       output: state.groqTokens.out,
       total: state.groqTokens.total,
       suffix
     });
+    // Zobrazit celkové tokeny všech providerů pokud jsou jiné než Groq
+    const totalEl = document.getElementById('totalTokenStats');
+    if (totalEl && state.totalTokens.total !== state.groqTokens.total) {
+      totalEl.textContent = ' (vše: ' + state.totalTokens.total + ')';
+    }
   }
 
   return {
