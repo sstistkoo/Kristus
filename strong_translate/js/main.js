@@ -149,9 +149,8 @@ function applyUiLanguage() {
       if (el) el.setAttribute(attr, value);
     };
     const uiTitleLang = getUiLangTag();
-    const targetTitleLang = String(localStorage.getItem('strong_target_lang') || 'cz').toLowerCase().replace(/^cs$/, 'cz').toUpperCase();
-    document.title = formatAppTitleWithTargetLang(t('app.title', { lang: targetTitleLang }), targetTitleLang);
-    setText('setupTitle', formatAppTitleWithTargetLang(t('setup.title', { lang: targetTitleLang }), targetTitleLang));
+    document.title = formatAppTitleWithTargetLang(t('app.title', { lang: uiTitleLang }), uiTitleLang);
+    setText('setupTitle', formatAppTitleWithTargetLang(t('setup.title', { lang: uiTitleLang }), uiTitleLang));
     setText('setupAdvancedSummary', t('setup.advanced'));
     setAttr('setupCompactSummary', 'title', t('setup.compact.title'));
     const providerForLabel = String(document.getElementById('provider')?.value || 'groq');
@@ -1109,7 +1108,9 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
       const normalized = normalizeCachedModels(models);
       if (Date.now() - timestamp < CACHE_TTL && normalized.length >= 2) {
         // Use cached models
-        selectElement.innerHTML = normalized.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+        const rotOpt = selectElement.querySelector('option[value="openrouter/rotate"]');
+        const rotHtml = rotOpt ? '<option value="openrouter/rotate">↻ Rotovat označené modely</option>' : '';
+        selectElement.innerHTML = rotHtml + normalized.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
         selectElement.disabled = false;
         restoreModel();
         hadFreshCache = true;
@@ -1168,8 +1169,11 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
         return;
       }
 
+      // Zachovat "Rotovat označené" option pokud existuje
+      const rotateOption = selectElement.querySelector('option[value="openrouter/rotate"]');
+      const rotateHtml = rotateOption ? '<option value="openrouter/rotate">↻ Rotovat označené modely</option>' : '';
       const optionHtml = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
-      selectElement.innerHTML = optionHtml;
+      selectElement.innerHTML = rotateHtml + optionHtml;
       selectElement.disabled = false;
       if (preferredModel && selectElement.querySelector(`option[value="${preferredModel}"]`)) {
         selectElement.value = preferredModel;
@@ -1186,6 +1190,11 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
       }
 
       if (!hadFreshCache) restoreModel();
+
+      // Naplnit rotation panel checkboxy
+      if (typeof window.refreshOrModelRotationPanel === 'function') {
+        window.refreshOrModelRotationPanel(options);
+      }
     })
     .catch(err => {
       if (hadFreshCache) return;
@@ -1240,6 +1249,14 @@ function onProviderChange() {
       // Guard: if provider changed while loading, abort
       if (document.getElementById('provider').value !== 'openrouter') return;
     });
+    // Refresh rotation panel hned - z cache
+    try {
+      const orCache = JSON.parse(localStorage.getItem('openrouter_free_models_cache') || '{}');
+      const orOpts = (orCache.models || []).map(function(m) {
+        return typeof m === 'object' && !Array.isArray(m) ? m : { value: String((m||[])[0]||''), label: String((m||[])[1]||(m||[])[0]||'') };
+      }).filter(function(o) { return o.value; });
+      if (orOpts.length && window.refreshOrModelRotationPanel) window.refreshOrModelRotationPanel(orOpts);
+    } catch(e) {}
   } else {
     modelSelect.innerHTML = PROVIDERS[newProv].models.map(([v,l]) => `<option value="${v}">${uiLabel(l)}</option>`).join('');
     modelSelect.disabled = false;
@@ -1751,6 +1768,7 @@ const {
   getFailedTopicsForFallback, getMissingTopicsForRepair,
   cloneTranslationTopicFields, shouldReplaceTopicValue,
   getProviderCooldownLeftSec, formatPreviewRawTranslation,
+  translateBatchForProvider,
 } = batchApi;
 
 // Cirkularita list ? detail: late-binding pres closure
@@ -1816,6 +1834,7 @@ const autoApi = createAutoApi({
   syncSecondaryProviderToggles: (...a) => syncSecondaryProviderToggles(...a),
   getSecondaryNextOperationState: batchApi.getSecondaryNextOperationState,
   stopElapsedTimer,
+  startElapsedTimer,
   showToast,
   log,
   getNextBatch,
@@ -1824,7 +1843,6 @@ const autoApi = createAutoApi({
   translateBatchForProvider: batchApi.translateBatchForProvider,
   getCurrentApiKey: (...a) => getCurrentApiKey(...a),
   getPipelineModelForProvider: (...a) => getPipelineModelForProvider(...a),
-  startElapsedTimer,
   updateStats,
   renderList,
   renderDetail
@@ -4893,33 +4911,10 @@ function printRecentAICalls() {
   });
   
   // Expose toggleMenu to global scope
-  let _menuOutsideHandler = null;
   window.toggleAutoSequential = toggleAutoSequential;
 window.toggleMenu = function() {
     const menuPanel = document.getElementById('menuPanel');
-    const isHidden = menuPanel.classList.contains('is-hidden');
     menuPanel.classList.toggle('is-hidden');
-
-    if (isHidden) {
-      // Panel se právě otevřel — zaregistruj click-outside
-      setTimeout(() => {
-        _menuOutsideHandler = function(e) {
-          const btn = document.getElementById('btnMenu');
-          if (!menuPanel.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
-            menuPanel.classList.add('is-hidden');
-            document.removeEventListener('click', _menuOutsideHandler, true);
-            _menuOutsideHandler = null;
-          }
-        };
-        document.addEventListener('click', _menuOutsideHandler, true);
-      }, 0);
-    } else {
-      // Panel se zavřel tlačítkem — odregistruj handler
-      if (_menuOutsideHandler) {
-        document.removeEventListener('click', _menuOutsideHandler, true);
-        _menuOutsideHandler = null;
-      }
-    }
   };
 // Pri skryt� tabu tak� flushni, aby se nic neztratilo
 document.addEventListener('visibilitychange', () => {
@@ -4927,6 +4922,16 @@ document.addEventListener('visibilitychange', () => {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+   // Init OR rotation panel z cache hned při startu
+   setTimeout(function() {
+     try {
+       const orCache = JSON.parse(localStorage.getItem('openrouter_free_models_cache') || '{}');
+       const orOpts = (orCache.models || []).map(function(m) {
+         return typeof m === 'object' && !Array.isArray(m) ? m : { value: String((m||[])[0]||''), label: String((m||[])[1]||(m||[])[0]||'') };
+       }).filter(function(o) { return o.value; });
+       if (orOpts.length && window.refreshOrModelRotationPanel) window.refreshOrModelRotationPanel(orOpts);
+     } catch(e) {}
+   }, 500);
    // Load custom UI language if exists
    try {
      const customLangCode = localStorage.getItem('strong_ui_lang_custom_active');
@@ -4954,3 +4959,63 @@ window.addEventListener('DOMContentLoaded', () => {
     showToast(t('toast.error.withMessage', { message: err?.message || String(err) }));
   });
 });
+
+// ── OPENROUTER MODEL ROTATION PANEL ─────────────────────────────────────────
+const OR_ROTATION_KEY = 'or_rotation_models';
+const OR_STATS_KEY = 'or_model_stats';
+
+function getOrStats() {
+  try { return JSON.parse(localStorage.getItem(OR_STATS_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveOrStats(stats) {
+  try { localStorage.setItem(OR_STATS_KEY, JSON.stringify(stats)); } catch(e) {}
+}
+function getOrRotationModels() {
+  try { const r = localStorage.getItem(OR_ROTATION_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+}
+function saveOrRotationModels(models) {
+  try { localStorage.setItem(OR_ROTATION_KEY, JSON.stringify(models)); } catch(e) {}
+}
+
+window.refreshOrModelRotationPanel = function(options) {
+  const list = document.getElementById('orModelCheckboxList');
+  if (!list) return;
+  const saved = new Set(getOrRotationModels());
+  const stats = getOrStats();
+  list.innerHTML = options.map(function(o) {
+    const s = stats[o.value] || { ok: 0, rl: 0 };
+    const total = s.ok + s.rl;
+    const statStr = total > 0
+      ? ' <span style="color:var(--txt3);font-size:10px">(✓' + s.ok + ' ✗' + s.rl + ')</span>'
+      : '';
+    const checked = saved.has(o.value) ? 'checked' : '';
+    const safeId = 'orck_' + o.value.replace(/[^a-zA-Z0-9]/g, '_');
+    return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-family:JetBrains Mono,monospace;color:var(--txt1);padding:2px 4px;border-radius:3px;" title="' + o.value + '">'
+      + '<input type="checkbox" id="' + safeId + '" value="' + o.value + '" ' + checked + ' onchange="window.onOrRotationChange()" style="cursor:pointer">'
+      + '<span>' + o.label + statStr + '</span>'
+      + '</label>';
+  }).join('');
+};
+
+window.onOrRotationChange = function() {
+  const list = document.getElementById('orModelCheckboxList');
+  if (!list) return;
+  const checked = Array.from(list.querySelectorAll('input[type=checkbox]:checked')).map(function(cb) { return cb.value; });
+  saveOrRotationModels(checked);
+};
+
+window.recordOrModelStat = function(model, success) {
+  if (!model || model === 'openrouter/free') return;
+  const stats = getOrStats();
+  if (!stats[model]) stats[model] = { ok: 0, rl: 0 };
+  if (success) stats[model].ok++; else stats[model].rl++;
+  saveOrStats(stats);
+  // Refresh panel
+  try {
+    const cached = JSON.parse(localStorage.getItem('openrouter_free_models_cache') || '{}');
+    const opts = (cached.models || []).map(function(m) {
+      return typeof m === 'object' && !Array.isArray(m) ? m : { value: String(m[0]||''), label: String(m[1]||m[0]||'') };
+    }).filter(function(m) { return m.value; });
+    if (opts.length && window.refreshOrModelRotationPanel) window.refreshOrModelRotationPanel(opts);
+  } catch(e) {}
+};

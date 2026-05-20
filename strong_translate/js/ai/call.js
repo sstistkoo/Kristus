@@ -133,9 +133,16 @@ function getFallbackModels(provider) {
 }
 
 async function callAIWithRetry(provider, apiKey, model, messages) {
-  const candidateModels = (provider === 'gemini' || (provider === 'openrouter' && model === 'openrouter/free'))
-    ? [model]
-    : [...new Set([model, ...getFallbackModels(provider).filter(m => m !== model)])];
+  // Pokud je vybrána rotace, použít zaškrtnuté modely místo konkrétního modelu
+  const effectiveModel = (provider === 'openrouter' && model === 'openrouter/rotate')
+    ? (getFallbackModels(provider)[0] || 'meta-llama/llama-3.3-70b-instruct:free')
+    : model;
+
+  const candidateModels = (provider === 'gemini' || (provider === 'openrouter' && effectiveModel === 'openrouter/free'))
+    ? [effectiveModel]
+    : (provider === 'openrouter' && model === 'openrouter/rotate')
+      ? getFallbackModels(provider) // celý seznam pro rotaci
+      : [...new Set([effectiveModel, ...getFallbackModels(provider).filter(m => m !== effectiveModel)])];
   const tryModels = candidateModels.filter((m) => !isModelBlocked(provider, m));
   let lastErr = null;
 
