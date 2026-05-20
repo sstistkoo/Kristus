@@ -5007,10 +5007,15 @@ window.onOrRotationChange = function() {
 };
 
 window.recordOrModelStat = function(model, success) {
-  if (!model || model === 'openrouter/free') return;
+  if (!model || model === 'openrouter/free' || model === 'openrouter/rotate') return;
+  // Normalizovat — přidat :free pokud chybí
+  const normModel = model.endsWith(':free') ? model : model + ':free';
   const stats = getOrStats();
-  if (!stats[model]) stats[model] = { ok: 0, rl: 0 };
-  if (success) stats[model].ok++; else stats[model].rl++;
+  // Zapsat pod oběma variantami (s :free i bez) pro jistotu
+  [model, normModel].forEach(function(key) {
+    if (!stats[key]) stats[key] = { ok: 0, rl: 0 };
+    if (success) stats[key].ok++; else stats[key].rl++;
+  });
   saveOrStats(stats);
   // Refresh panel
   try {

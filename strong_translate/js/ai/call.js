@@ -90,26 +90,35 @@ function getProviderConfiguredModels(provider) {
   return getProviderConfiguredModelsForAI(provider, PROVIDERS);
 }
 
+// Round-robin index pro střídání modelů
+let _orRoundRobinIndex = 0;
+
+function getOrRotationList() {
+  try {
+    const rotationRaw = localStorage.getItem('or_rotation_models');
+    if (rotationRaw) {
+      const models = JSON.parse(rotationRaw);
+      if (Array.isArray(models) && models.length > 0) return models;
+    }
+  } catch(e) {}
+  return [];
+}
+
 function getFallbackModels(provider) {
   if (provider !== 'openrouter') return getStaticFallbackModels(provider, PROVIDERS);
 
   // Nejdřív zkusit ručně vybrané modely pro rotaci
   try {
-    const rotationRaw = localStorage.getItem('or_rotation_models');
-    if (rotationRaw) {
-      const rotationModels = JSON.parse(rotationRaw);
-      if (Array.isArray(rotationModels) && rotationModels.length > 0) {
-        // Seřadit podle statistik — méně rate limitů = vyšší priorita
-        const stats = (() => { try { return JSON.parse(localStorage.getItem('or_model_stats') || '{}'); } catch(e) { return {}; } })();
-        return [...rotationModels].sort((a, b) => {
-          const sa = stats[a] || { ok: 0, rl: 0 };
-          const sb = stats[b] || { ok: 0, rl: 0 };
-          // Skóre: poměr úspěchů; modely bez historie jdou na konec
-          const scoreA = (sa.ok + sa.rl) === 0 ? 0.5 : sa.ok / (sa.ok + sa.rl);
-          const scoreB = (sb.ok + sb.rl) === 0 ? 0.5 : sb.ok / (sb.ok + sb.rl);
-          return scoreB - scoreA; // vyšší skóre = dřív
-        });
-      }
+    const rotationModels = getOrRotationList();
+    if (rotationModels.length > 0) {
+      // Round-robin: posunout index a sestavit seznam začínající od aktuálního modelu
+      _orRoundRobinIndex = _orRoundRobinIndex % rotationModels.length;
+      const rotated = [
+        ...rotationModels.slice(_orRoundRobinIndex),
+        ...rotationModels.slice(0, _orRoundRobinIndex)
+      ];
+      _orRoundRobinIndex = (_orRoundRobinIndex + 1) % rotationModels.length;
+      return rotated;
     }
   } catch(e) { /* ignore */ }
 
@@ -133,16 +142,17 @@ function getFallbackModels(provider) {
 }
 
 async function callAIWithRetry(provider, apiKey, model, messages) {
-  // Pokud je vybrána rotace, použít zaškrtnuté modely místo konkrétního modelu
-  const effectiveModel = (provider === 'openrouter' && model === 'openrouter/rotate')
-    ? (getFallbackModels(provider)[0] || 'meta-llama/llama-3.3-70b-instruct:free')
-    : model;
+  let candidateModels;
 
-  const candidateModels = (provider === 'gemini' || (provider === 'openrouter' && effectiveModel === 'openrouter/free'))
-    ? [effectiveModel]
-    : (provider === 'openrouter' && model === 'openrouter/rotate')
-      ? getFallbackModels(provider) // celý seznam pro rotaci
-      : [...new Set([effectiveModel, ...getFallbackModels(provider).filter(m => m !== effectiveModel)])];
+  if (provider === 'openrouter' && model === 'openrouter/rotate') {
+    // Round-robin rotace — getFallbackModels vrátí seznam začínající od dalšího modelu
+    const rotated = getFallbackModels(provider);
+    candidateModels = rotated.length > 0 ? rotated : ['meta-llama/llama-3.3-70b-instruct:free'];
+  } else if (provider === 'gemini' || (provider === 'openrouter' && model === 'openrouter/free')) {
+    candidateModels = [model];
+  } else {
+    candidateModels = [...new Set([model, ...getFallbackModels(provider).filter(m => m !== model)])];
+  }
   const tryModels = candidateModels.filter((m) => !isModelBlocked(provider, m));
   let lastErr = null;
 
@@ -169,8 +179,8 @@ async function callAIWithRetry(provider, apiKey, model, messages) {
          lastErr = e;
          const msg = (e.message || '').toLowerCase();
          const isRate = msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('too many');
-         // Zaznamenat rate limit do statistik
-         if (provider === 'openrouter' && isRate && typeof window !== 'undefined' && window.recordOrModelStat) {
+         // Zaznamenat selhání do statistik (rate limit i jiné chyby)
+         if (provider === 'openrouter' && typeof window !== 'undefined' && window.recordOrModelStat) {
            window.recordOrModelStat(m, false);
          }
          const isBanned = msg.includes('restricted') || msg.includes('organization');
