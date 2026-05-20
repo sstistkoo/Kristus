@@ -4984,17 +4984,42 @@ window.refreshOrModelRotationPanel = function(options) {
   if (!list) return;
   const saved = new Set(getOrRotationModels());
   const stats = getOrStats();
-  list.innerHTML = options.map(function(o) {
+
+  // Detekce speciálních modelů podle klíčových slov v ID
+  function getModelWarning(id) {
+    const v = id.toLowerCase();
+    if (v.includes('-vl') || v.includes('vision') || v.includes('multimodal') || v.includes('-vl:') || v.endsWith('vl:free')) {
+      return { icon: '🖼', title: 'Vision model — primárně pro obrázky, text nemusí fungovat' };
+    }
+    if (v.includes('coder') || v.includes('code') || v.includes('starcoder') || v.includes('deepcoder')) {
+      return { icon: '💻', title: 'Kódovací model — překlad textu nemusí být kvalitní' };
+    }
+    if (v.includes('embed') || v.includes('embedding')) {
+      return { icon: '⛔', title: 'Embedding model — nelze použít pro překlad' };
+    }
+    // Modely bez system role (uloženo po prvním 400)
+    const noSysKey = 'or_no_system_' + id.replace(/[^a-z0-9]/gi, '_');
+    if (localStorage.getItem(noSysKey)) {
+      return { icon: '⚠', title: 'Funguje jen bez system role — automaticky přizpůsobeno' };
+    }
+    return null;
+  }
+
+  list.innerHTML = options.filter(function(o) {
+    return o.value !== 'openrouter/rotate' && o.value !== 'openrouter/free';
+  }).map(function(o) {
     const s = stats[o.value] || { ok: 0, rl: 0 };
     const total = s.ok + s.rl;
     const statStr = total > 0
       ? ' <span style="color:var(--txt3);font-size:10px">(✓' + s.ok + ' ✗' + s.rl + ')</span>'
       : '';
+    const warn = getModelWarning(o.value);
+    const warnStr = warn ? ' <span title="' + warn.title + '" style="cursor:help">' + warn.icon + '</span>' : '';
     const checked = saved.has(o.value) ? 'checked' : '';
     const safeId = 'orck_' + o.value.replace(/[^a-zA-Z0-9]/g, '_');
     return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;font-family:JetBrains Mono,monospace;color:var(--txt1);padding:2px 4px;border-radius:3px;" title="' + o.value + '">'
       + '<input type="checkbox" id="' + safeId + '" value="' + o.value + '" ' + checked + ' onchange="window.onOrRotationChange()" style="cursor:pointer">'
-      + '<span>' + o.label + statStr + '</span>'
+      + '<span>' + o.label + warnStr + statStr + '</span>'
       + '</label>';
   }).join('');
 };

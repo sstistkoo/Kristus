@@ -417,20 +417,37 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
        return { content, usage: d.usageMetadata, resolvedModel: d.modelVersion || d.model || model, rateInfo: { provider: 'gemini' } };
 
      } else if (provider === 'openrouter') {
+      // Helper: sloučit system prompt do prvního user message (pro modely bez support system role)
+      function mergeSystemIntoUser(msgs) {
+        const sys = msgs.find(m => m.role === 'system');
+        if (!sys) return msgs;
+        const rest = msgs.filter(m => m.role !== 'system');
+        const firstUser = rest.find(m => m.role === 'user');
+        if (!firstUser) return rest;
+        firstUser.content = sys.content + '\n\n' + firstUser.content;
+        return rest;
+      }
+
+      const orHeaders = {
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://strong-bible-gr-cz.local',
+        'X-Title': (() => {
+          const src = String(localStorage.getItem('strong_source_lang') || 'gr').toUpperCase();
+          const tgt = String(localStorage.getItem('strong_target_lang') || 'cz').toUpperCase().replace('CS','CZ');
+          return 'Strong ' + src + '-' + tgt + ' Translator';
+        })()
+      };
+
+      // Zjistit jestli model je označen jako no-system (uloženo po prvním 400)
+      const noSystemKey = 'or_no_system_' + model.replace(/[^a-z0-9]/gi, '_');
+      const useNoSystem = !!localStorage.getItem(noSystemKey);
+      const orMessages = useNoSystem ? mergeSystemIntoUser([...messages]) : messages;
+
       const r = await fetch('https://corsproxy.io/?https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
-        headers: { 
-          'Authorization': 'Bearer ' + apiKey, 
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://strong-bible-gr-cz.local',
-          'X-Title': (() => {
-            const src = String(localStorage.getItem('strong_source_lang') || 'gr').toUpperCase();
-            const tgt = String(localStorage.getItem('strong_target_lang') || 'cz').toUpperCase().replace('CS','CZ');
-            return 'Strong ' + src + '-' + tgt + ' Translator';
-          })()
-        },
-        body: JSON.stringify({ model, messages,
-          temperature: temperature, max_tokens: maxTokens }),
+        headers: orHeaders,
+        body: JSON.stringify({ model, messages: orMessages, temperature, max_tokens: maxTokens }),
         signal: controller.signal
       });
      const d = await r.json();
@@ -438,9 +455,31 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
        const errMsg = d?.error?.message || d?.message || String(r.status);
        const errCode = String(d?.error?.code || '');
        if (r.status === 429 || errCode === '429') {
-         throw new Error(`429 Rate limit: ${errMsg}`);
+         throw new Error('429 Rate limit: ' + errMsg);
        }
-       throw new Error(`OpenRouter ${r.status}: ${errMsg}`);
+       // 400 - zkusit bez system role pokud jsme ho ještě nezkusili
+       if (r.status === 400 && !useNoSystem) {
+         log('Model ' + model + ' vrátil 400, zkouším bez system role...');
+         const r2 = await fetch('https://corsproxy.io/?https://openrouter.ai/api/v1/chat/completions', {
+           method: 'POST',
+           headers: orHeaders,
+           body: JSON.stringify({ model, messages: mergeSystemIntoUser([...messages]), temperature, max_tokens: maxTokens }),
+           signal: controller.signal
+         });
+         const d2 = await r2.json();
+         if (r2.ok) {
+           // Uložit že tento model nepodporuje system role
+           localStorage.setItem(noSystemKey, '1');
+           log('Model ' + model + ' funguje bez system role - uloženo');
+           validateAPIResponse(d2, 'openrouter');
+           const content2 = extractOpenRouterText(d2);
+           if (!content2) throw new Error('OpenRouter: prázdná odpověď');
+           return { content: content2, usage: d2.usage, resolvedModel: d2.model || model, rateInfo: { provider: 'openrouter' } };
+         }
+         const errMsg2 = d2?.error?.message || String(r2.status);
+         throw new Error('OpenRouter ' + r2.status + ': ' + errMsg2);
+       }
+       throw new Error('OpenRouter ' + r.status + ': ' + errMsg);
      }
      validateAPIResponse(d, 'openrouter');
       const content = extractOpenRouterText(d);

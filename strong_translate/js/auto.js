@@ -232,7 +232,7 @@ export function createAutoApi(deps) {
       const FALLBACK_MODELS = {
         groq: 'meta-llama/llama-4-scout-17b-16e-instruct',
         gemini: 'gemini-2.0-flash-lite',
-        openrouter: 'openrouter/free'
+        openrouter: 'openrouter/rotate'  // použít rotaci zaškrtnutých modelů
       };
 
       async function runProviderWorkerAtomic(prov) {
@@ -388,7 +388,7 @@ export function createAutoApi(deps) {
 
         // Nejdřív ověřit klíč a model PŘED getNextBatch — jinak by se klíče ztratily
         const apiKey = getCurrentApiKey(prov);
-        const SEQ_FALLBACK_MODELS = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', gemini: 'gemini-2.0-flash-lite', openrouter: 'openrouter/free' };
+        const SEQ_FALLBACK_MODELS = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', gemini: 'gemini-2.0-flash-lite', openrouter: 'openrouter/rotate' };
         const model = getPipelineModelForProvider(prov) || SEQ_FALLBACK_MODELS[prov];
         if (!apiKey) {
           log('[' + (PROVIDER_LABELS[prov]||prov) + '] chybí API klíč, přeskakuji');

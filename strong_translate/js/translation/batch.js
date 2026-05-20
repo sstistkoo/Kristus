@@ -1089,15 +1089,16 @@ async function translateBatchForProvider(allKeys, prov, apiKey, model) {
       logTokenEntry(prov, inT, outT, inT + outT);
     }
 
-    // Retry pro chybějící
-    if (missingKeys.length > 0) {
+    // Retry pro chybějící — přeskočit pokud je model rotační (nemá konkrétní ID)
+    if (missingKeys.length > 0 && model !== 'openrouter/rotate') {
       try {
         const entries = keys.map(k => {
           const e = state.entryMap.get(k);
           return e ? (e.key + ' | ' + e.greek + '\nD: ' + (e.definice || e.def || '') + '\nKJV: ' + (e.kjv || '')) : '';
         }).join('\n\n');
         const retryContent = t('batch.retry.missingG', { entries });
-        const raw2 = await callOnce(prov, apiKey, model, buildRetryMessages(retryContent));
+        const effectiveModel = raw.resolvedModel || model;
+        const raw2 = await callOnce(prov, apiKey, effectiveModel, buildRetryMessages(retryContent));
         missingKeys = parseTranslations(raw2.content, keys);
         preserveBetterTopicsAfterBatch(keys, previousMap);
         fillMissingVyznamFromSource(keys);
