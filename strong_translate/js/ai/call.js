@@ -244,8 +244,12 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
   }, CONFIG.API_TIMEOUT);
   
   // Load AI settings from localStorage (per provider with legacy fallback)
-  const temperature = parseFloat(localStorage.getItem(`strong_ai_temperature_${provider}`) || localStorage.getItem('strong_ai_temperature') || '0.3') || 0.3;
-  const maxTokens = parseInt(localStorage.getItem(`strong_ai_max_tokens_${provider}`) || localStorage.getItem('strong_ai_max_tokens') || '2500', 10) || 2500;
+  const temperature = parseFloat(localStorage.getItem('strong_ai_temperature_' + provider) || localStorage.getItem('strong_ai_temperature') || '0.3') || 0.3;
+
+  // Per-provider max_tokens — OpenRouter a Gemini zvládnou více, Groq je rychlejší s méně
+  const PROVIDER_MAX_TOKENS = { groq: 2500, gemini: 8192, openrouter: 8192 };
+  const maxTokensDefault = PROVIDER_MAX_TOKENS[provider] || 4096;
+  const maxTokens = parseInt(localStorage.getItem('strong_ai_max_tokens_' + provider) || localStorage.getItem('strong_ai_max_tokens') || String(maxTokensDefault), 10) || maxTokensDefault;
   
   try {
     const shouldLogFullResponse = Array.isArray(messages) && messages.some((m) => {
