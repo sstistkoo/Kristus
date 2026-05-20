@@ -391,6 +391,12 @@ function applyUiLanguage() {
     refreshStaticProviderSelectLabel('providerRunSecondaryGeminiModel', 'gemini');
     refreshStaticProviderSelectLabel('modelTestModel_groq', 'groq');
     refreshStaticProviderSelectLabel('modelTestModel_gemini', 'gemini');
+    // Naplnit OR selects z API
+    const orSelects = ['pipelineModelSecondaryOpenrouter', 'providerRunSecondaryOpenrouterModel', 'modelTestModel_openrouter'];
+    orSelects.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) populateOpenRouterModels(el, localStorage.getItem('strong_or_model_' + id) || localStorage.getItem('strong_model'), null);
+    });
     const promptTabsEl = document.getElementById('promptTabs');
      if (promptTabsEl) {
        const tabKeyMap = {
@@ -1067,7 +1073,7 @@ function buildPromptMessagesForModelTest(batch, promptType) {
 
 function populateOpenRouterModels(selectElement, savedModel, callback) {
   const CACHE_KEY = 'openrouter_free_models_cache';
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in ms
+  const CACHE_TTL = 30 * 60 * 1000; // 30 minut — vždy fetchujeme na pozadí
 
   function restoreModel() {
     // Restore saved model or use first available
@@ -1108,9 +1114,7 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
       const normalized = normalizeCachedModels(models);
       if (Date.now() - timestamp < CACHE_TTL && normalized.length >= 2) {
         // Use cached models
-        const rotOpt = selectElement.querySelector('option[value="openrouter/rotate"]');
-        const rotHtml = rotOpt ? '<option value="openrouter/rotate">↻ Rotovat označené modely</option>' : '';
-        selectElement.innerHTML = rotHtml + normalized.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+        selectElement.innerHTML = normalized.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
         selectElement.disabled = false;
         restoreModel();
         hadFreshCache = true;
@@ -1126,7 +1130,7 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
     selectElement.innerHTML = `<option value="">${t('openrouter.loading')}</option>`;
   }
 
-  fetch('https://openrouter.ai/api/v1/models?free=true')
+  fetch('https://openrouter.ai/api/v1/models')
     .then(r => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return r.json();
@@ -1143,12 +1147,13 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
       const modelMap = new Map(models.map(m => [m.id, m]));
 
       const topCandidates = [
+        { id: 'openrouter/rotate', fixedLabel: '↻ Rotovat označené modely', alwaysInclude: true },
         { id: 'openrouter/free', fixedLabel: t('provider.top.autoRouter') },
         { id: 'openai/gpt-oss-20b:free', fixedLabel: '? OpenAI GPT-OSS 20B (free)' },
         { id: 'nvidia/nemotron-nano-9b-v2:free', fixedLabel: '? NVIDIA Nemotron Nano 9B v2 (free)' }
       ];
       const topOptions = topCandidates
-        .filter(c => c.id === 'openrouter/free' || modelMap.has(c.id))
+        .filter(c => c.alwaysInclude || c.id === 'openrouter/free' || modelMap.has(c.id))
         .map(c => ({ value: c.id, label: c.fixedLabel }));
 
       const topIds = new Set(topOptions.map(o => o.value));
@@ -1169,11 +1174,8 @@ function populateOpenRouterModels(selectElement, savedModel, callback) {
         return;
       }
 
-      // Zachovat "Rotovat označené" option pokud existuje
-      const rotateOption = selectElement.querySelector('option[value="openrouter/rotate"]');
-      const rotateHtml = rotateOption ? '<option value="openrouter/rotate">↻ Rotovat označené modely</option>' : '';
       const optionHtml = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
-      selectElement.innerHTML = rotateHtml + optionHtml;
+      selectElement.innerHTML = optionHtml;
       selectElement.disabled = false;
       if (preferredModel && selectElement.querySelector(`option[value="${preferredModel}"]`)) {
         selectElement.value = preferredModel;
@@ -5018,4 +5020,78 @@ window.recordOrModelStat = function(model, success) {
     }).filter(function(m) { return m.value; });
     if (opts.length && window.refreshOrModelRotationPanel) window.refreshOrModelRotationPanel(opts);
   } catch(e) {}
+};
+
+// ── OPENROUTER ROTATION — výběrová tlačítka ─────────────────────────────────
+// Modely které zvládají odborný překlad do češtiny na free tieru
+const OR_RECOMMENDED_MODELS = new Set([
+  // Meta Llama — nejlepší pro češtinu
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'meta-llama/llama-4-scout:free',
+  'meta-llama/llama-4-maverick:free',
+  // Google Gemma 4
+  'google/gemma-4-31b-it:free',
+  'google/gemma-3-27b-it:free',
+  'google/gemma-3-12b-it:free',
+  // Qwen — silný na překlad
+  'qwen/qwen3-235b-a22b:free',
+  'qwen/qwen3-30b-a3b:free',
+  'qwen/qwen2.5-72b-instruct:free',
+  // DeepSeek
+  'deepseek/deepseek-r1:free',
+  'deepseek/deepseek-r1-0528:free',
+  // Mistral
+  'mistralai/mistral-small-3.1-24b-instruct:free',
+  'mistralai/mistral-7b-instruct:free',
+  // Nous Hermes
+  'nousresearch/hermes-3-llama-3.1-405b:free',
+  'nous/hermes-3-405b-instruct:free',
+  // Microsoft Phi
+  'microsoft/phi-4-reasoning-plus:free',
+]);
+
+window.orSelectRecommended = function() {
+  const list = document.getElementById('orModelCheckboxList');
+  if (!list) return;
+  // Kombinace přesných ID + klíčová slova pro případ jiných ID na API
+  const RECOMMENDED_KEYWORDS = [
+    'llama-3.3-70b', 'llama-4-scout', 'llama-4-maverick', 'llama-3.1-70b',
+    'gemma-4-31b', 'gemma-3-27b', 'gemma-3-12b', 'gemma-4-9b',
+    'qwen3-235b', 'qwen3-30b', 'qwen2.5-72b', 'qwen-3-235b', 'qwen-3-30b',
+    'deepseek-r1', 'deepseek-v3',
+    'mistral-small-3', 'mistral-small-24b',
+    'hermes-3-405b', 'hermes-3-llama',
+    'phi-4-reasoning', 'phi-4-mini',
+  ];
+  // Modely které překlad do češtiny nezvládají dobře — vyloučit
+  const EXCLUDE_KEYWORDS = [
+    'vision', 'vl', 'coder', 'code', 'embed', '1b', '3b', '7b', '8b',
+    'nano', 'mini', 'xs', 'tiny', 'small-1', 'small-2',
+  ];
+  const boxes = list.querySelectorAll('input[type=checkbox]');
+  boxes.forEach(cb => {
+    const val = cb.value.toLowerCase();
+    // Přesná shoda s ID seznamem
+    const exactMatch = OR_RECOMMENDED_MODELS.has(cb.value);
+    // Shoda klíčových slov
+    const keywordMatch = RECOMMENDED_KEYWORDS.some(kw => val.includes(kw));
+    // Výjimky — malé nebo specializované modely
+    const excluded = EXCLUDE_KEYWORDS.some(kw => val.includes(kw));
+    cb.checked = (exactMatch || keywordMatch) && !excluded;
+  });
+  window.onOrRotationChange();
+};
+
+window.orSelectAll = function() {
+  const list = document.getElementById('orModelCheckboxList');
+  if (!list) return;
+  list.querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = true; });
+  window.onOrRotationChange();
+};
+
+window.orSelectNone = function() {
+  const list = document.getElementById('orModelCheckboxList');
+  if (!list) return;
+  list.querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = false; });
+  window.onOrRotationChange();
 };

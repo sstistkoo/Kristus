@@ -331,10 +331,13 @@ function getNextBatch(size) {
   for (const e of state.entries) {
     if (result.length >= size) break;
     const existing = state.translated[e.key];
-    if (existing) {
-      if (existing.skipped) continue;        // explicitně přeskočené
-      if (existing._processing) continue;    // zpracovává jiný worker
-      if (existing.vyznam && existing.vyznam !== null) continue; // již přeloženo
+    // P?esko?it pokud existuje a nen� skipped, nebo pokud je ozna?eno jako _processing
+    if (existing && !existing.skipped) {
+      // Ve AUTO re�imu respektovat i _processing flag (p?edchoz� p?eklad je�t? nebyl dokon?en)
+      if (state.autoRunning && existing._processing) {
+        continue;
+      }
+      continue;
     }
     const startsWithG = e.key.startsWith('G');
     const startsWithH = e.key.startsWith('H');
@@ -1034,31 +1037,28 @@ async function translateTopicBatchWithGemini(keys, topicId) {
   }
 }
 
-// ── PARALELNÍ PŘEKLAD — provider jako parametr ────────────────────────────────────────────────
-// Stejná logika jako translateBatch, ale provider/model/apiKey jsou dané zvenku.
-// Používá se z auto.js pro souběžný překlad více providery najednou.
+// ── PARALELNÍ PŘEKLAD — provider jako parametr ─────────────────────────────
+// Volá se z auto.js pro paralelní překlad více providery najednou.
 async function translateBatchForProvider(allKeys, prov, apiKey, model) {
   if (!allKeys.length || !apiKey) return { ok: false };
 
-  // Přeskočit klíče co již mají překlad nebo jsou zpracovávány jiným workerem
-  // (worker je označil _processing před voláním této funkce)
-  const filteredKeys = allKeys.filter(k => {
+  // Přeskočit klíče co jsou již přeloženy nebo zpracovávány
+  const keys = allKeys.filter(k => {
     const tr = state.translated[k];
     if (!tr) return true;
-    if (tr._processing && tr.vyznam === null) return true; // naše vlastní _processing
     if (tr.skipped) return false;
-    if (tr.vyznam && tr.vyznam !== null) return false; // již přeloženo
+    if (tr._processing) return true; // naše vlastní _processing
+    if (tr.vyznam && tr.vyznam !== null) return false;
     return true;
   });
-  if (!filteredKeys.length) return { ok: true, translatedCount: 0, total: 0 };
+  if (!keys.length) return { ok: true, translatedCount: 0, total: 0 };
 
-  const batch = filteredKeys.map(k => state.entryMap.get(k)).filter(Boolean);
+  const batch = keys.map(k => state.entryMap.get(k)).filter(Boolean);
   if (!batch.length) return { ok: false };
 
   const messages = buildPromptMessages(batch);
-  const keys = filteredKeys; // použijeme filtrované
 
-  // Elapsed timer — spustit při prvním překladu
+  // Elapsed timer
   if (!state.startTime) {
     state.startTime = Date.now();
     startElapsedTimer();
@@ -1123,22 +1123,23 @@ async function translateBatchForProvider(allKeys, prov, apiKey, model) {
     return { ok: true, translatedCount, total: keys.length, reqMs };
 
   } catch (e) {
-    const msg = (e && e.message ? e.message : '').toLowerCase();
-    const isRate = msg.includes('429') || msg.includes('rate limit') || msg.includes('quota') || msg.includes('too many');
+    const msg = (e && e.message ? e.message : '');
+    const msgLow = msg.toLowerCase();
+    const isRate = msgLow.includes('429') || msgLow.includes('rate limit') || msgLow.includes('quota') || msgLow.includes('too many');
+    let cooldownSeconds = isRate ? 60 : 0;
+    const retryMatch = msg.match(/retry.after[:\s]*(\d+)/i);
+    if (retryMatch) cooldownSeconds = Math.max(cooldownSeconds, parseInt(retryMatch[1], 10) || 0);
+    if (msgLow.includes('resource_exhausted')) cooldownSeconds = Math.max(cooldownSeconds, 20 * 60);
+
     for (const key of keys) {
       if (state.translated[key] && state.translated[key]._processing) {
         delete state.translated[key]._processing;
       }
       if (!state.translated[key]) {
-        state.translated[key] = { vyznam: '\u2014', definice: '', puvod: '', specialista: '', raw: 'CHYBA: ' + e.message };
+        state.translated[key] = { vyznam: '—', definice: '', puvod: '', specialista: '', raw: 'CHYBA: ' + e.message };
       }
     }
     saveProgress();
-    // Zkusíme vyčíst doporučenou dobu čekání z error message
-    let cooldownSeconds = isRate ? 60 : 0;
-    const retryMatch = (e.message || '').match(/retry.after[:\s]*(\d+)/i) || (e.message || '').match(/(\d+)\s*sec/i);
-    if (retryMatch) cooldownSeconds = Math.max(cooldownSeconds, parseInt(retryMatch[1], 10) || 0);
-    if (msg.includes('resource_exhausted') || msg.includes('limit vycerpan')) cooldownSeconds = Math.max(cooldownSeconds, 20 * 60);
     logError('translateBatchForProvider', e, { prov, keys: keys.slice(0, 5) });
     if (!isRate) showToast(t('toast.error.withMessage', { message: e.message }));
     return { ok: false, rateLimited: isRate, cooldownSeconds };

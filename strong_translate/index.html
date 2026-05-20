@@ -76,13 +76,16 @@
         <input type="checkbox" id="pipelineEnableSecondaryOpenrouter" aria-label="Zapnout sekundární OpenRouter">
         <span id="pipelineEnableSecondaryOpenrouterText">zapnout opravy</span>
       </label>
-      <select id="pipelineModelSecondaryOpenrouter" aria-label="Sekundární model OpenRouter" title="Sekundární model OpenRouter">
-        <option value="openrouter/rotate">↻ Rotovat označené modely</option>
-      </select>
+      <select id="pipelineModelSecondaryOpenrouter" aria-label="Sekundární model OpenRouter" title="Sekundární model OpenRouter"></select>
     </div>
     <div id="orModelRotationPanelMain" style="margin-top:6px; padding:8px; background:var(--bg3); border-radius:6px; border:1px solid var(--brd);">
       <div style="font-size:11px; color:var(--txt2); margin-bottom:6px; font-family:'JetBrains Mono',monospace;">↻ OpenRouter — rotace modelů při rate limitu (zaškrtni pro střídání):</div>
       <div id="orModelCheckboxList" style="display:flex; flex-direction:column; gap:3px; max-height:200px; overflow-y:auto;"></div>
+      <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+        <button onclick="window.orSelectRecommended()" style="font-size:10px; padding:2px 8px; background:var(--acc); color:var(--bg1); border:none; border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace;">✓ Doporučené</button>
+        <button onclick="window.orSelectAll()" style="font-size:10px; padding:2px 8px; background:var(--bg4); color:var(--txt1); border:1px solid var(--brd); border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace;">Vše</button>
+        <button onclick="window.orSelectNone()" style="font-size:10px; padding:2px 8px; background:var(--bg4); color:var(--txt1); border:1px solid var(--brd); border-radius:3px; cursor:pointer; font-family:'JetBrains Mono',monospace;">Odznačit</button>
+      </div>
       <div style="margin-top:5px; font-size:10px; color:var(--txt3); font-family:'JetBrains Mono',monospace;">✓ = úspěšné &nbsp;|&nbsp; ✗ = rate limit — seřazeno automaticky</div>
     </div>
   </div>
