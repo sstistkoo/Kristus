@@ -298,7 +298,7 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
 
    } else if (provider === 'gemini') {
      const userContent = messages.find(m => m.role === 'user')?.content || '';
-     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+     const url = `https://corsproxy.io/?https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
      const r = await fetch(url, {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
