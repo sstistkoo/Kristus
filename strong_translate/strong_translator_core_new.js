@@ -181,41 +181,27 @@ function normalizeReferences(input) {
 }
 
 export function parseTranslations(raw, keys, translated = {}) {
-   let normalized = String(raw || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const normalized = String(raw || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-   // Normalizace špatných formátů hlaviček ze špatně naučených modelů:
-   // ###G[4594]### → ###G4594###
-   // ###[4594]###  → ###4594###
-   // ###G 4594###  → ###G4594###
-   // **###G4594###** → ###G4594###  (markdown bold)
-   normalized = normalized
-     .replace(/###([GH]?)\[(\d+)\]###/g, '###$1$2###')   // závorky kolem čísla
-     .replace(/###([GH]?)\s+(\d+)###/g, '###$1$2###')    // mezera mezi prefixem a číslem
-     .replace(/\*\*###([GH]?\d+)###\*\*/g, '###$1###')   // markdown bold **###..###**
-     .replace(/`###([GH]?\d+)###`/g, '###$1###');        // markdown code `###..###`
-
-  const blocks = normalized.split(/(?=###(?:[GH])?\d+###)/);
-  
+  // Sestavíme sadu čísel která čekáme (G4594 → "4594", H123 → "123")
   const numToKey = {};
   for (const k of keys) {
-    const num = k.slice(1);
-    numToKey[num] = k;
+    numToKey[k.slice(1)] = k;
   }
-  
+
+  // Rozdělíme na bloky — hledáme jakoukoliv sekvenci ### ... číslo ... ###
+  // Tolerujeme mezery, závorky, prefix G/H, markdown bold/code okolo
+  const blocks = normalized.split(/(?=(?:\*{0,2}`?)#{2,4}\s*[\[\(]?[GgHh]?\s*\d+\s*[\]\)]?\s*#{2,4})/);
+
   for (const block of blocks) {
-    const km = block.match(/###(?:([GH]\d+)|(\d+))###/);
+    // Vytáhnout číslo z hlavičky — tolerujeme libovolný "obal"
+    const km = block.match(/#{2,4}\s*[\[\(]?[GgHh]?\s*(\d+)\s*[\]\)]?\s*#{2,4}/);
     if (!km) continue;
-    const foundKey = km[1] || km[2];
-    const num = /^[GH]/.test(foundKey) ? foundKey.slice(1) : foundKey;
-    
-    let targetKey = null;
-    if (keys.includes(foundKey)) {
-      targetKey = foundKey;
-    } else if (numToKey[num]) {
-      targetKey = numToKey[num];
-    } else {
-      continue;
-    }
+    const num = km[1]; // jen číslo, bez prefixu
+
+    // Porovnat s očekávanými klíči pouze podle čísla
+    const targetKey = numToKey[num];
+    if (!targetKey) continue; // číslo není v naší dávce — přeskočit
     
     const content = block.slice(km[0].length).trim();
     
