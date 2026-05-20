@@ -181,7 +181,19 @@ function normalizeReferences(input) {
 }
 
 export function parseTranslations(raw, keys, translated = {}) {
-   const normalized = String(raw || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+   let normalized = String(raw || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+   // Normalizace špatných formátů hlaviček ze špatně naučených modelů:
+   // ###G[4594]### → ###G4594###
+   // ###[4594]###  → ###4594###
+   // ###G 4594###  → ###G4594###
+   // **###G4594###** → ###G4594###  (markdown bold)
+   normalized = normalized
+     .replace(/###([GH]?)\[(\d+)\]###/g, '###$1$2###')   // závorky kolem čísla
+     .replace(/###([GH]?)\s+(\d+)###/g, '###$1$2###')    // mezera mezi prefixem a číslem
+     .replace(/\*\*###([GH]?\d+)###\*\*/g, '###$1###')   // markdown bold **###..###**
+     .replace(/`###([GH]?\d+)###`/g, '###$1###');        // markdown code `###..###`
+
   const blocks = normalized.split(/(?=###(?:[GH])?\d+###)/);
   
   const numToKey = {};
