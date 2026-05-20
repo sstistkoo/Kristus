@@ -4,8 +4,7 @@ import { PROVIDERS, AUTO_PROVIDER_ENABLED_KEY, PIPELINE_SECONDARY_ENABLED_KEY } 
 import { safeSetLocalStorage, safeRemoveLocalStorage } from './storage.js';
 
 export function createAutoApi(deps) {
-  // ── VERZE SOUBORU — změň číslo pro ověření cache na GitHubu ──
-  console.log('%c AUTO.JS v2026-05-20-C načten OK', 'background:#1a1a2e;color:#00ff88;font-weight:bold;padding:2px 6px;border-radius:3px');
+
   const {
     state,
     t,
@@ -61,18 +60,6 @@ export function createAutoApi(deps) {
     // Spustit až po malém zpoždění, aby UI mohlo aktualizovat
     setTimeout(() => {
       if (state.autoRunning && !state.autoStepRunning) {
-        // Debug: vypsat stav všech providerů při startu
-        console.group('%c AUTO START DEBUG', 'background:#003366;color:#ffcc00;font-weight:bold');
-        ['groq', 'gemini', 'openrouter'].forEach(prov => {
-          const enabled = isAutoProviderEnabled(prov);
-          const key = getCurrentApiKey(prov);
-          const model = getPipelineModelForProvider(prov);
-          console.log(prov.toUpperCase() + ':',
-            'enabled=' + enabled,
-            '| key=' + (key ? key.slice(0,10) + '...(len=' + key.length + ')' : 'NULL/EMPTY'),
-            '| model=' + (model || 'NULL'));
-        });
-        console.groupEnd();
         runAutoStep();
       }
     }, 50);
@@ -190,25 +177,11 @@ export function createAutoApi(deps) {
   // ── POMOCNÉ: Zjistí aktivní providery s klíčem ──────────────────────────────
   function getActiveParallelProviders() {
     const all = ['groq', 'gemini', 'openrouter'];
-    const result = [];
-    for (const prov of all) {
-      const enabled = isAutoProviderEnabled(prov);
-      const apiKey = getCurrentApiKey(prov);
-      const model = getPipelineModelForProvider(prov);
-      const hasKey = !!(apiKey && apiKey.trim().length > 0);
-      const label = PROVIDER_LABELS[prov] || prov;
-      if (!enabled) {
-        log('AUTO-DEBUG [' + label + ']: vypnutý (checkbox)');
-        continue;
-      }
-      if (!hasKey) {
-        log('AUTO-DEBUG [' + label + ']: chybí API klíč');
-        continue;
-      }
-      log('AUTO-DEBUG [' + label + ']: OK | model=' + (model || 'fallback') + ' | klíč=' + apiKey.slice(0,8) + '...');
-      result.push(prov);
-    }
-    return result;
+    return all.filter(prov => {
+      if (!isAutoProviderEnabled(prov)) return false;
+      const key = getCurrentApiKey(prov);
+      return key && key.trim().length > 0;
+    });
   }
 
   async function runAutoStep() {
@@ -250,7 +223,6 @@ export function createAutoApi(deps) {
         startElapsedTimer();
       }
 
-      console.log('%c AKTIVNÍ WORKEŘI: ' + activeProviders.join(', '), 'background:#004400;color:#88ff88;font-weight:bold');
       log('Paralelní překlad: ' + activeProviders.join(', ') + ' (dávka ' + batchSize + ')');
       updateETA();
 

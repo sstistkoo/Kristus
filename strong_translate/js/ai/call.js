@@ -39,7 +39,16 @@ function getRecentAICalls() {
 
 function logAICallToConsole(callEntry) {
   const { type, provider, model, timestamp, durationMs, messages, response, usage, error } = callEntry;
-  console.groupCollapsed(`🤖 AI ${type} — ${provider} | ${model} — ${durationMs}ms — ${timestamp}`);
+  // Vytáhnout rozsah hesel z user promptu (např. G1–G5)
+  let rangeLabel = '';
+  try {
+    const userMsg = (messages || []).find(m => m.role === 'user');
+    const text = String(userMsg?.content || '');
+    const keys = [...text.matchAll(/([GH]\d+)\s*\|/g)].map(m => m[1]);
+    if (keys.length >= 2) rangeLabel = ' [' + keys[0] + '–' + keys[keys.length - 1] + ']';
+    else if (keys.length === 1) rangeLabel = ' [' + keys[0] + ']';
+  } catch(e) {}
+  console.groupCollapsed('🤖 AI ' + type + ' — ' + provider + ' | ' + model + rangeLabel + ' — ' + durationMs + 'ms — ' + timestamp);
   if (error) {
     console.log('%c❌ Error:', 'color: #ff0000; font-weight: bold;', error);
   }
