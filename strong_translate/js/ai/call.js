@@ -92,25 +92,44 @@ function getProviderConfiguredModels(provider) {
 
 function getFallbackModels(provider) {
   if (provider !== 'openrouter') return getStaticFallbackModels(provider, PROVIDERS);
-  if (provider === 'openrouter') {
-    try {
-      const raw = localStorage.getItem('openrouter_free_models_cache');
-      if (raw) {
-        const cached = JSON.parse(raw);
-        if (cached && Array.isArray(cached.models) && cached.models.length) {
-          const ids = cached.models.map(m => {
-            if (Array.isArray(m)) return m[0];
-            if (m && typeof m === 'object') return m.id || m.value;
-            return null;
-          }).filter(Boolean);
-          return [...new Set(ids)].slice(0, 5);
-        }
+
+  // Nejdřív zkusit ručně vybrané modely pro rotaci
+  try {
+    const rotationRaw = localStorage.getItem('or_rotation_models');
+    if (rotationRaw) {
+      const rotationModels = JSON.parse(rotationRaw);
+      if (Array.isArray(rotationModels) && rotationModels.length > 0) {
+        // Seřadit podle statistik — méně rate limitů = vyšší priorita
+        const stats = (() => { try { return JSON.parse(localStorage.getItem('or_model_stats') || '{}'); } catch(e) { return {}; } })();
+        return [...rotationModels].sort((a, b) => {
+          const sa = stats[a] || { ok: 0, rl: 0 };
+          const sb = stats[b] || { ok: 0, rl: 0 };
+          // Skóre: poměr úspěchů; modely bez historie jdou na konec
+          const scoreA = (sa.ok + sa.rl) === 0 ? 0.5 : sa.ok / (sa.ok + sa.rl);
+          const scoreB = (sb.ok + sb.rl) === 0 ? 0.5 : sb.ok / (sb.ok + sb.rl);
+          return scoreB - scoreA; // vyšší skóre = dřív
+        });
       }
-    } catch(e) { /* ignore */ }
-    // Minimální fallback, kdyby cache ještě neexistovala
-    return ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instruct:free'];
-  }
-  return [];
+    }
+  } catch(e) { /* ignore */ }
+
+  // Fallback na cache všech modelů
+  try {
+    const raw = localStorage.getItem('openrouter_free_models_cache');
+    if (raw) {
+      const cached = JSON.parse(raw);
+      if (cached && Array.isArray(cached.models) && cached.models.length) {
+        const ids = cached.models.map(m => {
+          if (Array.isArray(m)) return m[0];
+          if (m && typeof m === 'object') return m.id || m.value;
+          return null;
+        }).filter(Boolean);
+        return [...new Set(ids)].slice(0, 5);
+      }
+    }
+  } catch(e) { /* ignore */ }
+
+  return ['meta-llama/llama-3.3-70b-instruct:free', 'meta-llama/llama-3.1-8b-instruct:free'];
 }
 
 async function callAIWithRetry(provider, apiKey, model, messages) {
@@ -128,6 +147,10 @@ async function callAIWithRetry(provider, apiKey, model, messages) {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await callOnce(provider, apiKey, m, messages);
+        // Zaznamenat úspěch do statistik
+        if (provider === 'openrouter' && typeof window !== 'undefined' && window.recordOrModelStat) {
+          window.recordOrModelStat(res.resolvedModel || m, true);
+        }
         return {
           ...res,
           providerUsed: provider,
@@ -139,6 +162,10 @@ async function callAIWithRetry(provider, apiKey, model, messages) {
          lastErr = e;
          const msg = (e.message || '').toLowerCase();
          const isRate = msg.includes('429') || msg.includes('quota') || msg.includes('rate') || msg.includes('too many');
+         // Zaznamenat rate limit do statistik
+         if (provider === 'openrouter' && isRate && typeof window !== 'undefined' && window.recordOrModelStat) {
+           window.recordOrModelStat(m, false);
+         }
          const isBanned = msg.includes('restricted') || msg.includes('organization');
          const is404 = msg.includes('404') || msg.includes('not found');
          const is503 = msg.includes('503') || msg.includes('service unavailable');

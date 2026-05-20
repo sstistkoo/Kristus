@@ -173,7 +173,6 @@
         <input type="file" id="importFileInput" class="is-hidden" accept=".txt,.json,application/json,text/plain" onchange="importFile(this)" aria-label="Výběr TXT nebo JSON souboru k importu">
         <button class="hbtn grn" id="btnExportAll" onclick="exportAllLocalStorage()" title="Exportovat všechny překlady z localStorage" aria-label="Exportovat všechny překlady">⬇ Vše</button>
         <button class="hbtn auto" id="btnAuto" onclick="toggleAuto()" aria-label="Spustit automatický překlad">▶ AUTO</button>
-        <button class="hbtn auto" id="btnAutoSeq" onclick="toggleAutoSequential()" aria-label="Spustit postupný překlad (provider za providerem)">↻ Postupně</button>
         <button class="hbtn" id="btnAISettingsDesktop" onclick="showSettingsModal()" title="Nastavení AI (provider, model, dávka)" aria-label="Nastavení AI">⚙ Nastavení AI</button>
         <!-- Vždy viditelné: stavové/akční tlačítka -->
         <button class="hbtn red" id="btnFailedEntries" onclick="showFailedEntries()" title="Zobrazit neúspěšné překlady" aria-label="Zobrazit neúspěšné překlady">⚠ Neus. <span id="failedCount"></span></button>
@@ -208,16 +207,12 @@
   <!-- Auto panel -->
   <div class="auto-panel" id="autoPanel">
     <div class="auto-info">
-      <div class="auto-info-row">
-        <span id="autoInfoPrefix">AUTO:</span>
-        <span id="autoBatch">—</span>
-      </div>
-      <div class="auto-info-row">
-        <input type="number" id="autoBatchSizeInput" class="auto-small-input" min="1" max="200" step="1" value="10" onchange="applyAutoPanelSettings()" aria-label="AUTO: velikost dávky" title="AUTO: velikost dávky">
-        <span>/</span>
-        <input type="number" id="autoIntervalInput" class="auto-small-input" min="1" max="600" step="1" value="20" onchange="applyAutoPanelSettings()" aria-label="AUTO: interval mezi dávkami (s)" title="AUTO: interval mezi dávkami (s)">
-        <span id="autoInfoSeconds">s</span>
-      </div>
+      <span id="autoInfoPrefix">AUTO: dávka</span> <b id="autoBatch">—</b>,
+      <span id="autoInfoSettings">nastavení</span>
+      <input type="number" id="autoBatchSizeInput" class="auto-small-input" min="1" max="200" step="1" value="10" onchange="applyAutoPanelSettings()" aria-label="AUTO: velikost dávky" title="AUTO: velikost dávky">
+      /
+      <input type="number" id="autoIntervalInput" class="auto-small-input" min="1" max="600" step="1" value="20" onchange="applyAutoPanelSettings()" aria-label="AUTO: interval mezi dávkami (s)" title="AUTO: interval mezi dávkami (s)">
+      <span id="autoInfoSeconds">s</span> (<span id="autoInfoInterval">interval</span> <b id="autoInterval">—</b>s)
     </div>
     <div class="countdown" id="countdown">—</div>
     <div id="autoProviderCountdowns" class="auto-provider-countdowns">
@@ -526,6 +521,15 @@
         <div class="mobl-set-row" id="modelRow_openrouter">
           <label id="modelTestModelOpenrouterLabel">Model (OpenRouter)</label>
           <select id="modelTestModel_openrouter" aria-label="Model (OpenRouter)" title="Model (OpenRouter)" onchange="saveModelTestModelSelections()"></select>
+        </div>
+        <div id="orModelRotationPanel" style="display:none; margin-top:8px; padding:8px; background:var(--bg3); border-radius:6px; border:1px solid var(--brd);">
+          <div style="font-size:11px; color:var(--txt2); margin-bottom:6px; font-family:'JetBrains Mono',monospace;">
+            ↻ Rotace modelů při rate limitu — zaškrtni modely pro střídání:
+          </div>
+          <div id="orModelCheckboxList" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto;"></div>
+          <div style="margin-top:6px; font-size:10px; color:var(--txt3); font-family:'JetBrains Mono',monospace;">
+            ✓ = úspěšné překlady &nbsp;|&nbsp; ✗ = rate limity
+          </div>
         </div>
       </div>
       <div class="mobl-set-row">
