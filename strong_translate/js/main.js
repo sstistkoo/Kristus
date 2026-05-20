@@ -5006,9 +5006,26 @@ window.refreshOrModelRotationPanel = function(options) {
     return null;
   }
 
-  list.innerHTML = options.filter(function(o) {
+  // Seřadit podle úspěšnosti: nejvíce úspěchů nahoře, bez historie dole
+  const sortedOptions = options.filter(function(o) {
     return o.value !== 'openrouter/rotate' && o.value !== 'openrouter/free';
-  }).map(function(o) {
+  }).slice().sort(function(a, b) {
+    const sa = stats[a.value] || { ok: 0, rl: 0 };
+    const sb = stats[b.value] || { ok: 0, rl: 0 };
+    const totalA = sa.ok + sa.rl;
+    const totalB = sb.ok + sb.rl;
+    // Bez historie → na konec
+    if (totalA === 0 && totalB === 0) return 0;
+    if (totalA === 0) return 1;
+    if (totalB === 0) return -1;
+    // Seřadit podle počtu úspěchů (více = výše), pak poměru
+    const scoreA = sa.ok / totalA;
+    const scoreB = sb.ok / totalB;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    return sb.ok - sa.ok; // při stejném poměru více úspěchů = výše
+  });
+
+  list.innerHTML = sortedOptions.map(function(o) {
     const s = stats[o.value] || { ok: 0, rl: 0 };
     const total = s.ok + s.rl;
     const statStr = total > 0
