@@ -61,6 +61,18 @@ export function createAutoApi(deps) {
     // Spustit až po malém zpoždění, aby UI mohlo aktualizovat
     setTimeout(() => {
       if (state.autoRunning && !state.autoStepRunning) {
+        // Debug: vypsat stav všech providerů při startu
+        console.group('%c AUTO START DEBUG', 'background:#003366;color:#ffcc00;font-weight:bold');
+        ['groq', 'gemini', 'openrouter'].forEach(prov => {
+          const enabled = isAutoProviderEnabled(prov);
+          const key = getCurrentApiKey(prov);
+          const model = getPipelineModelForProvider(prov);
+          console.log(prov.toUpperCase() + ':',
+            'enabled=' + enabled,
+            '| key=' + (key ? key.slice(0,10) + '...(len=' + key.length + ')' : 'NULL/EMPTY'),
+            '| model=' + (model || 'NULL'));
+        });
+        console.groupEnd();
         runAutoStep();
       }
     }, 50);
@@ -238,6 +250,7 @@ export function createAutoApi(deps) {
         startElapsedTimer();
       }
 
+      console.log('%c AKTIVNÍ WORKEŘI: ' + activeProviders.join(', '), 'background:#004400;color:#88ff88;font-weight:bold');
       log('Paralelní překlad: ' + activeProviders.join(', ') + ' (dávka ' + batchSize + ')');
       updateETA();
 
