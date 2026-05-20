@@ -1314,11 +1314,17 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
   // Worker pro jeden provider — bere dávky ze sdílené fronty, každý čeká svůj interval
   async function bulkProviderWorker(prov) {
     const apiKey = getCurrentApiKey(prov);
-    const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value;
-    if (!apiKey || !model) {
-      log('[' + prov + '] chybí klíč nebo model, worker se nespustí');
+    const TR_FALLBACK_MODELS = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', gemini: 'gemini-2.0-flash-lite', openrouter: 'openrouter/free' };
+    const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value || TR_FALLBACK_MODELS[prov];
+    if (!apiKey) {
+      log('[' + prov + '] chybí API klíč, worker se nespustí');
       return;
     }
+    if (!model) {
+      log('[' + prov + '] chybí model, worker se nespustí');
+      return;
+    }
+    log('[' + prov + '] bulk worker startuje: ' + model);
 
     while (true) {
       if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;

@@ -228,13 +228,24 @@ export function createAutoApi(deps) {
       // Každý provider je samostatný worker — bere dávky nezávisle dokud jsou hesla.
       // Sdílená atomická zámka: JS single-thread zaručuje že getNextBatch+_processing
       // proběhne celé bez přerušení (žádný await uvnitř).
+      const FALLBACK_MODELS = {
+        groq: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        gemini: 'gemini-2.0-flash-lite',
+        openrouter: 'openrouter/free'
+      };
+
       async function runProviderWorkerAtomic(prov) {
         const apiKey = getCurrentApiKey(prov);
-        const model = getPipelineModelForProvider(prov);
-        if (!apiKey || !model) {
-          log('[' + prov + '] chybí klíč nebo model, worker se nespustí');
+        const model = getPipelineModelForProvider(prov) || FALLBACK_MODELS[prov];
+        if (!apiKey) {
+          log('[' + (PROVIDER_LABELS[prov]||prov) + '] chybí API klíč, worker se nespustí');
           return;
         }
+        if (!model) {
+          log('[' + (PROVIDER_LABELS[prov]||prov) + '] chybí model, worker se nespustí');
+          return;
+        }
+        log('[' + (PROVIDER_LABELS[prov]||prov) + '] worker startuje s modelem: ' + model);
 
         while (state.autoRunning) {
           if (isAutoTokenLimitReached()) break;
@@ -376,9 +387,14 @@ export function createAutoApi(deps) {
 
         // Nejdřív ověřit klíč a model PŘED getNextBatch — jinak by se klíče ztratily
         const apiKey = getCurrentApiKey(prov);
-        const model = getPipelineModelForProvider(prov);
-        if (!apiKey || !model) {
-          log('[' + prov + '] chybí API klíč nebo model, přeskakuji');
+        const SEQ_FALLBACK_MODELS = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', gemini: 'gemini-2.0-flash-lite', openrouter: 'openrouter/free' };
+        const model = getPipelineModelForProvider(prov) || SEQ_FALLBACK_MODELS[prov];
+        if (!apiKey) {
+          log('[' + (PROVIDER_LABELS[prov]||prov) + '] chybí API klíč, přeskakuji');
+          continue;
+        }
+        if (!model) {
+          log('[' + (PROVIDER_LABELS[prov]||prov) + '] chybí model, přeskakuji');
           continue;
         }
 

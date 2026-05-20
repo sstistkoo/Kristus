@@ -346,7 +346,11 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
           'Authorization': 'Bearer ' + apiKey, 
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://strong-bible-gr-cz.local',
-          'X-Title': 'Strong GR-CZ Translator'
+          'X-Title': (() => {
+            const src = String(localStorage.getItem('strong_source_lang') || 'gr').toUpperCase();
+            const tgt = String(localStorage.getItem('strong_target_lang') || 'cz').toUpperCase().replace('CS','CZ');
+            return 'Strong ' + src + '-' + tgt + ' Translator';
+          })()
         },
         body: JSON.stringify({ model, messages,
           temperature: temperature, max_tokens: maxTokens }),
