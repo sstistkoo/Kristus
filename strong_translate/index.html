@@ -179,6 +179,7 @@
       <button class="hbtn" id="btnJumpToStart" onclick="jumpToStart()" title="Přeskočit na toto číslo" aria-label="Přeskočit na zadané G číslo">→</button>
     </div>
 <div class="hdr-btns">
+        <button class="hbtn hbtn-tiny" id="btnBackToSetup" onclick="showSetup()" aria-label="Zpět do nastavení">←</button>
         <button class="hbtn" id="btnImport" onclick="document.getElementById('importFileInput').click()" aria-label="Importovat TXT nebo JSON soubor s překlady">⬆ Import TXT/JSON</button>
         <input type="file" id="importFileInput" class="is-hidden" accept=".txt,.json,application/json,text/plain" onchange="importFile(this)" aria-label="Výběr TXT nebo JSON souboru k importu">
         <button class="hbtn grn" id="btnExportAll" onclick="exportAllLocalStorage()" title="Exportovat všechny překlady z localStorage" aria-label="Exportovat všechny překlady">⬇ Vše</button>
@@ -232,14 +233,16 @@
     <div class="countdown" id="countdown">—</div>
     <div id="autoProviderCountdowns" class="auto-provider-countdowns">
       <div class="auto-provider-row auto-provider-row-wide">
+        <input type="number" id="limitTokens_groq" class="auto-small-input" min="0" step="10000" placeholder="∞ tok" title="Limit tokenů Groq (0=vypnuto)" style="width:52px" onchange="saveProviderLimit('groq','tokens',this.value)">
         <label id="autoEnableLabelGroq" class="auto-enable-label" title="Zapnout/vypnout Groq pro AUTO">
           <input type="checkbox" id="autoEnable_groq" checked aria-label="Zapnout Groq v AUTO">
           G
         </label>
         <div id="autoCountdown_groq">Groq: —</div>
-        <div class="auto-log" id="autoLog">Čeká na start...</div>
+        <div class="auto-log" id="autoLog" style="display:none"></div>
       </div>
       <div class="auto-provider-row">
+        <input type="number" id="limitReqs_gemini" class="auto-small-input" min="0" step="10" placeholder="∞ req" title="Limit požadavků Gemini (0=vypnuto)" style="width:52px" onchange="saveProviderLimit('gemini','reqs',this.value)">
         <label id="autoEnableLabelGemini" class="auto-enable-label" title="Zapnout/vypnout Gemini fallback">
           <input type="checkbox" id="autoEnable_gemini" checked aria-label="Zapnout Gemini v AUTO">
           Gm
@@ -247,17 +250,18 @@
         <div id="autoCountdown_gemini">Gemini: —</div>
       </div>
       <div class="auto-provider-row">
+        <input type="number" id="limitReqs_openrouter" class="auto-small-input" min="0" step="10" placeholder="∞ req" title="Limit požadavků OpenRouter (0=vypnuto)" style="width:52px" onchange="saveProviderLimit('openrouter','reqs',this.value)">
         <label id="autoEnableLabelOpenrouter" class="auto-enable-label" title="Zapnout/vypnout OpenRouter fallback">
           <input type="checkbox" id="autoEnable_openrouter" checked aria-label="Zapnout OpenRouter v AUTO">
           OR
         </label>
         <div id="autoCountdown_openrouter">OpenRouter: —</div>
+        <span id="orReqCount" style="font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace;white-space:nowrap">0 req</span>
       </div>
     </div>
     <div class="auto-eta">
       ⏱ <span id="etaLabel">—</span>
     </div>
-    <button class="hbtn red" id="btnAutoStop" onclick="stopAuto()" aria-label="Zastavit automatický překlad">■ Stop</button>
   </div>
 
   <!-- Split -->
@@ -323,8 +327,8 @@
         <div class="log-head">
           <span></span>
           <span id="logCount" class="log-count"></span>
+          <span id="autoLogMirror" class="auto-log" style="flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace;"></span>
           <span id="logHotkeysHint" class="log-hotkeys-hint" title="Space=dávka  A=auto  ↑↓=navigace  Esc=zavřít modal">⌨ Space·A·↑↓</span>
-      <button class="hbtn hbtn-tiny hbtn-with-offset" id="btnBackToSetup" onclick="showSetup()" aria-label="Zpět do nastavení">← Nastavení</button>
       <button class="hbtn hbtn-tiny" id="btnClearLog" onclick="clearLog()" aria-label="Vymazat log">✕ Vymazat</button>
         </div>
         <input type="hidden" id="batchSizeRun" value="10">

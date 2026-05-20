@@ -358,9 +358,21 @@ function renderTopicRepairModal() {
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px">
         <div id="topicRepairStatus" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3)">—</div>
         <div style="display:grid;gap:2px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt2);margin-top:6px">
-          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="topicRepairEnable_groq" ${topicRepairState.providerEnabled.groq ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">G <span id="topicRepairProvider_groq">Groq: —</span></label>
-          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="topicRepairEnable_gemini" ${topicRepairState.providerEnabled.gemini ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">Gm <span id="topicRepairProvider_gemini">Google: —</span></label>
-          <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="topicRepairEnable_openrouter" ${topicRepairState.providerEnabled.openrouter ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">OR <span id="topicRepairProvider_openrouter">OpenRouter: —</span></label>
+          <label style="display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="topicRepairEnable_groq" ${topicRepairState.providerEnabled.groq ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
+            G <span id="topicRepairProvider_groq">Groq: —</span>
+            <span id="trGroqTokens" style="color:var(--txt3);margin-left:4px"></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="topicRepairEnable_gemini" ${topicRepairState.providerEnabled.gemini ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
+            Gm <span id="topicRepairProvider_gemini">Google: —</span>
+            <span id="trGeminiStats" style="color:var(--txt3);margin-left:4px"></span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px">
+            <input type="checkbox" id="topicRepairEnable_openrouter" ${topicRepairState.providerEnabled.openrouter ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
+            OR <span id="topicRepairProvider_openrouter">OpenRouter: —</span>
+            <span id="trOrStats" style="color:var(--txt3);margin-left:4px"></span>
+          </label>
         </div>
       </div>
       <details id="topicRepairBulkDetails" style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px" ${state.repairStrategy === 'bulk' ? 'open' : ''}>
@@ -1228,6 +1240,44 @@ function initTopicRepairBulkRunInputs() {
 }
 
 /** Jedno téma — vnitřní smyčka dávek (režim „Vše“ i jedno téma z editoru). */
+// Aktualizuje stat spany u providerů v topicRepair modalu
+function updateTopicRepairProviderStats() {
+  try {
+    const limits = (typeof window !== 'undefined' && window.getProviderLimits) ? window.getProviderLimits() : {};
+    const getReqCount = (prov) => parseInt(sessionStorage.getItem('provider_req_count_' + prov) || '0', 10);
+
+    // OR: počet requestů / limit
+    const orEl = document.getElementById('trOrStats');
+    if (orEl) {
+      const orCount = getReqCount('openrouter');
+      const orLimit = limits.openrouter?.reqs;
+      orEl.textContent = orCount + (orLimit ? '/' + orLimit : '') + ' req';
+      orEl.style.color = (orLimit && orCount >= orLimit) ? 'var(--err)' : 'var(--txt3)';
+    }
+
+    // Gemini: počet requestů + tokeny
+    const gmEl = document.getElementById('trGeminiStats');
+    if (gmEl) {
+      const gmCount = getReqCount('gemini');
+      const gmLimit = limits.gemini?.reqs;
+      const gmTok = state.totalTokens?.in ? Math.round((state.totalTokens.in - (state.groqTokens?.in || 0)) / 1000) : 0;
+      const reqStr = gmCount + (gmLimit ? '/' + gmLimit : '') + ' req';
+      gmEl.textContent = reqStr;
+      gmEl.style.color = (gmLimit && gmCount >= gmLimit) ? 'var(--err)' : 'var(--txt3)';
+    }
+
+    // Groq: tokeny
+    const groqEl = document.getElementById('trGroqTokens');
+    if (groqEl && state.groqTokens?.total) {
+      const limits2 = limits;
+      const groqLimit = limits2.groq?.tokens;
+      const groqTok = state.groqTokens.total;
+      groqEl.textContent = Math.round(groqTok / 1000) + 'K' + (groqLimit ? '/' + Math.round(groqLimit / 1000) + 'K' : '') + ' tok';
+      groqEl.style.color = (groqLimit && groqTok >= groqLimit) ? 'var(--err)' : 'var(--txt3)';
+    }
+  } catch(e) {}
+}
+
 async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, userPromptTemplate, onlyFailed, bs) {
   let tasks = state.topicRepairState.tasks.filter(t => t && t.topicId === topicId && t.includeBulk !== false);
   let picked;
@@ -1314,7 +1364,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
   // Worker pro jeden provider — bere dávky ze sdílené fronty, každý čeká svůj interval
   async function bulkProviderWorker(prov) {
     const apiKey = getCurrentApiKey(prov);
-    const TR_FALLBACK_MODELS = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', gemini: 'gemini-2.0-flash-lite', openrouter: 'openrouter/free' };
+    const TR_FALLBACK_MODELS = { groq: 'meta-llama/llama-4-scout-17b-16e-instruct', gemini: 'gemini-2.0-flash-lite', openrouter: 'openrouter/rotate' };
     const model = getPipelineModelForProvider(prov) || document.getElementById('model')?.value || TR_FALLBACK_MODELS[prov];
     if (!apiKey) {
       log('[' + prov + '] chybí API klíč, worker se nespustí');
@@ -1328,6 +1378,15 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
 
     while (true) {
       if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
+
+      // Zkontrolovat request limit pro Gemini a OpenRouter
+      if ((prov === 'gemini' || prov === 'openrouter') && typeof window !== 'undefined' && window.checkProviderRequestLimit) {
+        if (window.checkProviderRequestLimit(prov)) {
+          log('[' + prov + '] dosažen limit požadavků — zastavuji bulk worker');
+          break;
+        }
+        window.incrementProviderReqCount && window.incrementProviderReqCount(prov);
+      }
 
       // Atomicky vzít dávku (bez await uvnitř = bezpečné)
       const batchKeys = takeNextBulkBatch();
@@ -1352,6 +1411,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
         const rawText = String(raw?.content || '').trim();
         const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
         applyBulkBatchResult(prov, batchKeys, parsedMap, rawText, null);
+        updateTopicRepairProviderStats();
 
         // Vlastní interval — každý provider čeká nezávisle
         const waitUntil = Date.now() + iv0 * 1000;
@@ -1363,6 +1423,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
       } catch (e) {
         logError('bulkProviderWorker', e, { prov, batchKeys, topicId });
         applyBulkBatchResult(prov, batchKeys, {}, '', e.message);
+        updateTopicRepairProviderStats();
 
         // Rate limit — delší cooldown jen pro tohoto providera
         const msgL = (e.message || '').toLowerCase();

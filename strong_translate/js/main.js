@@ -4914,6 +4914,7 @@ function printRecentAICalls() {
   
   // Expose toggleMenu to global scope
   window.toggleAutoSequential = toggleAutoSequential;
+window.saveAutoTokenLimit = saveAutoTokenLimit;
 window.toggleMenu = function() {
     const menuPanel = document.getElementById('menuPanel');
     menuPanel.classList.toggle('is-hidden');
@@ -5125,3 +5126,85 @@ window.orSelectNone = function() {
   list.querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = false; });
   window.onOrRotationChange();
 };
+
+// ── PROVIDER LIMITY ─────────────────────────────────────────────────────────
+const PROVIDER_LIMIT_KEY = 'provider_limits';
+
+function getProviderLimits() {
+  try { return JSON.parse(localStorage.getItem(PROVIDER_LIMIT_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+window.saveProviderLimit = function(prov, type, val) {
+  const limits = getProviderLimits();
+  if (!limits[prov]) limits[prov] = {};
+  limits[prov][type] = parseInt(val, 10) || 0;
+  localStorage.setItem(PROVIDER_LIMIT_KEY, JSON.stringify(limits));
+};
+
+function loadProviderLimitInputs() {
+  const limits = getProviderLimits();
+  const groqTok = document.getElementById('limitTokens_groq');
+  const geminiReq = document.getElementById('limitReqs_gemini');
+  const orReq = document.getElementById('limitReqs_openrouter');
+  if (groqTok && limits.groq?.tokens) groqTok.value = limits.groq.tokens;
+  if (geminiReq && limits.gemini?.reqs) geminiReq.value = limits.gemini.reqs;
+  if (orReq && limits.openrouter?.reqs) orReq.value = limits.openrouter.reqs;
+}
+
+// Synchronizovat Groq token limit s autoTokenLimit polem
+const _origSaveProviderLimit = window.saveProviderLimit;
+window.saveProviderLimit = function(prov, type, val) {
+  _origSaveProviderLimit(prov, type, val);
+  if (prov === 'groq' && type === 'tokens') {
+    const autoTokenInput = document.getElementById('autoTokenLimit');
+    if (autoTokenInput) { autoTokenInput.value = val; saveAutoTokenLimit(); }
+  }
+};
+
+// Zrcadlit autoLog do log-head
+function mirrorAutoLog() {
+  const src = document.getElementById('autoLog');
+  const dst = document.getElementById('autoLogMirror');
+  if (!src || !dst) return;
+  const observer = new MutationObserver(() => { dst.textContent = src.textContent; });
+  observer.observe(src, { childList: true, subtree: true, characterData: true });
+  dst.textContent = src.textContent;
+}
+
+// Zkontrolovat provider limity při každém překladu
+window.checkProviderRequestLimit = function(prov) {
+  const limits = getProviderLimits();
+  const reqLimit = limits[prov]?.reqs;
+  if (!reqLimit || reqLimit <= 0) return false;
+  const key = 'provider_req_count_' + prov;
+  const count = parseInt(sessionStorage.getItem(key) || '0', 10) + 1;
+  sessionStorage.setItem(key, String(count));
+  return count >= reqLimit;
+};
+
+window.incrementProviderReqCount = function(prov) {
+  const key = 'provider_req_count_' + prov;
+  const count = parseInt(sessionStorage.getItem(key) || '0', 10) + 1;
+  sessionStorage.setItem(key, String(count));
+  // Zobrazit počítadlo u OpenRouter
+  if (prov === 'openrouter') {
+    const el = document.getElementById('orReqCount');
+    if (el) {
+      const limits = getProviderLimits();
+      const limit = limits.openrouter?.reqs;
+      el.textContent = count + (limit ? '/' + limit : '') + ' req';
+    }
+  }
+};
+
+window.getProviderLimits = getProviderLimits;
+window.resetProviderReqCounts = function() {
+  ['groq','gemini','openrouter'].forEach(p => sessionStorage.removeItem('provider_req_count_' + p));
+  const el = document.getElementById('orReqCount');
+  if (el) el.textContent = '0 req';
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(loadProviderLimitInputs, 600);
+  setTimeout(mirrorAutoLog, 1000);
+});

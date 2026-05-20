@@ -421,12 +421,17 @@ function getTranslationEngineLabel(raw, fallbackProvider, fallbackModel) {
       function mergeSystemIntoUser(msgs) {
         const sys = msgs.find(m => m.role === 'system');
         if (!sys) return msgs;
-        const rest = msgs.filter(m => m.role !== 'system');
-        const firstUser = rest.find(m => m.role === 'user');
-        if (!firstUser) return rest;
-        firstUser.content = sys.content + '\n\n' + firstUser.content;
-        return rest;
+        return msgs
+          .filter(m => m.role !== 'system')
+          .map(m => {
+            if (m.role === 'user' && !mergeSystemIntoUser._done) {
+              mergeSystemIntoUser._done = true;
+              return { ...m, content: sys.content + '\n\n' + m.content };
+            }
+            return m;
+          });
       }
+      mergeSystemIntoUser._done = false;
 
       const orHeaders = {
         'Authorization': 'Bearer ' + apiKey,

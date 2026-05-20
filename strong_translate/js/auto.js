@@ -223,6 +223,11 @@ export function createAutoApi(deps) {
         startElapsedTimer();
       }
 
+      // Reset počítadel requestů při novém kole překladu
+      if (typeof window !== 'undefined' && window.resetProviderReqCounts) {
+        window.resetProviderReqCounts();
+      }
+
       log('Paralelní překlad: ' + activeProviders.join(', ') + ' (dávka ' + batchSize + ')');
       updateETA();
 
@@ -353,6 +358,11 @@ export function createAutoApi(deps) {
       if (!state.startTime) {
         state.startTime = Date.now();
         startElapsedTimer();
+      }
+
+      // Reset počítadel requestů při novém startu sequential
+      if (typeof window !== 'undefined' && window.resetProviderReqCounts) {
+        window.resetProviderReqCounts();
       }
 
       // Inicializace per-provider cooldown timestamps

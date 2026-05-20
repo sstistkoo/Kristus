@@ -1064,6 +1064,15 @@ async function translateBatchForProvider(allKeys, prov, apiKey, model) {
     startElapsedTimer();
   }
 
+  // Zkontrolovat request limit pro Gemini a OpenRouter
+  if ((prov === 'gemini' || prov === 'openrouter') && typeof window !== 'undefined' && window.checkProviderRequestLimit) {
+    if (window.checkProviderRequestLimit(prov)) {
+      log('[' + prov + '] dosažen limit požadavků — přeskakuji');
+      return { ok: false, rateLimited: false, limitReached: true };
+    }
+    window.incrementProviderReqCount && window.incrementProviderReqCount(prov);
+  }
+
   const reqStart = performance.now();
   try {
     const previousMap = {};
