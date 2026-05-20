@@ -251,6 +251,8 @@
       </div>
       <div class="auto-provider-row">
         <input type="number" id="limitReqs_openrouter" class="auto-small-input" min="0" step="10" placeholder="∞ req" title="Limit požadavků OpenRouter (0=vypnuto)" style="width:52px" onchange="saveProviderLimit('openrouter','reqs',this.value)">
+        <input type="number" id="intervalOR" class="auto-small-input" min="0" step="1" value="2" title="Interval OpenRouter mezi dávkami (s)" style="width:36px" onchange="saveProviderLimit('openrouter','interval',this.value)">
+        <span style="font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace">s</span>
         <label id="autoEnableLabelOpenrouter" class="auto-enable-label" title="Zapnout/vypnout OpenRouter fallback">
           <input type="checkbox" id="autoEnable_openrouter" checked aria-label="Zapnout OpenRouter v AUTO">
           OR

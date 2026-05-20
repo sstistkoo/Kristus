@@ -290,9 +290,15 @@ export function createAutoApi(deps) {
           if (!state.autoRunning) break;
 
           // Vlastní interval — každý provider čeká svůj čas nezávisle
+          // OpenRouter může mít vlastní interval z nastavení
           let delay = intervalMs;
+          if (prov === 'openrouter') {
+            const orLimits = typeof window !== 'undefined' && window.getProviderLimits ? window.getProviderLimits() : {};
+            const orInterval = orLimits.openrouter?.interval;
+            if (orInterval != null && orInterval !== '') delay = Math.max(0, Number(orInterval) * 1000);
+          }
           if (result && result.rateLimited) {
-            delay = Math.max(intervalMs, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
+            delay = Math.max(delay, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
             log('[' + (PROVIDER_LABELS[prov]||prov) + '] rate limit, cekam ' + Math.round(delay / 1000) + 's');
           }
           // Čekat interval s živým odpočítáváním

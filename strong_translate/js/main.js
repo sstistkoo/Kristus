@@ -5163,9 +5163,11 @@ function loadProviderLimitInputs() {
   const groqTok = document.getElementById('limitTokens_groq');
   const geminiReq = document.getElementById('limitReqs_gemini');
   const orReq = document.getElementById('limitReqs_openrouter');
+  const orInt = document.getElementById('intervalOR');
   if (groqTok && limits.groq?.tokens) groqTok.value = limits.groq.tokens;
   if (geminiReq && limits.gemini?.reqs) geminiReq.value = limits.gemini.reqs;
   if (orReq && limits.openrouter?.reqs) orReq.value = limits.openrouter.reqs;
+  if (orInt && limits.openrouter?.interval != null) orInt.value = limits.openrouter.interval;
 }
 
 // Synchronizovat Groq token limit s autoTokenLimit polem
