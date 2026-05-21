@@ -117,15 +117,20 @@ function parseTopicRepairBatchResponse(rawText, topicId) {
     if (!b) continue;
     const header = b.match(headerRe);
     if (!header) continue;
-    const letter = (header[1] || 'G').toUpperCase();
+    const letter = (header[1] || '').toUpperCase();
     const num = header[2];
-    const key = letter + num;
+    // Ukládáme pod oběma variantami aby lookup vždy trefil správný klíč
+    const key = (letter || 'G') + num;
     const rest = b.slice(header.index + header[0].length).trim();
     let val = String(extractTopicValueFromAI(rest, topicId, 'strict') || '').trim();
     if (!hasMeaningfulValue(val)) {
       val = String(extractTopicValueFromAI(rest, topicId, 'loose') || '').trim();
     }
-    if (hasMeaningfulValue(val)) out[key] = val;
+    if (hasMeaningfulValue(val)) {
+      out[key] = val;
+      // Pokud AI vynechala písmeno, uložíme pod oběma variantami aby lookup vždy uspěl
+      if (!letter) { out['G' + num] = val; out['H' + num] = val; }
+    }
   }
   return out;
 }
@@ -296,9 +301,9 @@ async function translateNext() {
 function jumpToStart() {
   const num = parseInt(document.getElementById('startFrom').value);
   if (!num || num < 1) { showToast(t('toast.jump.enterGNumber')); return; }
-  const key = 'G' + num;
+  const key = state.entryMap.has('G' + num) ? 'G' + num : ('H' + num);
   const found = state.entryMap.get(key);
-  if (!found) { showToast(t('toast.entry.notFoundInFile', { key: `G${num}` })); return; }
+  if (!found) { showToast(t('toast.entry.notFoundInFile', { key })); return; }
 
    // Oznac v�echna hesla PRED t�mto c�slem jako preskocen� (zachov�me existuj�c� preklady)
    for (const e of state.entries) {
@@ -310,7 +315,7 @@ function jumpToStart() {
    saveProgress();
    updateStats();
    renderList();
-   showToast(t('toast.translation.resumeFrom', { key: `G${num}` }));
+   showToast(t('toast.translation.resumeFrom', { key }));
    // Scroll na heslo v listu (virtu�ln�)
    setTimeout(() => {
      const scroll = document.getElementById('listScroll');
@@ -1016,7 +1021,8 @@ async function translateTopicBatchWithGemini(keys, topicId) {
     const parsedMap = parseTopicRepairBatchResponse(rawText, topicId);
 
     for (const key of keys) {
-      const val = String(parsedMap[key] || parsedMap[key.replace(/^[GH]/, '')] || '').trim();
+      const _num = key.replace(/^[GH]/, '');
+      const val = String(parsedMap[key] || parsedMap[_num] || parsedMap['G' + _num] || parsedMap['H' + _num] || '').trim();
       await addTopicBatchResult(key, topicId, val, prov, model);
 
       // Specialista nav�c

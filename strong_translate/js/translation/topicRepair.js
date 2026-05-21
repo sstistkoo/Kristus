@@ -1199,11 +1199,13 @@ function extractTopicRepairBatchBlockForKey(rawText, key) {
     if (!b) continue;
     const header = b.match(headerRe);
     if (!header) continue;
-    const letter = (header[1] || 'G').toUpperCase();
+    const letter = (header[1] || '').toUpperCase();
     const num = header[2];
-    const k = (letter + num).toUpperCase();
-    // Hledání s i bez písmene
-    if (k === upperKey || k === upperKey.replace(/^[GH]/, '')) return b;
+    const numOnly = num;
+    const k = ((letter || 'G') + num).toUpperCase();
+    // Hledání s i bez písmene – pokud AI vynechala písmeno, zkusíme obě varianty
+    if (k === upperKey || numOnly === upperKey.replace(/^[GH]/, '') ||
+        'G' + numOnly === upperKey || 'H' + numOnly === upperKey) return b;
   }
   return '';
 }
@@ -1389,7 +1391,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
         continue;
       }
       const numericKey = key.replace(/^[GH]/, '');
-      const val = String(parsedMap[key] || parsedMap[numericKey] || '').trim();
+      const val = String(parsedMap[key] || parsedMap[numericKey] || parsedMap['G' + numericKey] || parsedMap['H' + numericKey] || '').trim();
       if (hasMeaningfulValue(val)) {
         task.candidateValue = val;
         task.provider = prov;

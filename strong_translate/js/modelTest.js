@@ -364,7 +364,7 @@ export function createModelTestRunnerApi(deps) {
 
   function getSampleEntriesForModelTest(count = 3) {
     if (!Array.isArray(state.entries) || state.entries.length === 0) return [];
-    const preferred = state.entries.filter((e) => e?.key && e.key.startsWith('G')).slice(0, count);
+    const preferred = state.entries.filter((e) => e?.key && /^[GH]\d+$/.test(e.key)).slice(0, count);
     if (preferred.length >= count) return preferred;
     return state.entries.slice(0, count).filter(Boolean);
   }
