@@ -4661,6 +4661,9 @@ window.applyAutoPanelSettings = applyAutoPanelSettings;
 window.onProviderChange = onProviderChange;
 window.showSetup = showSetup;
 window.toggleListPane = toggleListPane;
+window.toggleAutoPanel = function() {
+  document.getElementById('autoPanel')?.classList.toggle('show');
+};
 window.copyModelTestPromptPreview = copyModelTestPromptPreview;
 window.resetModelTestPromptPreview = resetModelTestPromptPreview;
 
@@ -4781,6 +4784,44 @@ window.updateModelTestProviderUi = updateModelTestProviderUi;
 // Z promptLibraryApi
 window.togglePromptAutoMode = togglePromptAutoMode;
 window.togglePromptModeQuick = togglePromptModeQuick;
+
+// DevTools console panel
+(function initDevTools() {
+  const COLORS = { log: '#ccc', warn: '#f0c040', error: '#ff6060', info: '#6ab0f5' };
+  const _orig = { log: console.log, warn: console.warn, error: console.error, info: console.info };
+
+  function appendEntry(level, args) {
+    const panel = document.getElementById('devToolsLog');
+    if (!panel) return;
+    const line = document.createElement('div');
+    line.style.cssText = `color:${COLORS[level]};border-bottom:1px solid #1e1e1e;padding:2px 0;word-break:break-all`;
+    const time = new Date().toLocaleTimeString('cs-CZ', { hour12: false });
+    const prefix = level === 'log' ? '' : `[${level.toUpperCase()}] `;
+    line.textContent = `${time} ${prefix}${args.map(a => {
+      try { return typeof a === 'object' ? JSON.stringify(a) : String(a); } catch { return String(a); }
+    }).join(' ')}`;
+    panel.appendChild(line);
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  ['log', 'warn', 'error', 'info'].forEach(lvl => {
+    console[lvl] = (...args) => { _orig[lvl](...args); appendEntry(lvl, args); };
+  });
+
+  window.addEventListener('error', e => appendEntry('error', [e.message, e.filename + ':' + e.lineno]));
+  window.addEventListener('unhandledrejection', e => appendEntry('error', ['Unhandled:', String(e.reason)]));
+})();
+
+window.toggleDevTools = function() {
+  const panel = document.getElementById('devToolsPanel');
+  const visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'flex';
+};
+
+window.clearDevTools = function() {
+  const log = document.getElementById('devToolsLog');
+  if (log) log.innerHTML = '';
+};
 
 // Prompt edit modal
 window.showPromptEditModal = showPromptEditModal;

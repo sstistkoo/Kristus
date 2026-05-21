@@ -239,6 +239,9 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
 
 #mobileMenuBtn { display: none; }
 #mobileListBtn { display: none; }
+#mobilePanelBtn { display: none; }
+#mobileAiSettingsBtn { display: none; }
+#mobileDevToolsBtn { display: none; }
 
 .hbtn {
   font-family: 'JetBrains Mono', monospace;
@@ -763,6 +766,9 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   /* Mobile menu button - show only on mobile */
   #mobileMenuBtn { display: inline-block; }
   #mobileListBtn { display: inline-block; }
+  #mobilePanelBtn { display: inline-block; }
+  #mobileAiSettingsBtn { display: inline-block; }
+  #mobileDevToolsBtn { display: inline-block; }
   .hdr-btns .hbtn { display: none; }
   .hdr-btns #mobileMenuBtn,
   .hdr-btns #btnToggleList,

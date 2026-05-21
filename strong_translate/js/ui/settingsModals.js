@@ -245,16 +245,6 @@ function getDefaultContentTagForTarget(targetRaw) {
 
  function showSettingsModal() {
    initPipelineModelSelectorsInSettingsModal();
-   const batchSizeRunMobile = document.getElementById('batchSizeRunMobile');
-   const batchSize = document.getElementById('batchSize');
-   if (batchSizeRunMobile && batchSize) {
-     batchSizeRunMobile.value = batchSize.value;
-   }
-   const intervalRunMobile = document.getElementById('intervalRunMobile');
-   const interval = document.getElementById('interval');
-   if (intervalRunMobile && interval) {
-     intervalRunMobile.value = interval.value;
-   }
     const autoTokenLimitEl = document.getElementById('autoTokenLimit');
     const tokenLimitRunMobileEl = document.getElementById('tokenLimitRunMobile');
     console.log('[showSettingsModal] autoTokenLimit:', autoTokenLimitEl, 'tokenLimitRunMobile:', tokenLimitRunMobileEl);
@@ -274,29 +264,14 @@ function closeSettingsModal() {
   const mainGroq = document.getElementById('providerRunMainGroqModel')?.value || '';
   const secGemini = document.getElementById('providerRunSecondaryGeminiModel')?.value || '';
   const secOpenRouter = document.getElementById('providerRunSecondaryOpenrouterModel')?.value || '';
-  const secGeminiEnabled = !!document.getElementById('providerRunEnableSecondaryGemini')?.checked;
-  const secOpenRouterEnabled = !!document.getElementById('providerRunEnableSecondaryOpenrouter')?.checked;
   if (mainGroq) setPipelineModelForProvider('groq', mainGroq);
   if (secGemini) setPipelineModelForProvider('gemini', secGemini);
   if (secOpenRouter) setPipelineModelForProvider('openrouter', secOpenRouter);
-  setPipelineSecondaryEnabled('gemini', secGeminiEnabled);
-  setPipelineSecondaryEnabled('openrouter', secOpenRouterEnabled);
-  syncSecondaryProviderToggles('gemini', secGeminiEnabled);
-  syncSecondaryProviderToggles('openrouter', secOpenRouterEnabled);
    updateAutoProviderCountdowns();
    const providerEl = document.getElementById('provider');
    if (providerEl) providerEl.value = 'groq';
    const mainGroqEl = document.getElementById('model');
    if (mainGroq && mainGroqEl) mainGroqEl.value = mainGroq;
-const batchSizeRunMobile = document.getElementById('batchSizeRunMobile');
-    const batchSize = document.getElementById('batchSize');
-    if (batchSizeRunMobile && batchSize) batchSize.value = batchSizeRunMobile.value;
-    const intervalRunMobile = document.getElementById('intervalRunMobile');
-    const interval = document.getElementById('interval');
-    if (intervalRunMobile && interval) interval.value = intervalRunMobile.value;
-    // Save batch size and interval to localStorage
-    if (batchSize) safeSetLocalStorage(BATCH_SIZE_KEY, batchSize.value, 'settingsModals');
-    if (interval) safeSetLocalStorage(INTERVAL_KEY, interval.value, 'settingsModals');
     // Set token limit BEFORE init calls – original order
     const tokenLimitRunMobile = document.getElementById('tokenLimitRunMobile');
     if (tokenLimitRunMobile) {

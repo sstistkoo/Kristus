@@ -1033,7 +1033,7 @@
   "systemPrompt.translator.status.aiBuildDone": "Hotovo: prompt vytvořen ({provider} | {model}).",
   "systemPrompt.translator.status.aiBuildError": "Chyba generování promptu: {message}",
    "topicRepair.modal.waiting": "čeká",
-  "header.topicRepair": "Oprava témat",
+  "header.topicRepair": "Téma",
   "header.topicRepair.title": "Otevřít modal opravy chybějících témat",
   "header.topicRepair.aria": "Otevřít modal opravy chybějících témat"
 }
