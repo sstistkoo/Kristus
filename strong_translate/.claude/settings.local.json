@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem C:\\\\Users\\\\stistko\\\\CascadeProjects\\\\Kristus\\\\strong_translate | Where-Object { $_.Name -ne \".kilo\" } | Select-Object Name, LastWriteTime)",
+      "Read(//mnt/c/Users/stistko/CascadeProjects/Kristus/**)"
+    ]
+  }
+}

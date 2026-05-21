@@ -251,13 +251,23 @@ export function createAutoApi(deps) {
           log('[' + (PROVIDER_LABELS[prov]||prov) + '] chybí model, worker se nespustí');
           return;
         }
+
+        // Per-provider nastavení — fallback na globální hodnoty
+        const provLimits = (typeof window !== 'undefined' && window.getProviderLimits) ? window.getProviderLimits() : {};
+        const provBatchRaw = provLimits[prov]?.batchSize;
+        const effectiveBatchSize = (provBatchRaw && Number(provBatchRaw) > 0) ? Math.max(1, Number(provBatchRaw)) : batchSize;
+        const provIntervalRaw = provLimits[prov]?.interval;
+        const effectiveIntervalMs = (provIntervalRaw != null && provIntervalRaw !== '' && Number(provIntervalRaw) >= 0)
+          ? Number(provIntervalRaw) * 1000
+          : intervalMs;
+
         log('[' + (PROVIDER_LABELS[prov]||prov) + '] worker startuje s modelem: ' + model);
 
         while (state.autoRunning) {
           if (isAutoTokenLimitReached()) break;
 
-          // Zkontrolovat request limit pro Gemini a OpenRouter
-          if ((prov === 'gemini' || prov === 'openrouter') && typeof window !== 'undefined' && window.checkProviderRequestLimit) {
+          // Zkontrolovat request limit pro všechny providery
+          if (typeof window !== 'undefined' && window.checkProviderRequestLimit) {
             if (window.checkProviderRequestLimit(prov)) {
               log('[' + (PROVIDER_LABELS[prov]||prov) + '] dosažen limit požadavků — zastavuji worker');
               setProviderStatus(prov, 'limit req');
@@ -267,7 +277,7 @@ export function createAutoApi(deps) {
 
           // Atomicky vzít dávku a okamžitě označit _processing
           // (žádný await mezi getNextBatch a nastavením _processing = bezpečné)
-          const batch = getNextBatch(batchSize);
+          const batch = getNextBatch(effectiveBatchSize);
           if (!batch.length) break;
           for (const key of batch) {
             if (!state.translated[key]) {
@@ -290,13 +300,7 @@ export function createAutoApi(deps) {
           if (!state.autoRunning) break;
 
           // Vlastní interval — každý provider čeká svůj čas nezávisle
-          // OpenRouter může mít vlastní interval z nastavení
-          let delay = intervalMs;
-          if (prov === 'openrouter') {
-            const orLimits = typeof window !== 'undefined' && window.getProviderLimits ? window.getProviderLimits() : {};
-            const orInterval = orLimits.openrouter?.interval;
-            if (orInterval != null && orInterval !== '') delay = Math.max(0, Number(orInterval) * 1000);
-          }
+          let delay = effectiveIntervalMs;
           if (result && result.rateLimited) {
             delay = Math.max(delay, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
             log('[' + (PROVIDER_LABELS[prov]||prov) + '] rate limit, cekam ' + Math.round(delay / 1000) + 's');
@@ -411,8 +415,8 @@ export function createAutoApi(deps) {
           continue; // tento provider ještě nesmí, zkusíme další
         }
 
-        // Zkontrolovat request limit
-        if ((prov === 'gemini' || prov === 'openrouter') && typeof window !== 'undefined' && window.checkProviderRequestLimit) {
+        // Zkontrolovat request limit pro všechny providery
+        if (typeof window !== 'undefined' && window.checkProviderRequestLimit) {
           if (window.checkProviderRequestLimit(prov)) {
             log('[' + (PROVIDER_LABELS[prov]||prov) + '] dosažen limit požadavků');
             setProviderStatus(prov, 'limit req');
@@ -434,8 +438,17 @@ export function createAutoApi(deps) {
           continue;
         }
 
+        // Per-provider nastavení — fallback na globální hodnoty
+        const seqProvLimits = (typeof window !== 'undefined' && window.getProviderLimits) ? window.getProviderLimits() : {};
+        const seqBatchRaw = seqProvLimits[prov]?.batchSize;
+        const seqBatchSize = (seqBatchRaw && Number(seqBatchRaw) > 0) ? Math.max(1, Number(seqBatchRaw)) : batchSize;
+        const seqIntervalRaw = seqProvLimits[prov]?.interval;
+        const seqIntervalMs = (seqIntervalRaw != null && seqIntervalRaw !== '' && Number(seqIntervalRaw) >= 0)
+          ? Number(seqIntervalRaw) * 1000
+          : intervalMs;
+
         // Vzít dávku
-        const batch = getNextBatch(batchSize);
+        const batch = getNextBatch(seqBatchSize);
         if (!batch.length) {
           stopAutoSequential();
           showToast(t('toast.translation.done'));
@@ -471,9 +484,9 @@ export function createAutoApi(deps) {
         if (state.activeKey && state.translated[state.activeKey]) renderDetail();
 
         // Nastavit cooldown pro tohoto providera
-        let cooldown = intervalMs;
+        let cooldown = seqIntervalMs;
         if (result && result.rateLimited) {
-          cooldown = Math.max(intervalMs, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
+          cooldown = Math.max(seqIntervalMs, result.cooldownSeconds ? result.cooldownSeconds * 1000 : 60000);
           log('[' + (PROVIDER_LABELS[prov]||prov) + '] rate limit, cooldown ' + Math.round(cooldown / 1000) + 's');
         }
         state.seqProviderNextAllowed[prov] = Date.now() + cooldown;

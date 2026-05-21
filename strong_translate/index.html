@@ -218,41 +218,35 @@
 
   <!-- Auto panel -->
   <div class="auto-panel" id="autoPanel">
-    <div class="auto-info">
-      <div class="auto-info-row">
-        <span id="autoInfoPrefix">AUTO:</span>
-        <span id="autoBatch">—</span>
-      </div>
-      <div class="auto-info-row">
-        <input type="number" id="autoBatchSizeInput" class="auto-small-input" min="1" max="200" step="1" value="10" onchange="applyAutoPanelSettings()" aria-label="AUTO: velikost dávky" title="AUTO: velikost dávky">
-        <span>/</span>
-        <input type="number" id="autoIntervalInput" class="auto-small-input" min="1" max="600" step="1" value="20" onchange="applyAutoPanelSettings()" aria-label="AUTO: interval mezi dávkami (s)" title="AUTO: interval mezi dávkami (s)">
-        <span id="autoInfoSeconds">s</span>
-      </div>
-    </div>
     <div class="countdown" id="countdown">—</div>
     <div id="autoProviderCountdowns" class="auto-provider-countdowns">
       <div class="auto-provider-row auto-provider-row-wide">
-        <input type="number" id="limitTokens_groq" class="auto-small-input" min="0" step="10000" placeholder="∞ tok" title="Limit tokenů Groq (0=vypnuto)" style="width:52px" onchange="saveProviderLimit('groq','tokens',this.value)">
+        <input type="number" id="batchSize_groq" class="auto-small-input" min="1" max="200" step="1" value="5" title="Počet hesel na dávku — Groq" style="width:40px" onchange="saveProviderLimit('groq','batchSize',this.value)">
+        <input type="number" id="interval_groq" class="auto-small-input" min="0" step="1" value="20" title="Interval Groq mezi dávkami v sekundách" style="width:46px" onchange="saveProviderLimit('groq','interval',this.value)">
+        <input type="number" id="limitReqs_groq" class="auto-small-input" min="0" step="10" placeholder="req" title="Limit požadavků Groq za session (0=vypnuto)" style="width:46px" onchange="saveProviderLimit('groq','reqs',this.value)">
         <label id="autoEnableLabelGroq" class="auto-enable-label" title="Zapnout/vypnout Groq pro AUTO">
           <input type="checkbox" id="autoEnable_groq" checked aria-label="Zapnout Groq v AUTO">
           G
         </label>
         <div id="autoCountdown_groq">Groq: —</div>
+        <span id="groqReqCount" style="font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace;white-space:nowrap">0 req</span>
         <div class="auto-log" id="autoLog" style="display:none"></div>
       </div>
-      <div class="auto-provider-row">
-        <input type="number" id="limitReqs_gemini" class="auto-small-input" min="0" step="10" placeholder="∞ req" title="Limit požadavků Gemini (0=vypnuto)" style="width:52px" onchange="saveProviderLimit('gemini','reqs',this.value)">
+      <div class="auto-provider-row auto-provider-row-wide">
+        <input type="number" id="batchSize_gemini" class="auto-small-input" min="1" max="200" step="1" value="5" title="Počet hesel na dávku — Gemini" style="width:40px" onchange="saveProviderLimit('gemini','batchSize',this.value)">
+        <input type="number" id="interval_gemini" class="auto-small-input" min="0" step="1" value="20" title="Interval Gemini mezi dávkami v sekundách" style="width:46px" onchange="saveProviderLimit('gemini','interval',this.value)">
+        <input type="number" id="limitReqs_gemini" class="auto-small-input" min="0" step="10" value="400" title="Limit požadavků Gemini za session (0=vypnuto)" style="width:46px" onchange="saveProviderLimit('gemini','reqs',this.value)">
         <label id="autoEnableLabelGemini" class="auto-enable-label" title="Zapnout/vypnout Gemini fallback">
           <input type="checkbox" id="autoEnable_gemini" checked aria-label="Zapnout Gemini v AUTO">
           Gm
         </label>
         <div id="autoCountdown_gemini">Gemini: —</div>
+        <span id="geminiReqCount" style="font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace;white-space:nowrap">0 req</span>
       </div>
-      <div class="auto-provider-row">
-        <input type="number" id="limitReqs_openrouter" class="auto-small-input" min="0" step="10" placeholder="∞ req" title="Limit požadavků OpenRouter (0=vypnuto)" style="width:52px" onchange="saveProviderLimit('openrouter','reqs',this.value)">
-        <input type="number" id="intervalOR" class="auto-small-input" min="0" step="1" value="2" title="Interval OpenRouter mezi dávkami (s)" style="width:36px" onchange="saveProviderLimit('openrouter','interval',this.value)">
-        <span style="font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace">s</span>
+      <div class="auto-provider-row auto-provider-row-wide">
+        <input type="number" id="batchSize_openrouter" class="auto-small-input" min="1" max="200" step="1" value="5" title="Počet hesel na dávku — OpenRouter" style="width:40px" onchange="saveProviderLimit('openrouter','batchSize',this.value)">
+        <input type="number" id="interval_openrouter" class="auto-small-input" min="0" step="1" value="20" title="Interval OpenRouter mezi dávkami v sekundách" style="width:46px" onchange="saveProviderLimit('openrouter','interval',this.value)">
+        <input type="number" id="limitReqs_openrouter" class="auto-small-input" min="0" step="10" value="400" title="Limit požadavků OpenRouter za session (0=vypnuto)" style="width:46px" onchange="saveProviderLimit('openrouter','reqs',this.value)">
         <label id="autoEnableLabelOpenrouter" class="auto-enable-label" title="Zapnout/vypnout OpenRouter fallback">
           <input type="checkbox" id="autoEnable_openrouter" checked aria-label="Zapnout OpenRouter v AUTO">
           OR

@@ -424,6 +424,13 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   font-size: 10px;
   color: var(--txt);
   outline: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.auto-small-input::-webkit-outer-spin-button,
+.auto-small-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .auto-provider-countdowns {

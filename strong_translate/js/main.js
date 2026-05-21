@@ -5159,26 +5159,31 @@ window.saveProviderLimit = function(prov, type, val) {
 };
 
 function loadProviderLimitInputs() {
-  const limits = getProviderLimits();
-  const groqTok = document.getElementById('limitTokens_groq');
-  const geminiReq = document.getElementById('limitReqs_gemini');
-  const orReq = document.getElementById('limitReqs_openrouter');
-  const orInt = document.getElementById('intervalOR');
-  if (groqTok && limits.groq?.tokens) groqTok.value = limits.groq.tokens;
-  if (geminiReq && limits.gemini?.reqs) geminiReq.value = limits.gemini.reqs;
-  if (orReq && limits.openrouter?.reqs) orReq.value = limits.openrouter.reqs;
-  if (orInt && limits.openrouter?.interval != null) orInt.value = limits.openrouter.interval;
-}
+  const DEFAULTS = {
+    groq:       { batchSize: 5, interval: 20 },
+    gemini:     { batchSize: 5, interval: 20, reqs: 400 },
+    openrouter: { batchSize: 5, interval: 20, reqs: 400 },
+  };
 
-// Synchronizovat Groq token limit s autoTokenLimit polem
-const _origSaveProviderLimit = window.saveProviderLimit;
-window.saveProviderLimit = function(prov, type, val) {
-  _origSaveProviderLimit(prov, type, val);
-  if (prov === 'groq' && type === 'tokens') {
-    const autoTokenInput = document.getElementById('autoTokenLimit');
-    if (autoTokenInput) { autoTokenInput.value = val; saveAutoTokenLimit(); }
+  const limits = getProviderLimits();
+  let changed = false;
+  for (const [prov, defs] of Object.entries(DEFAULTS)) {
+    if (!limits[prov]) { limits[prov] = {}; changed = true; }
+    for (const [type, defVal] of Object.entries(defs)) {
+      if (limits[prov][type] == null) { limits[prov][type] = defVal; changed = true; }
+    }
   }
-};
+  if (changed) localStorage.setItem(PROVIDER_LIMIT_KEY, JSON.stringify(limits));
+
+  for (const prov of ['groq', 'gemini', 'openrouter']) {
+    const bsEl = document.getElementById('batchSize_' + prov);
+    const ivEl = document.getElementById('interval_' + prov);
+    const rqEl = document.getElementById('limitReqs_' + prov);
+    if (bsEl && limits[prov]?.batchSize != null) bsEl.value = limits[prov].batchSize;
+    if (ivEl && limits[prov]?.interval != null) ivEl.value = limits[prov].interval;
+    if (rqEl && limits[prov]?.reqs != null) rqEl.value = limits[prov].reqs;
+  }
+}
 
 // Zrcadlit autoLog do log-head
 function mirrorAutoLog() {
@@ -5208,9 +5213,10 @@ window.incrementProviderReqCount = function(prov) {
   const limit = limits[prov]?.reqs;
   const limitReached = limit && count >= limit;
 
-  // Zobrazit počítadlo u OpenRouter
-  if (prov === 'openrouter') {
-    const el = document.getElementById('orReqCount');
+  // Zobrazit počítadlo pro každý provider
+  const reqCountElId = { groq: 'groqReqCount', gemini: 'geminiReqCount', openrouter: 'orReqCount' }[prov];
+  if (reqCountElId) {
+    const el = document.getElementById(reqCountElId);
     if (el) {
       el.textContent = count + (limit ? '/' + limit : '') + ' req';
       el.style.color = limitReached ? 'var(--err, #ff4444)' : '';
@@ -5230,9 +5236,12 @@ window.incrementProviderReqCount = function(prov) {
 
 window.getProviderLimits = getProviderLimits;
 window.resetProviderReqCounts = function() {
-  ['groq','gemini','openrouter'].forEach(p => sessionStorage.removeItem('provider_req_count_' + p));
-  const el = document.getElementById('orReqCount');
-  if (el) el.textContent = '0 req';
+  ['groq', 'gemini', 'openrouter'].forEach(p => sessionStorage.removeItem('provider_req_count_' + p));
+  const reqCountElIds = { groq: 'groqReqCount', gemini: 'geminiReqCount', openrouter: 'orReqCount' };
+  for (const id of Object.values(reqCountElIds)) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = '0 req'; el.style.color = ''; }
+  }
 };
 
 window.addEventListener('DOMContentLoaded', () => {
