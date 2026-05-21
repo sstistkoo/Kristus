@@ -189,6 +189,7 @@
             <button class="hbtn hdr-close is-hidden" id="btnRestoreBackup" onclick="restoreFromBackup('backup')" title="Obnovit ze zálohy" aria-label="Obnovit ze zálohy">↺ Záloha</button>
           </div>
         </div>
+        <button class="hbtn" id="mobileListBtn" onclick="toggleListPane()" aria-label="Zobrazit/skrýt seznam hesel">≡</button>
         <button class="hbtn red" id="mobileMenuBtn" onclick="showMobileActions()" aria-label="Zobrazit akce">☰</button>
     </div>
   </div>
@@ -356,6 +357,9 @@
       <button class="mobl-btn grn" id="btnMobileExportTxt" onclick="closeMobileModal(); exportTXT()" aria-label="Exportovat do TXT">⬇ Export TXT</button>
       <button class="mobl-btn grn" id="btnMobileExportJson" onclick="closeMobileModal(); exportJSON()" aria-label="Exportovat do JSON">⬇ Export JSON</button>
       <button class="mobl-btn" id="btnMobileExportRange" onclick="closeMobileModal(); exportRange()" aria-label="Exportovat rozsah">⬇ Výběr k exportu</button>
+      <button class="mobl-btn" id="btnMobileAutoSeq" onclick="closeMobileModal(); toggleAutoSequential()" aria-label="Postupný překlad provider za providerem">↻ Postupně</button>
+      <button class="mobl-btn" id="btnMobileTopicRepair" onclick="closeMobileModal(); startTopicRepairFlowForMissing()" aria-label="Opravit chybějící témata">🗔 Oprava témat</button>
+      <button class="mobl-btn" id="btnMobileTools" onclick="closeMobileModal(); showTranslatorPromptsModal()" aria-label="Otevřít Tools">🛠 Tools</button>
       <button class="mobl-btn" id="btnMobileAiSettings" onclick="closeMobileModal(); showSettingsModal()" aria-label="Nastavení AI">⚙ Nastavení AI</button>
       <button class="mobl-btn cancel" id="btnMobileClose" onclick="closeMobileModal()" aria-label="Zavřít">✕ Zavřít</button>
     </div>

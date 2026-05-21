@@ -238,6 +238,7 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
 .hdr-btns { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
 
 #mobileMenuBtn { display: none; }
+#mobileListBtn { display: none; }
 
 .hbtn {
   font-family: 'JetBrains Mono', monospace;
@@ -747,15 +748,28 @@ hr.div { border: none; border-top: 1px solid var(--brd); margin: 18px 0; }
   .detail-pane { width: 100%; height: 50%; flex-shrink: 0; }
   .log-panel { height: 50%; flex-shrink: 0; }
   
+  /* Hide stop-token input and timer on mobile */
+  #autoTokenLimitLabel { display: none; }
+  #timeElapsed { display: none; }
+
+  /* Reorder: start-from-group appears right after the 3 stats (Přeloženo/Zbývá/Celkem) */
+  .start-from-group { order: 1; gap: 4px; }
+  .start-from-label { font-size: 9px; }
+  .start-from-input { width: 44px; font-size: 10px; padding: 2px 4px; }
+  #tokenStats { order: 2; }
+  #pbarContainer { order: 3; }
+  .hdr-btns { order: 4; }
+
   /* Mobile menu button - show only on mobile */
   #mobileMenuBtn { display: inline-block; }
+  #mobileListBtn { display: inline-block; }
   .hdr-btns .hbtn { display: none; }
   .hdr-btns #mobileMenuBtn,
   .hdr-btns #btnToggleList,
   .hdr-btns #btnAuto,
   .hdr-btns [onclick="clearProgress()"],
   .hdr-btns [onclick="showFailedEntries()"],
-  .hdr-btns [onclick="showSettingsModal()"] { display: inline-block; }
+  .hdr-btns #btnTopicRepair { display: inline-block; }
   .log-head { flex-wrap: wrap; }
   .auto-panel {
     display: none;

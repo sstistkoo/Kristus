@@ -511,6 +511,12 @@ function applyUiLanguage() {
     setAttr('btnMobileExportJson', 'aria-label', t('mobile.exportJson.aria'));
     setText('btnMobileExportRange', t('mobile.exportRange'));
     setAttr('btnMobileExportRange', 'aria-label', t('mobile.exportRange.aria'));
+    setText('btnMobileAutoSeq', t('mobile.autoSeq'));
+    setAttr('btnMobileAutoSeq', 'aria-label', t('mobile.autoSeq.aria'));
+    setText('btnMobileTopicRepair', t('mobile.topicRepair'));
+    setAttr('btnMobileTopicRepair', 'aria-label', t('mobile.topicRepair.aria'));
+    setText('btnMobileTools', t('mobile.tools'));
+    setAttr('btnMobileTools', 'aria-label', t('mobile.tools.aria'));
     setText('btnMobileAiSettings', t('mobile.aiSettings'));
     setAttr('btnMobileAiSettings', 'aria-label', t('mobile.aiSettings.aria'));
     setText('btnMobileClose', t('mobile.close'));
@@ -4674,6 +4680,7 @@ window.filterMissingTopicsList = filterMissingTopicsList;
 // Z modalsApi
 window.selectRange = selectRange;
 window.showMobileActions = showMobileActions;
+window.closeMobileModal = closeMobileModal;
 
 // Z autoApi
 window.toggleAuto = toggleAuto;
