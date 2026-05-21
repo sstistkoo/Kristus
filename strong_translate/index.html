@@ -20,9 +20,7 @@
   <h1 id="setupTitle">⟁ Strong GR → --</h1>
   
 
-  <div id="resumeBox" class="resume-box"></div>
-
-  <div id="setupCompactSummary" class="setup-compact" title="Souhrn aktuálního nastavení">—</div>
+  <span id="resumeIndicator" style="display:none; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--grn); padding:2px 8px; border-radius:3px; background:rgba(0,180,80,0.12); margin-bottom:10px; vertical-align:middle">✓ nalezeno</span>
 
   <div class="setup-advanced">
     <details id="setupAdvancedDetails">
@@ -88,27 +86,6 @@
       </div>
       <div style="margin-top:5px; font-size:10px; color:var(--txt3); font-family:'JetBrains Mono',monospace;">✓ = úspěšné &nbsp;|&nbsp; ✗ = rate limit — seřazeno automaticky</div>
     </div>
-  </div>
-
-  <div class="row">
-    <label for="batchSize" id="batchSizeLabel">Velikost dávky (hesel na jedno volání)</label>
-    <select id="batchSize" aria-label="Počet hesel na jednu dávku">
-      <option value="1">1 heslo</option>
-      <option value="5" selected>5 hesel</option>
-      <option value="10">10 hesel</option>
-      <option value="15">15 hesel</option>
-      <option value="20">20 hesel</option>
-    </select>
-  </div>
-
-  <div class="row">
-    <label for="interval" id="intervalLabel">Interval mezi dávkami (vteřiny) — ochrana rate limitu</label>
-    <select id="interval" aria-label="Interval mezi dávkami v sekundách">
-      <option value="5">5 s (Groq fast)</option>
-      <option value="10">10 s (bezpečné)</option>
-      <option value="20" selected>20 s (Gemini free)</option>
-      <option value="30">30 s (při chybách)</option>
-    </select>
   </div>
 
     </details>

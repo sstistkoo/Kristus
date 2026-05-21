@@ -152,7 +152,6 @@ function applyUiLanguage() {
     document.title = formatAppTitleWithTargetLang(t('app.title', { lang: uiTitleLang }), uiTitleLang);
     setText('setupTitle', formatAppTitleWithTargetLang(t('setup.title', { lang: uiTitleLang }), uiTitleLang));
     setText('setupAdvancedSummary', t('setup.advanced'));
-    setAttr('setupCompactSummary', 'title', t('setup.compact.title'));
     const providerForLabel = String(document.getElementById('provider')?.value || 'groq');
     setText('keyLabel', t('api.key.label', { provider: PROVIDERS[providerForLabel]?.label || 'Groq' }));
     setText('startBtn', t('setup.start'));
@@ -162,8 +161,6 @@ function applyUiLanguage() {
     setAttr('btnHelp', 'aria-label', t('setup.help'));
     setAttr('btnLimits', 'title', t('setup.limits'));
     setAttr('btnLimits', 'aria-label', t('setup.limits'));
-    setText('batchSizeLabel', t('setup.batchSize'));
-    setText('intervalLabel', t('setup.interval'));
     setText('pipelineGroupLabel', t('pipeline.group'));
     setText('pipelineMainLabel', t('pipeline.main'));
     setText('pipelineSecondaryGeminiLabel', t('pipeline.secondaryGemini'));
@@ -180,7 +177,6 @@ function applyUiLanguage() {
     setAttr('apiKey', 'aria-label', t('setup.apiKey.input.aria'));
     setAttr('apiKeyProfile', 'aria-label', t('setup.apiKey.profile.aria'));
     setAttr('model', 'aria-label', t('setup.model.aria'));
-    setAttr('batchSize', 'aria-label', t('setup.batchSize.aria'));
     setAttr('fileTXT', 'aria-label', t('setup.file.input.aria'));
     setAttr('pipelineModelMainGroq', 'aria-label', t('pipeline.mainGroq.aria'));
     setAttr('pipelineModelMainGroq', 'title', t('pipeline.mainGroq.aria'));
@@ -416,19 +412,6 @@ function applyUiLanguage() {
     setAttr('btnSelectRange', 'aria-label', t('list.selectRange.aria'));
     setAttr('filterStatus', 'aria-label', t('list.filterStatus.aria'));
     setAttr('filterSort', 'aria-label', t('list.filterSort.aria'));
-    const intervalLabels = {
-      '5': t('setup.interval.option.5'),
-      '10': t('setup.interval.option.10'),
-      '20': t('setup.interval.option.20'),
-      '30': t('setup.interval.option.30')
-    };
-    const intervalEl = document.getElementById('interval');
-    if (intervalEl) {
-      intervalEl.querySelectorAll('option').forEach(opt => {
-        const txt = intervalLabels[String(opt.value || '')];
-        if (txt) opt.textContent = txt;
-      });
-    }
     const batchSizeLabels = {
       '1': t('setup.batch.option.1'),
       '5': t('setup.batch.option.5'),
@@ -436,13 +419,6 @@ function applyUiLanguage() {
       '15': t('setup.batch.option.15'),
       '20': t('setup.batch.option.20')
     };
-    const batchSizeEl = document.getElementById('batchSize');
-    if (batchSizeEl) {
-      batchSizeEl.querySelectorAll('option').forEach(opt => {
-        const txt = batchSizeLabels[String(opt.value || '')];
-        if (txt) opt.textContent = txt;
-      });
-    }
     const batchSizeRunMobileEl = document.getElementById('batchSizeRunMobile');
     if (batchSizeRunMobileEl) {
       batchSizeRunMobileEl.querySelectorAll('option').forEach(opt => {
@@ -1432,19 +1408,17 @@ function updateAutoBtn() {
 // -- RESUME -------------------------------------------------------
 async function checkResume() {
   try {
-    const box = document.getElementById('resumeBox');
-    if (box) box.style.display = 'none';
+    const ind = document.getElementById('resumeIndicator');
+    if (ind) ind.style.display = 'none';
     let data = null;
     let source = t('resume.source.indexedDB');
-    // 1. Try IndexedDB
     const idbSaved = await idbGetItem(storeKey());
     if (idbSaved) {
       data = idbSaved;
     } else if (state.currentFileId) {
-      // 2. Try localStorage legacy
       const legacy = localStorage.getItem(LEGACY_STORE_KEY);
-      if (legacy) { 
-        data = JSON.parse(legacy); 
+      if (legacy) {
+        data = JSON.parse(legacy);
         source = t('resume.source.legacySlot');
       }
     }
@@ -1453,10 +1427,10 @@ async function checkResume() {
       const t = data.translated[k];
       return t && t.vyznam && t.vyznam !== '�' && !t.skipped;
     }).length;
-    if (count > 0 && box) {
-      box.style.display = 'block';
+    if (count > 0 && ind) {
+      ind.style.display = 'inline-block';
       const ts = data.ts ? new Date(data.ts).toLocaleString('cs') : '?';
-      box.innerHTML = t('resume.found', { source, count, ts });
+      ind.title = `${source}: ${count} hesel — ${ts}`;
     }
   } catch(e) {
     logWarn('checkResume', 'Failed to parse saved progress', { error: e.message });
@@ -1527,8 +1501,8 @@ function startApp() {
 }
 
 async function initApp(loadingEl) {
-   state.currentBatchSize = parseInt(document.getElementById('batchSize').value);
-   state.currentInterval  = parseInt(document.getElementById('interval').value);
+   state.currentBatchSize = 5;
+   state.currentInterval  = 20;
 
    // Obnov ulo�en� preklad � pro aktu�lne nacten� soubor
    try {
@@ -2204,26 +2178,9 @@ function getCompactPipelineSecondaryLabel() {
   return 'auto router off';
 }
 
-function updateSetupCompactSummary() {
-  const el = document.getElementById('setupCompactSummary');
-  if (!el) return;
-  const main = getCompactSelectedOptionLabel('pipelineModelMainGroq', '???');
-  const secondary = getCompactPipelineSecondaryLabel();
-  const batch = String(document.getElementById('batchSize')?.value || '10');
-  const interval = String(document.getElementById('interval')?.value || '20');
-  const summary = `${main}, ${secondary}, hesel ${batch}, interval ${interval} s`;
-  el.textContent = summary;
-  el.title = summary;
-}
+function updateSetupCompactSummary() {}
 
-function bindSetupCompactSummaryEvents() {
-  ['batchSize', 'interval'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el || el.dataset.compactSummaryBound === '1') return;
-    el.addEventListener('change', updateSetupCompactSummary);
-    el.dataset.compactSummaryBound = '1';
-  });
-}
+function bindSetupCompactSummaryEvents() {}
 // -- STATS & SAVE ------------------------------------------------
 
 
@@ -5096,6 +5053,10 @@ const OR_RECOMMENDED_MODELS = new Set([
   'nous/hermes-3-405b-instruct:free',
   // Microsoft Phi
   'microsoft/phi-4-reasoning-plus:free',
+  // Arcee AI
+  'arcee-ai/trinity-large-thinking:free',
+  // OpenAI (free tier)
+  'openai/gpt-oss-120b:free',
 ]);
 
 window.orSelectRecommended = function() {
@@ -5154,7 +5115,8 @@ function getProviderLimits() {
 window.saveProviderLimit = function(prov, type, val) {
   const limits = getProviderLimits();
   if (!limits[prov]) limits[prov] = {};
-  limits[prov][type] = parseInt(val, 10) || 0;
+  const num = parseInt(val, 10);
+  limits[prov][type] = Number.isNaN(num) ? null : num;
   localStorage.setItem(PROVIDER_LIMIT_KEY, JSON.stringify(limits));
 };
 
