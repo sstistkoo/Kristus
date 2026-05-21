@@ -254,7 +254,36 @@ function updateTopicRepairModalUI() {
   const listEl = document.getElementById('topicRepairList');
   if (listEl) listEl.innerHTML = rows || `<div style="font-size:12px;color:var(--txt3)">${t('topicRepair.none')}</div>`;
   updateTopicRepairProviderStatus();
+  updateTopicRepairSelectCounts();
   syncTopicRepairMinimizeBusyIndicator();
+}
+
+function updateTopicRepairSelectCounts() {
+  const trs = state.topicRepairState;
+  if (!trs) return;
+  const all = trs.tasks.filter(t => !t.hidden);
+  const cnt = (id) => all.filter(t => t.topicId === id && t.status === 'waiting').length;
+  const allWaiting = all.filter(t => t.status === 'waiting').length;
+  const counts = { all: allWaiting, definice: cnt('definice'), vyznam: cnt('vyznam'), kjv: cnt('kjv'), puvod: cnt('puvod'), specialista: cnt('specialista') };
+  const shortLabels = { all: 'Vše', definice: 'D', vyznam: 'V', kjv: 'K', puvod: 'P', specialista: 'S' };
+
+  for (const prov of ['groq', 'gemini', 'openrouter']) {
+    const sel = document.getElementById(`topicRepairProviderTopic_${prov}`);
+    if (!sel) continue;
+    for (const opt of sel.options) {
+      const c = counts[opt.value];
+      if (c !== undefined) opt.textContent = `${shortLabels[opt.value]} (${c})`;
+    }
+  }
+
+  const bulkSel = document.getElementById('topicRepairBulkTopicSelect');
+  if (!bulkSel) return;
+  for (const opt of bulkSel.options) {
+    const c = counts[opt.value];
+    if (c === undefined) continue;
+    if (opt.value === 'all') opt.textContent = `${t('topicRepair.modal.all')} (${c})`;
+    else opt.textContent = `${TOPIC_LABELS[opt.value] || opt.value} (${c})`;
+  }
 }
 
 function buildTopicRepairTasks(keys) {
@@ -309,6 +338,13 @@ function applyTopicRepairProviderCheckboxes() {
   updateTopicRepairProviderStatus();
 }
 
+function setTopicRepairProviderTopic(prov, topicId) {
+  if (!state.topicRepairState) return;
+  if (!state.topicRepairState.providerTopic) state.topicRepairState.providerTopic = {};
+  state.topicRepairState.providerTopic[prov] = topicId;
+  localStorage.setItem('tr_providerTopic_' + prov, topicId);
+}
+
 function renderTopicRepairModal() {
   const topicRepairState = state.topicRepairState;
   if (!topicRepairState) return;
@@ -332,6 +368,15 @@ function renderTopicRepairModal() {
      puvod: allTasks.filter(t => t.topicId === 'puvod').length,
      specialista: allTasks.filter(t => t.topicId === 'specialista').length
    };
+   const _provTopic = topicRepairState.providerTopic || {};
+   const _ptOpts = (prov) => [
+     `<option value="all" ${(_provTopic[prov]||'all')==='all'?'selected':''}>Vše (${allTasks.length})</option>`,
+     `<option value="definice" ${_provTopic[prov]==='definice'?'selected':''}>D (${topicCounts.definice})</option>`,
+     `<option value="vyznam" ${_provTopic[prov]==='vyznam'?'selected':''}>V (${topicCounts.vyznam})</option>`,
+     `<option value="kjv" ${_provTopic[prov]==='kjv'?'selected':''}>K (${topicCounts.kjv})</option>`,
+     `<option value="puvod" ${_provTopic[prov]==='puvod'?'selected':''}>P (${topicCounts.puvod})</option>`,
+     `<option value="specialista" ${_provTopic[prov]==='specialista'?'selected':''}>S (${topicCounts.specialista})</option>`
+   ].join('');
    
    modal.innerHTML = `
     <div style="max-width:980px;margin:0 auto;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:16px">
@@ -344,23 +389,10 @@ function renderTopicRepairModal() {
       </div>
       <div style="font-size:11px;color:var(--txt2);margin:8px 0 10px 0">${t('topicRepair.modal.missingHint')}</div>
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px">
-        <div style="font-size:12px;color:var(--txt);margin-bottom:8px"><b>${t('topicRepair.modal.modeTitle')}</b></div>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--txt2)">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="topicRepairStrategy" id="topicRepairStrategySeq" value="sequential" ${state.repairStrategy === 'sequential' ? 'checked' : ''} onchange="setTopicRepairStrategy('sequential')" style="accent-color:var(--acc)">
-            ${t('topicRepair.modal.modeSequential')}
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="radio" name="topicRepairStrategy" id="topicRepairStrategyBulk" value="bulk" ${state.repairStrategy === 'bulk' ? 'checked' : ''} onchange="setTopicRepairStrategy('bulk')" style="accent-color:var(--acc)">
-            ${t('topicRepair.modal.modeBulk')}
-          </label>
-        </div>
-        <div id="topicRepairBulkStrategyHint" style="margin-top:8px;font-size:11px;color:var(--txt3);display:${state.repairStrategy === 'bulk' ? 'block' : 'none'}">${t('topicRepair.modal.bulkHint')}</div>
-      </div>
-      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px">
         <div id="topicRepairStatus" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3)">—</div>
         <div style="display:grid;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt2);margin-top:6px">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <select id="topicRepairProviderTopic_groq" onchange="setTopicRepairProviderTopic('groq',this.value)" title="Téma pro Groq" style="background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:1px 3px;font-family:'JetBrains Mono',monospace;font-size:10px;max-width:120px">${_ptOpts('groq')}</select>
             <input type="number" id="tr_batchSize_groq" class="auto-small-input" min="1" max="200" step="1" value="${_trLimits.groq?.batchSize ?? 5}" style="width:40px" title="Počet hesel na dávku — Groq" onchange="window.saveProviderLimit&&saveProviderLimit('groq','batchSize',this.value)">
             <input type="number" id="tr_interval_groq" class="auto-small-input" min="0" step="1" value="${_trLimits.groq?.interval ?? 20}" style="width:46px" title="Interval Groq (s)" onchange="window.saveProviderLimit&&saveProviderLimit('groq','interval',this.value)">
             <input type="number" id="tr_limitReqs_groq" class="auto-small-input" min="0" step="10" value="${_trLimits.groq?.reqs ?? ''}" placeholder="req" style="width:46px" title="Limit požadavků Groq za session (0=vypnuto)" onchange="window.saveProviderLimit&&saveProviderLimit('groq','reqs',this.value)">
@@ -372,6 +404,7 @@ function renderTopicRepairModal() {
             <span id="trGroqTokens" style="color:var(--txt3);margin-left:4px"></span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <select id="topicRepairProviderTopic_gemini" onchange="setTopicRepairProviderTopic('gemini',this.value)" title="Téma pro Gemini" style="background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:1px 3px;font-family:'JetBrains Mono',monospace;font-size:10px;max-width:120px">${_ptOpts('gemini')}</select>
             <input type="number" id="tr_batchSize_gemini" class="auto-small-input" min="1" max="200" step="1" value="${_trLimits.gemini?.batchSize ?? 5}" style="width:40px" title="Počet hesel na dávku — Gemini" onchange="window.saveProviderLimit&&saveProviderLimit('gemini','batchSize',this.value)">
             <input type="number" id="tr_interval_gemini" class="auto-small-input" min="0" step="1" value="${_trLimits.gemini?.interval ?? 20}" style="width:46px" title="Interval Gemini (s)" onchange="window.saveProviderLimit&&saveProviderLimit('gemini','interval',this.value)">
             <input type="number" id="tr_limitReqs_gemini" class="auto-small-input" min="0" step="10" value="${_trLimits.gemini?.reqs ?? 400}" placeholder="req" style="width:46px" title="Limit požadavků Gemini za session (0=vypnuto)" onchange="window.saveProviderLimit&&saveProviderLimit('gemini','reqs',this.value)">
@@ -383,6 +416,7 @@ function renderTopicRepairModal() {
             <span id="trGeminiStats" style="color:var(--txt3);margin-left:4px"></span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <select id="topicRepairProviderTopic_openrouter" onchange="setTopicRepairProviderTopic('openrouter',this.value)" title="Téma pro OpenRouter" style="background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:1px 3px;font-family:'JetBrains Mono',monospace;font-size:10px;max-width:120px">${_ptOpts('openrouter')}</select>
             <input type="number" id="tr_batchSize_openrouter" class="auto-small-input" min="1" max="200" step="1" value="${_trLimits.openrouter?.batchSize ?? 5}" style="width:40px" title="Počet hesel na dávku — OpenRouter" onchange="window.saveProviderLimit&&saveProviderLimit('openrouter','batchSize',this.value)">
             <input type="number" id="tr_interval_openrouter" class="auto-small-input" min="0" step="1" value="${_trLimits.openrouter?.interval ?? 20}" style="width:46px" title="Interval OpenRouter (s)" onchange="window.saveProviderLimit&&saveProviderLimit('openrouter','interval',this.value)">
             <input type="number" id="tr_limitReqs_openrouter" class="auto-small-input" min="0" step="10" value="${_trLimits.openrouter?.reqs ?? 400}" placeholder="req" style="width:46px" title="Limit požadavků OpenRouter za session (0=vypnuto)" onchange="window.saveProviderLimit&&saveProviderLimit('openrouter','reqs',this.value)">
@@ -405,14 +439,25 @@ function renderTopicRepairModal() {
           <button class="hbtn" type="button" onclick="setTopicRepairBulkIncludeAll(true)">${t('topicRepair.modal.batchAll')}</button>
           <button class="hbtn" type="button" onclick="setTopicRepairBulkIncludeAll(false)">${t('topicRepair.modal.batchNone')}</button>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:10px;font-size:12px;color:var(--txt2)">
-          <label style="display:flex;align-items:center;gap:6px">${t('topicRepair.modal.batchSize')}
-            <input type="number" id="topicRepairBulkBatchInput" min="1" max="100" step="1" style="width:64px;padding:4px 6px;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:12px" title="${escHtml(t('topicRepair.modal.batchSize.title'))}" oninput="syncTopicRepairBulkRunInputsToHidden()">
+<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd)">
+          <label style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--txt2);flex-wrap:wrap">
+            <span style="white-space:nowrap"><b>${t('topicRepair.modal.select')}</b></span>
+            <select id="topicRepairBulkTopicSelect" onchange="refreshTopicRepairBatchPromptEditor()" style="min-width:200px;flex:1;max-width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:4px 6px;font-size:12px">
+              <option value="all" ${state.bulkTopicId === 'all' ? 'selected' : ''}>${t('topicRepair.modal.all')} (${allTasks.length})</option>
+              <option value="definice" ${state.bulkTopicId === 'definice' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.definice)} (${topicCounts.definice})</option>
+              <option value="vyznam" ${state.bulkTopicId === 'vyznam' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.vyznam)} (${topicCounts.vyznam})</option>
+              <option value="kjv" ${state.bulkTopicId === 'kjv' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.kjv)} (${topicCounts.kjv})</option>
+              <option value="puvod" ${state.bulkTopicId === 'puvod' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.puvod)} (${topicCounts.puvod})</option>
+              <option value="specialista" ${state.bulkTopicId === 'specialista' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.specialista)} (${topicCounts.specialista})</option>
+            </select>
           </label>
-          <label style="display:flex;align-items:center;gap:6px">${t('topicRepair.modal.interval')}
-            <input type="number" id="topicRepairBulkIntervalInput" min="0" max="600" step="1" style="width:64px;padding:4px 6px;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:12px" title="${escHtml(t('topicRepair.modal.interval.title'))}" oninput="syncTopicRepairBulkRunInputsToHidden()">
-          </label>
-          <span id="topicRepairBulkRunSummary" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3)"></span>
+          <div id="topicRepairBulkListFilterRow" style="display:${state.bulkTopicId === 'all' ? 'flex' : 'none'};flex-wrap:wrap;gap:10px 14px;align-items:center;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);font-size:11px;color:var(--txt2)">
+            <span style="width:100%;margin-bottom:2px">${t('topicRepair.modal.allLimitTypes')}</span>
+            ${TOPIC_REPAIR_BULK_TOPIC_ORDER.map(tid => {
+              const on = (state.bulkListTopicFilter || defaultBulkListTopicFilter())[tid] !== false;
+              return `<label style="display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap"><input type="checkbox" ${on ? 'checked' : ''} onchange="toggleTopicRepairBulkListFilter('${tid}', this.checked)" style="accent-color:var(--acc)">${escHtml(TOPIC_LABELS[tid] || tid)}</label>`;
+            }).join('')}
+          </div>
         </div>
 <div style="margin-top:8px">
            <div style="font-size:11px;color:var(--txt2);margin-bottom:6px">${t('topicRepair.modal.batchPromptHelp')}</div>
@@ -429,35 +474,12 @@ function renderTopicRepairModal() {
            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
              <button class="hbtn" type="button" onclick="saveTopicRepairBatchPromptDraft()">${t('topicRepair.modal.savePrompt')}</button>
              <button class="hbtn" type="button" onclick="resetTopicRepairBatchPromptToDefault()">${t('topicRepair.modal.defaultFromCatalog')}</button>
-             <button class="hbtn grn" id="topicRepairBulkRunBtn" type="button" onclick="runTopicRepairBulkTranslation()">${t('topicRepair.modal.bulkRunSelected')}</button>
            </div>
            <div style="font-size:11px;color:var(--txt3);margin-top:8px">
              ${t('topicRepair.modal.tipPauseFirst')}
            </div>
          </div>
       </details>
-      <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px">
-        <div style="font-size:12px;color:var(--txt);margin-bottom:6px"><b>${t('topicRepair.modal.topicInListTitle')}</b> — ${t('topicRepair.modal.topicInListHint')}</div>
-        <label style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--txt2);flex-wrap:wrap">
-          <span style="white-space:nowrap">${t('topicRepair.modal.select')}</span>
-<select id="topicRepairBulkTopicSelect" onchange="refreshTopicRepairBatchPromptEditor()" style="min-width:240px;flex:1;max-width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:4px;color:var(--txt);padding:6px;font-size:12px">
-              <option value="all" ${state.bulkTopicId === 'all' ? 'selected' : ''}>${t('topicRepair.modal.all')} (${allTasks.length})</option>
-              <option value="definice" ${state.bulkTopicId === 'definice' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.definice)} (${topicCounts.definice})</option>
-              <option value="vyznam" ${state.bulkTopicId === 'vyznam' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.vyznam)} (${topicCounts.vyznam})</option>
-              <option value="kjv" ${state.bulkTopicId === 'kjv' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.kjv)} (${topicCounts.kjv})</option>
-              <option value="puvod" ${state.bulkTopicId === 'puvod' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.puvod)} (${topicCounts.puvod})</option>
-              <option value="specialista" ${state.bulkTopicId === 'specialista' ? 'selected' : ''}>${escHtml(TOPIC_LABELS.specialista)} (${topicCounts.specialista})</option>
-            </select>
-        </label>
-        <div id="topicRepairBulkListFilterRow" style="display:${state.bulkTopicId === 'all' ? 'flex' : 'none'};flex-wrap:wrap;gap:10px 14px;align-items:center;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);font-size:11px;color:var(--txt2)">
-          <span style="width:100%;margin-bottom:2px">${t('topicRepair.modal.allLimitTypes')}</span>
-          ${TOPIC_REPAIR_BULK_TOPIC_ORDER.map(tid => {
-            const on = (state.bulkListTopicFilter || defaultBulkListTopicFilter())[tid] !== false;
-            return `<label style="display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap"><input type="checkbox" ${on ? 'checked' : ''} onchange="toggleTopicRepairBulkListFilter('${tid}', this.checked)" style="accent-color:var(--acc)">${escHtml(TOPIC_LABELS[tid] || tid)}</label>`;
-          }).join('')}
-        </div>
-        <div style="font-size:10px;color:var(--txt3);margin-top:8px">${t('topicRepair.modal.batchPromptSectionHint')}</div>
-      </div>
 <div style="margin:10px 0;display:flex;align-items:center;gap:8px">
         <button class="hbtn" id="btnToggleShowApproved" onclick="toggleShowApproved()">
           ${state.showApproved ? t('topicRepair.hideApproved') : t('topicRepair.showApproved', { count: state.topicRepairState.tasks.filter(t=>t.hidden).length })}
@@ -465,6 +487,7 @@ function renderTopicRepairModal() {
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
         <button class="hbtn grn" id="topicRepairStartSequentialBtn" type="button" onclick="startTopicRepairSequentialWorker()">${t('topicRepair.modal.startSequential')}</button>
+         <button class="hbtn grn" id="topicRepairBulkRunBtn" type="button" onclick="runTopicRepairBulkTranslation()">${t('topicRepair.modal.bulkRunSelected')}</button>
          <span style="font-size:11px;color:var(--txt3);margin-left:4px">(${waitingCount} ${t('topicRepair.modal.waiting')})</span>
          <button class="hbtn grn" id="topicRepairToggleBtn" onclick="toggleTopicRepairRun()">${t('topicRepair.pause')}</button>
          <button class="hbtn grn" id="topicRepairApplyBtn" onclick="applyTopicRepairSelected()">${t('topicRepair.applyOverwrite', { count: 0 })}</button>
@@ -505,6 +528,11 @@ function startTopicRepairFlow(keys) {
       groq: isAutoProviderEnabled('groq'),
       gemini: isAutoProviderEnabled('gemini'),
       openrouter: isAutoProviderEnabled('openrouter')
+    },
+    providerTopic: {
+      groq: localStorage.getItem('tr_providerTopic_groq') || 'definice',
+      gemini: localStorage.getItem('tr_providerTopic_gemini') || 'specialista',
+      openrouter: localStorage.getItem('tr_providerTopic_openrouter') || 'vyznam'
     }
   };
   state.showApproved = false;
@@ -1298,7 +1326,7 @@ function updateTopicRepairProviderStats() {
   } catch(e) {}
 }
 
-async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, userPromptTemplate, onlyFailed, bs) {
+async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, userPromptTemplate, onlyFailed, bs, providerFilter = null) {
   let tasks = state.topicRepairState.tasks.filter(t => t && t.topicId === topicId && t.includeBulk !== false);
   let picked;
   if (onlyFailed) {
@@ -1317,6 +1345,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
   if (!keys.length) return { count: 0 };
 
   const enabledProviders = ['groq', 'gemini', 'openrouter'].filter(p => {
+    if (providerFilter && !providerFilter.includes(p)) return false;
     if (!state.topicRepairState?.providerEnabled?.[p]) return false;
     const k = getCurrentApiKey(p);
     return k && k.trim().length > 0;
@@ -1531,44 +1560,78 @@ async function runTopicRepairBulkTranslation() {
 
   try {
     const iv0 = parseInt(document.getElementById('intervalRun')?.value, 10) || 20;
+    const provTopics = state.topicRepairState?.providerTopic || {};
 
-    if (selTopic === 'all') {
-      const mask = state.bulkListTopicFilter || defaultBulkListTopicFilter();
-      const topicsToRun = TOPIC_REPAIR_BULK_TOPIC_ORDER.filter(id => mask[id] !== false);
-      if (!topicsToRun.length) {
-        showToast(t('toast.topicRepair.pickTopicInAllMode'));
-        return;
+    // Rozdělit providery: ti s konkrétním tématem vs ti s "Vše" (globální výběr)
+    const globalProviders = enabledProviders.filter(p => (provTopics[p] || 'all') === 'all');
+    const specificGroups = {};
+    for (const prov of enabledProviders) {
+      const pt = provTopics[prov] || 'all';
+      if (pt !== 'all') {
+        if (!specificGroups[pt]) specificGroups[pt] = [];
+        specificGroups[pt].push(prov);
       }
-let ranAny = false;
-       for (let ti = 0; ti < topicsToRun.length; ti++) {
-         const topicId = topicsToRun[ti];
-         const sysPrompt = getTopicRepairSystemPrompt(topicId);
-         const usrPrompt = applyPromptLanguageTokens(String(getTopicRepairUserPrompt(topicId) || '').trim());
-         if (!usrPrompt) {
-           log(`⚠ Přeskočeno téma ${topicId} — prázdný uložený batch prompt.`);
-           continue;
-         }
-         const res = await runTopicRepairBulkTranslationCore(state, topicId, sysPrompt, usrPrompt, onlyFailed, bs);
-         if (res.count > 0) ranAny = true;
-         if (ti < topicsToRun.length - 1 && iv0 > 0) await sleepMs(iv0 * 1000);
-       }
-       showToast(ranAny ? t('topicRepair.bulkAllDone', { count: topicsToRun.length }) : t('topicRepair.bulkAllNone'));
-     } else {
-       const sysTa = document.getElementById('topicRepairSystemPrompt');
-       const usrTa = document.getElementById('topicRepairUserPrompt');
-       const sysPrompt = sysTa ? sysTa.value.trim() : '';
-       const usrPrompt = applyPromptLanguageTokens(String(usrTa?.value || '').trim());
-       if (!usrPrompt) {
-         showToast(t('toast.batchPrompt.empty'));
-         return;
-       }
-       const res = await runTopicRepairBulkTranslationCore(state, selTopic, sysPrompt, usrPrompt, onlyFailed, bs);
-      if (res.count === 0) {
-        showToast(t('toast.batchRun.nothingSelected'));
-        return;
-      }
-      showToast(t('toast.topic.bulkDone', { topic: TOPIC_LABELS[selTopic] || selTopic, count: res.count }));
     }
+
+    const parallelTasks = [];
+
+    // Každý provider s konkrétním tématem běží paralelně samostatně
+    for (const [topicId, provs] of Object.entries(specificGroups)) {
+      const sysPrompt = getTopicRepairSystemPrompt(topicId);
+      const usrPrompt = applyPromptLanguageTokens(String(getTopicRepairUserPrompt(topicId) || '').trim());
+      if (!usrPrompt) { log(`⚠ Přeskočeno téma ${topicId} — prázdný batch prompt.`); continue; }
+      parallelTasks.push(runTopicRepairBulkTranslationCore(state, topicId, sysPrompt, usrPrompt, onlyFailed, bs, provs));
+    }
+
+    // Provideři s "Vše" používají globální výběr tématu
+    if (globalProviders.length) {
+      if (selTopic === 'all') {
+        const mask = state.bulkListTopicFilter || defaultBulkListTopicFilter();
+        const topicsToRun = TOPIC_REPAIR_BULK_TOPIC_ORDER.filter(id => mask[id] !== false);
+        if (!topicsToRun.length && !parallelTasks.length) {
+          showToast(t('toast.topicRepair.pickTopicInAllMode'));
+          return;
+        }
+        if (topicsToRun.length) {
+          parallelTasks.push((async () => {
+            let ranAny = false;
+            for (let ti = 0; ti < topicsToRun.length; ti++) {
+              const topicId = topicsToRun[ti];
+              const sysPrompt = getTopicRepairSystemPrompt(topicId);
+              const usrPrompt = applyPromptLanguageTokens(String(getTopicRepairUserPrompt(topicId) || '').trim());
+              if (!usrPrompt) { log(`⚠ Přeskočeno téma ${topicId} — prázdný uložený batch prompt.`); continue; }
+              const res = await runTopicRepairBulkTranslationCore(state, topicId, sysPrompt, usrPrompt, onlyFailed, bs, globalProviders);
+              if (res.count > 0) ranAny = true;
+              if (ti < topicsToRun.length - 1 && iv0 > 0) await sleepMs(iv0 * 1000);
+            }
+            showToast(ranAny ? t('topicRepair.bulkAllDone', { count: topicsToRun.length }) : t('topicRepair.bulkAllNone'));
+          })());
+        }
+      } else {
+        const sysTa = document.getElementById('topicRepairSystemPrompt');
+        const usrTa = document.getElementById('topicRepairUserPrompt');
+        const sysPrompt = sysTa ? sysTa.value.trim() : '';
+        const usrPrompt = applyPromptLanguageTokens(String(usrTa?.value || '').trim());
+        if (!usrPrompt && !parallelTasks.length) {
+          showToast(t('toast.batchPrompt.empty'));
+          return;
+        }
+        if (usrPrompt) {
+          parallelTasks.push((async () => {
+            const res = await runTopicRepairBulkTranslationCore(state, selTopic, sysPrompt, usrPrompt, onlyFailed, bs, globalProviders);
+            if (res.count === 0) showToast(t('toast.batchRun.nothingSelected'));
+            else showToast(t('toast.topic.bulkDone', { topic: TOPIC_LABELS[selTopic] || selTopic, count: res.count }));
+          })());
+        }
+      }
+    }
+
+    if (!parallelTasks.length) {
+      showToast(t('toast.batchPrompt.empty'));
+      return;
+    }
+
+    await Promise.all(parallelTasks);
   } catch (e) {
     if (e && e.message !== 'missing_api_key' && e.message !== 'topic_repair_bulk_aborted') {
       showToast(t('toast.error.withMessage', { message: (e.message || e) }));
@@ -2592,6 +2655,7 @@ return {
      closeTopicRepairModalSafe,
      stopTopicRepairTicker,
      applyTopicRepairProviderCheckboxes,
+     setTopicRepairProviderTopic,
      startTopicRepairFlow,
      setTopicRepairStrategy,
      startTopicRepairSequentialWorker,

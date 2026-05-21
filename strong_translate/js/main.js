@@ -1873,7 +1873,7 @@ const {
    saveTopicRepairBatchPromptDraft, resetTopicRepairBatchPromptToDefault,
   refreshTopicRepairBatchPromptEditor, toggleTopicRepairBulkListFilter,
   syncTopicRepairBulkRunInputsToHidden, runTopicRepairBulkTranslation,
-  toggleTopicRepairBulkInclude, setTopicRepairBulkIncludeAll,
+  toggleTopicRepairBulkInclude, setTopicRepairBulkIncludeAll, setTopicRepairProviderTopic,
   getTopicPromptTemplateByPromptType, syncTopicPromptTemplatesReport,
   buildTopicPrompt, openTopicPromptModal, runTopicPromptAI,
   applyTopicPromptResult, shouldReplaceSpecialista, closeTopicPromptModal,
@@ -4703,6 +4703,7 @@ window.syncTopicRepairBulkRunInputsToHidden = syncTopicRepairBulkRunInputsToHidd
 window.runTopicRepairBulkTranslation = runTopicRepairBulkTranslation;
 window.toggleTopicRepairBulkInclude = toggleTopicRepairBulkInclude;
 window.setTopicRepairBulkIncludeAll = setTopicRepairBulkIncludeAll;
+window.setTopicRepairProviderTopic = setTopicRepairProviderTopic;
 window.getTopicPromptTemplateByPromptType = getTopicPromptTemplateByPromptType;
 window.syncTopicPromptTemplatesReport = syncTopicPromptTemplatesReport;
 window.buildTopicPrompt = buildTopicPrompt;
@@ -4756,6 +4757,7 @@ window.syncTopicRepairBulkRunInputsToHidden = syncTopicRepairBulkRunInputsToHidd
 window.runTopicRepairBulkTranslation = runTopicRepairBulkTranslation;
 window.toggleTopicRepairBulkInclude = toggleTopicRepairBulkInclude;
 window.setTopicRepairBulkIncludeAll = setTopicRepairBulkIncludeAll;
+window.setTopicRepairProviderTopic = setTopicRepairProviderTopic;
 window.fillAllTopics = fillAllTopics;
 window.getActiveKey = () => state.activeKey;
 
