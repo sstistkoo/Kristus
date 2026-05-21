@@ -319,7 +319,9 @@ function renderTopicRepairModal() {
    const modal = document.createElement('div');
    modal.id = 'topicRepairModal';
    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10025;overflow-y:auto;padding:16px';
-   
+
+   const _trLimits = (typeof window !== 'undefined' && window.getProviderLimits) ? window.getProviderLimits() : {};
+
    // Vypočítání počtů pro zobrazení
    const allTasks = topicRepairState.tasks.filter(t => !t.hidden);
    const waitingCount = allTasks.filter(t => t.status === 'waiting').length;
@@ -357,22 +359,40 @@ function renderTopicRepairModal() {
       </div>
       <div style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px">
         <div id="topicRepairStatus" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3)">—</div>
-        <div style="display:grid;gap:2px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt2);margin-top:6px">
-          <label style="display:flex;align-items:center;gap:6px">
-            <input type="checkbox" id="topicRepairEnable_groq" ${topicRepairState.providerEnabled.groq ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
-            G <span id="topicRepairProvider_groq">Groq: —</span>
+        <div style="display:grid;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt2);margin-top:6px">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <input type="number" id="tr_batchSize_groq" class="auto-small-input" min="1" max="200" step="1" value="${_trLimits.groq?.batchSize ?? 5}" style="width:40px" title="Počet hesel na dávku — Groq" onchange="window.saveProviderLimit&&saveProviderLimit('groq','batchSize',this.value)">
+            <input type="number" id="tr_interval_groq" class="auto-small-input" min="0" step="1" value="${_trLimits.groq?.interval ?? 20}" style="width:46px" title="Interval Groq (s)" onchange="window.saveProviderLimit&&saveProviderLimit('groq','interval',this.value)">
+            <input type="number" id="tr_limitReqs_groq" class="auto-small-input" min="0" step="10" value="${_trLimits.groq?.reqs ?? ''}" placeholder="req" style="width:46px" title="Limit požadavků Groq za session (0=vypnuto)" onchange="window.saveProviderLimit&&saveProviderLimit('groq','reqs',this.value)">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="checkbox" id="topicRepairEnable_groq" ${topicRepairState.providerEnabled.groq ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
+              G
+            </label>
+            <span id="topicRepairProvider_groq">Groq: —</span>
             <span id="trGroqTokens" style="color:var(--txt3);margin-left:4px"></span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px">
-            <input type="checkbox" id="topicRepairEnable_gemini" ${topicRepairState.providerEnabled.gemini ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
-            Gm <span id="topicRepairProvider_gemini">Google: —</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <input type="number" id="tr_batchSize_gemini" class="auto-small-input" min="1" max="200" step="1" value="${_trLimits.gemini?.batchSize ?? 5}" style="width:40px" title="Počet hesel na dávku — Gemini" onchange="window.saveProviderLimit&&saveProviderLimit('gemini','batchSize',this.value)">
+            <input type="number" id="tr_interval_gemini" class="auto-small-input" min="0" step="1" value="${_trLimits.gemini?.interval ?? 20}" style="width:46px" title="Interval Gemini (s)" onchange="window.saveProviderLimit&&saveProviderLimit('gemini','interval',this.value)">
+            <input type="number" id="tr_limitReqs_gemini" class="auto-small-input" min="0" step="10" value="${_trLimits.gemini?.reqs ?? 400}" placeholder="req" style="width:46px" title="Limit požadavků Gemini za session (0=vypnuto)" onchange="window.saveProviderLimit&&saveProviderLimit('gemini','reqs',this.value)">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="checkbox" id="topicRepairEnable_gemini" ${topicRepairState.providerEnabled.gemini ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
+              Gm
+            </label>
+            <span id="topicRepairProvider_gemini">Google: —</span>
             <span id="trGeminiStats" style="color:var(--txt3);margin-left:4px"></span>
-          </label>
-          <label style="display:flex;align-items:center;gap:6px">
-            <input type="checkbox" id="topicRepairEnable_openrouter" ${topicRepairState.providerEnabled.openrouter ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
-            OR <span id="topicRepairProvider_openrouter">OpenRouter: —</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <input type="number" id="tr_batchSize_openrouter" class="auto-small-input" min="1" max="200" step="1" value="${_trLimits.openrouter?.batchSize ?? 5}" style="width:40px" title="Počet hesel na dávku — OpenRouter" onchange="window.saveProviderLimit&&saveProviderLimit('openrouter','batchSize',this.value)">
+            <input type="number" id="tr_interval_openrouter" class="auto-small-input" min="0" step="1" value="${_trLimits.openrouter?.interval ?? 20}" style="width:46px" title="Interval OpenRouter (s)" onchange="window.saveProviderLimit&&saveProviderLimit('openrouter','interval',this.value)">
+            <input type="number" id="tr_limitReqs_openrouter" class="auto-small-input" min="0" step="10" value="${_trLimits.openrouter?.reqs ?? 400}" placeholder="req" style="width:46px" title="Limit požadavků OpenRouter za session (0=vypnuto)" onchange="window.saveProviderLimit&&saveProviderLimit('openrouter','reqs',this.value)">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="checkbox" id="topicRepairEnable_openrouter" ${topicRepairState.providerEnabled.openrouter ? 'checked' : ''} onchange="applyTopicRepairProviderCheckboxes()" style="accent-color:var(--acc)">
+              OR
+            </label>
+            <span id="topicRepairProvider_openrouter">OpenRouter: —</span>
             <span id="trOrStats" style="color:var(--txt3);margin-left:4px"></span>
-          </label>
+          </div>
         </div>
       </div>
       <details id="topicRepairBulkDetails" style="background:var(--bg3);border:1px solid var(--brd);border-radius:6px;padding:10px;margin-bottom:10px" ${state.repairStrategy === 'bulk' ? 'open' : ''}>
@@ -1317,10 +1337,10 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
   let queueIndex = 0;
   let totalProcessed = 0;
 
-  function takeNextBulkBatch() {
+  function takeNextBulkBatch(batchSize) {
     if (queueIndex >= keys.length) return null;
-    const batch = keys.slice(queueIndex, queueIndex + bs);
-    queueIndex += bs;
+    const batch = keys.slice(queueIndex, queueIndex + batchSize);
+    queueIndex += batchSize;
     // Označit hned jako running — bez await, takže atomicky
     for (const key of batch) {
       const task = state.topicRepairState.tasks.find(t => t.key === key && t.topicId === topicId);
@@ -1374,13 +1394,22 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
       log('[' + prov + '] chybí model, worker se nespustí');
       return;
     }
-    log('[' + prov + '] bulk worker startuje: ' + model);
+    // Per-provider nastavení — fallback na globální hodnoty
+    const _provLimits = (typeof window !== 'undefined' && window.getProviderLimits) ? window.getProviderLimits() : {};
+    const _provBatchRaw = _provLimits[prov]?.batchSize;
+    const effectiveBs = (_provBatchRaw && Number(_provBatchRaw) > 0) ? Math.max(1, Number(_provBatchRaw)) : bs;
+    const _provIntervalRaw = _provLimits[prov]?.interval;
+    const effectiveIv = (_provIntervalRaw != null && _provIntervalRaw !== '' && Number(_provIntervalRaw) >= 0)
+      ? Number(_provIntervalRaw)
+      : iv0;
+
+    log('[' + prov + '] bulk worker startuje: ' + model + ' | dávka ' + effectiveBs + ' | interval ' + effectiveIv + 's');
 
     while (true) {
       if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
 
-      // Zkontrolovat request limit pro Gemini a OpenRouter
-      if ((prov === 'gemini' || prov === 'openrouter') && typeof window !== 'undefined' && window.checkProviderRequestLimit) {
+      // Zkontrolovat request limit pro všechny providery
+      if (typeof window !== 'undefined' && window.checkProviderRequestLimit) {
         if (window.checkProviderRequestLimit(prov)) {
           log('[' + prov + '] dosažen limit požadavků — zastavuji bulk worker');
           break;
@@ -1389,7 +1418,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
       }
 
       // Atomicky vzít dávku (bez await uvnitř = bezpečné)
-      const batchKeys = takeNextBulkBatch();
+      const batchKeys = takeNextBulkBatch(effectiveBs);
       if (!batchKeys) break;
 
       updateTopicRepairModalUI();
@@ -1414,7 +1443,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
         updateTopicRepairProviderStats();
 
         // Vlastní interval — každý provider čeká nezávisle
-        const waitUntil = Date.now() + iv0 * 1000;
+        const waitUntil = Date.now() + effectiveIv * 1000;
         while (Date.now() < waitUntil) {
           if (abortVersion !== Number(state.topicRepairBulkAbortVersion || 0)) break;
           await sleepMs(Math.min(500, waitUntil - Date.now()));
@@ -1436,7 +1465,7 @@ async function runTopicRepairBulkTranslationCore(state, topicId, systemPrompt, u
               if (msgL.includes('resource_exhausted')) c = Math.max(c, 20 * 60);
               return c;
             })()
-          : iv0;
+          : effectiveIv;
 
         if (isRate) log('[' + prov + '] rate limit, cekam ' + cooldown + 's');
         const waitUntil = Date.now() + cooldown * 1000;
